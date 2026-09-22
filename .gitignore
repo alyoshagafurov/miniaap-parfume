@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next
+.next/
+out/
+next-env.d.ts
+
+# build / runtime
+dist/
+build/
+*.tsbuildinfo
+
+# env — never commit secrets
+.env
+.env.*
+!.env.example
+
+# test / qa artefacts
+coverage/
+playwright-report/
+test-results/
+/qa/**/*.png
+/qa/**/*.webm
+/qa/**/*.zip
+
+# local data
+/docker/data/
+*.log
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# impeccable local state
+.impeccable/config.local.json
+.impeccable/live/
