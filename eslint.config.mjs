@@ -28,7 +28,7 @@ export default defineConfig([
   },
   {
     // CLI scripts and seeds report progress on stdout; that is their interface.
-    files: ["scripts/**", "prisma/seed.ts", "*.config.*"],
+    files: ["scripts/**", "prisma/seed.ts", "src/bot/index.ts", "*.config.*"],
     rules: { "no-console": "off" },
   },
 ]);
