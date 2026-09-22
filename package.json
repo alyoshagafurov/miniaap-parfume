@@ -48,7 +48,9 @@
     "@telegram-apps/sdk-react": "3.3.9",
     "@tma.js/init-data-node": "2.0.8",
     "argon2": "0.45.1",
+    "csv-parse": "7.0.2",
     "grammy": "1.46.0",
+    "iconv-lite": "0.7.3",
     "ioredis": "6.0.0",
     "motion": "13.4.1",
     "next": "16.3.6",
@@ -56,9 +58,11 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "7.88.0",
+    "read-excel-file": "9.3.10",
     "sharp": "0.35.4",
     "sonner": "2.0.8",
     "vaul": "1.1.2",
+    "write-excel-file": "4.1.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
