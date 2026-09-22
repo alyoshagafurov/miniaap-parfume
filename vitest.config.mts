@@ -2,24 +2,15 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: [
-      {
-        test: {
-          name: "unit",
-          environment: "node",
-          include: ["tests/unit/**/*.test.ts"],
-        },
-      },
-      {
-        test: {
-          name: "db",
-          environment: "node",
-          include: ["tests/db/**/*.test.ts"],
-          pool: "forks",
-          poolOptions: { forks: { singleFork: false } },
-          fileParallelism: true,
-        },
-      },
-    ],
+    // Server-side logic only. Nothing here boots Next, so these stay fast
+    // enough to run on every save.
+    environment: "node",
+    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    coverage: {
+      include: ["src/lib/**", "src/server/**"],
+    },
+  },
+  resolve: {
+    alias: { "@": new URL("./src", import.meta.url).pathname },
   },
 });
