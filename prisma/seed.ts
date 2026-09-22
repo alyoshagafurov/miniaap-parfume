@@ -271,7 +271,6 @@ async function main() {
             (f) => fragranceMeta.get(`${f[0]}::${f[1]}`)?.aliases ?? [],
           ),
           title,
-          sku,
         });
 
         const searchNotes = buildSearchNotes({

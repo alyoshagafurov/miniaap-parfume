@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSearchText, normalizeSearch } from "./search";
+import { buildSearchText, normalizeSearch, normalizeSku } from "./search";
 
 describe("normalizeSearch", () => {
   it("lower-cases and collapses whitespace", () => {
@@ -65,14 +65,25 @@ describe("buildSearchText", () => {
       fragranceNames: ["Coco Mademoiselle"],
       fragranceAliases: ["Коко Мадемуазель"],
       title: "Chanel Coco Mademoiselle 100 мл",
-      sku: "ARM-1001",
     });
 
     expect(text).toContain("chanel");
     expect(text).toContain("шанель");
     expect(text).toContain("coco mademoiselle");
     expect(text).toContain("коко мадемуазель");
-    expect(text).toContain("arm 1001");
+  });
+
+  it("leaves the article number out of the fuzzy haystack", () => {
+    // Every SKU shares a prefix, so including them made an article-shaped query
+    // trigram-match the whole catalog.
+    const text = buildSearchText({
+      brandName: "Chanel",
+      brandAliases: [],
+      fragranceNames: ["Coco Mademoiselle"],
+      fragranceAliases: [],
+      title: "Chanel Coco Mademoiselle 100 мл",
+    });
+    expect(text).not.toContain("arm");
   });
 
   it("includes both fragrances of a twin", () => {
@@ -82,7 +93,6 @@ describe("buildSearchText", () => {
       fragranceNames: ["Aqua Fresh", "Night Rose"],
       fragranceAliases: [],
       title: "Двойняшка 100 мл",
-      sku: "ARM-2001",
     });
 
     expect(text).toContain("aqua fresh");
@@ -96,7 +106,6 @@ describe("buildSearchText", () => {
       fragranceNames: ["Chanel"],
       fragranceAliases: [],
       title: "Chanel Chanel",
-      sku: "CHANEL",
     });
 
     expect(text.split(" ").filter((t) => t === "chanel")).toHaveLength(1);
@@ -109,10 +118,25 @@ describe("buildSearchText", () => {
       fragranceNames: ["Terre d'Hermès"],
       fragranceAliases: [],
       title: "Hermès Terre 100 мл",
-      sku: "ARM-3001",
     });
 
     expect(normalizeSearch(text)).toBe(text);
     expect(text).not.toContain("è");
+  });
+});
+
+describe("normalizeSku — separators carry no meaning in an article number", () => {
+  it.each([
+    ["ARM-1005", "arm1005"],
+    ["arm 1005", "arm1005"],
+    ["arm1005", "arm1005"],
+    ["  ARM–1005 ", "arm1005"],
+    ["ARM/1005", "arm1005"],
+  ])("folds %j to %j", (input, expected) => {
+    expect(normalizeSku(input)).toBe(expected);
+  });
+
+  it("keeps distinct articles distinct", () => {
+    expect(normalizeSku("ARM-1005")).not.toBe(normalizeSku("ARM-10050"));
   });
 });

@@ -49,15 +49,19 @@ export interface SearchTextParts {
   fragranceNames: readonly string[];
   fragranceAliases: readonly string[];
   title: string;
-  sku: string;
 }
 
 /**
  * Builds the ranked haystack for a product.
  *
  * Tokens are de-duplicated. pg_trgm scores similarity over the whole string, so
- * a brand whose name also appears in its aliases, its title and its SKU would
- * otherwise outrank a better match purely by repetition.
+ * a brand whose name also appears in its aliases and its title would otherwise
+ * outrank a better match purely by repetition.
+ *
+ * The article number is deliberately NOT here. Every SKU in a catalog shares a
+ * prefix, so including them made any article-shaped query trigram-match the
+ * entire catalog — searching "ARM-1005" reported 1360 results. Articles are
+ * matched exactly, by normalizeSku, which is what someone typing one wants.
  */
 export function buildSearchText(parts: SearchTextParts): string {
   const source = [
@@ -66,10 +70,18 @@ export function buildSearchText(parts: SearchTextParts): string {
     ...parts.fragranceNames,
     ...parts.fragranceAliases,
     parts.title,
-    parts.sku,
   ].join(" ");
 
   return dedupeTokens(normalizeSearch(source));
+}
+
+/**
+ * Folds an article number to its comparable form, so that "ARM-1005",
+ * "arm 1005" and "arm1005" are the same article. Separators carry no meaning
+ * in an article number, unlike in a fragrance name.
+ */
+export function normalizeSku(input: string): string {
+  return input.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /** The recall-only half: notes and description. Never used for ranking. */
