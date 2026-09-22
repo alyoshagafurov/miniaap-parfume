@@ -1,6 +1,22 @@
 import { z } from "zod";
 
 /**
+ * Loads .env into process.env.
+ *
+ * Prisma 7 stopped loading .env, and tsx never did, so standalone scripts and
+ * the bot process must ask for it explicitly. Node has had this built in since
+ * 20.12, so it costs no dependency. In production the variables come from the
+ * container environment and there is no file — hence the tolerated failure.
+ */
+export function loadDotEnv(file = ".env"): void {
+  try {
+    process.loadEnvFile(file);
+  } catch {
+    // No .env: expected wherever real environment variables are set.
+  }
+}
+
+/**
  * Environment.
  *
  * Validated once, at the edge, so a missing variable is a startup error with a

@@ -1,17 +1,8 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- Extensions required by catalog search.
---
--- pg_trgm powers typo tolerance: a buyer who types "шанел" still finds Chanel.
--- unaccent folds diacritics so "Chloé" is reachable as "chloe".
---
--- Note on indexing: unaccent() is STABLE, not IMMUTABLE, because it depends on
--- a mutable dictionary. Using it inside an index expression is the classic way
--- to silently corrupt an index. This schema therefore never indexes an
--- expression — the application writes an already-normalised value into
--- products.searchText, and the trigram indexes below sit on that plain column.
--- ─────────────────────────────────────────────────────────────────────────────
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS unaccent;
+-- CreateExtension
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- CreateExtension
+CREATE EXTENSION IF NOT EXISTS "unaccent";
 
 -- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('FEMALE', 'MALE', 'UNISEX');
@@ -45,6 +36,7 @@ CREATE TABLE "brands" (
     "aliases" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
     "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "isDemo" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -64,6 +56,7 @@ CREATE TABLE "fragrances" (
     "notesHeart" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "notesBase" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "description" TEXT,
+    "isDemo" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -79,6 +72,7 @@ CREATE TABLE "categories" (
     "coverKey" TEXT,
     "sortOrder" INTEGER NOT NULL DEFAULT 0,
     "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "isDemo" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -256,6 +250,12 @@ CREATE UNIQUE INDEX "products_sku_key" ON "products"("sku");
 CREATE UNIQUE INDEX "products_slug_key" ON "products"("slug");
 
 -- CreateIndex
+CREATE INDEX "products_searchText_idx" ON "products" USING GIN ("searchText" gin_trgm_ops);
+
+-- CreateIndex
+CREATE INDEX "products_searchNotes_idx" ON "products" USING GIN ("searchNotes" gin_trgm_ops);
+
+-- CreateIndex
 CREATE INDEX "products_categoryId_status_sortOrder_idx" ON "products"("categoryId", "status", "sortOrder");
 
 -- CreateIndex
@@ -328,41 +328,36 @@ ALTER TABLE "order_items" ADD CONSTRAINT "order_items_productId_fkey" FOREIGN KE
 ALTER TABLE "login_codes" ADD CONSTRAINT "login_codes_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "admin_users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Catalog search indexes
--- ─────────────────────────────────────────────────────────────────────────────
-
--- searchText is the ranked haystack (brand + aliases + fragrance + aliases +
--- title + sku). searchNotes holds notes and description and is used only to
--- widen recall, never to rank, so that a long note list cannot dilute the
--- similarity score of a brand match.
+-- Everything below is outside Prisma's schema language.
 --
--- GIN + gin_trgm_ops serves both the similarity operator (%) used for typo
--- tolerance and ILIKE '%...%' used for substring matching, so one index per
--- column covers every query shape in src/server/catalog.
-CREATE INDEX "products_searchText_trgm_idx" ON "products" USING GIN ("searchText" gin_trgm_ops);
-CREATE INDEX "products_searchNotes_trgm_idx" ON "products" USING GIN ("searchNotes" gin_trgm_ops);
-
+-- The trigram indexes and the pg_trgm/unaccent extensions are deliberately NOT
+-- here: they are declared in schema.prisma so Prisma manages them. Written as
+-- raw SQL they are invisible to Prisma's diff, which drops them the next time
+-- anything unrelated changes — which is precisely what happened before this
+-- migration was squashed.
+--
+-- A note on why normalisation is not an index expression: unaccent() is STABLE,
+-- not IMMUTABLE, because it depends on a mutable dictionary. Indexing it is a
+-- known way to corrupt an index silently. The application therefore writes an
+-- already-normalised value into searchText, and the indexes sit on the plain
+-- column.
 -- ─────────────────────────────────────────────────────────────────────────────
--- Request numbering
--- ─────────────────────────────────────────────────────────────────────────────
 
--- ARM-000123. A sequence rather than max(number)+1: two buyers submitting at
--- the same moment must not be handed the same number.
+-- Request numbers (ARM-000123). A sequence rather than max(number)+1: two
+-- buyers submitting at the same moment must not be handed the same number.
 CREATE SEQUENCE IF NOT EXISTS "order_number_seq" START 1;
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Business rules enforced by the database
---
+-- ── Business rules enforced by the database ──────────────────────────────────
 -- These duplicate checks that also live in zod on the server. That is
--- deliberate: the import path, the seed and any future script all write through
--- the database, and a rule that only exists in one code path is a rule that
--- will eventually be bypassed.
--- ─────────────────────────────────────────────────────────────────────────────
+-- deliberate: the import path, the seed and any future maintenance script all
+-- write through the database, and a rule enforced in only one code path is a
+-- rule that will eventually be bypassed.
 
 -- Settings is a singleton.
 ALTER TABLE "settings" ADD CONSTRAINT "settings_singleton_chk" CHECK ("id" = 1);
+ALTER TABLE "settings" ADD CONSTRAINT "settings_minorder_nonneg_chk" CHECK ("minOrderKop" >= 0);
 
--- Money is non-negative integer kopecks, and a discount must actually be one.
+-- Money is non-negative integer kopecks, and a "discount" must actually be one.
 ALTER TABLE "products" ADD CONSTRAINT "products_price_nonneg_chk" CHECK ("priceKop" >= 0);
 ALTER TABLE "products" ADD CONSTRAINT "products_oldprice_higher_chk" CHECK ("oldPriceKop" IS NULL OR "oldPriceKop" > "priceKop");
 ALTER TABLE "products" ADD CONSTRAINT "products_packsize_chk" CHECK ("packSize" >= 1);
@@ -371,11 +366,10 @@ ALTER TABLE "products" ADD CONSTRAINT "products_volume_chk" CHECK ("volumeMl" > 
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_qty_chk" CHECK ("qty" > 0);
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_price_nonneg_chk" CHECK ("priceKop" >= 0);
 ALTER TABLE "orders" ADD CONSTRAINT "orders_total_nonneg_chk" CHECK ("totalKop" >= 0);
-ALTER TABLE "settings" ADD CONSTRAINT "settings_minorder_nonneg_chk" CHECK ("minOrderKop" >= 0);
 
--- A twin carries exactly two fragrances, a normal product one; either way the
--- positions start at 0 and are contiguous, which this enforces at the row level.
+-- A twin carries two fragrances, a normal product one; either way positions
+-- start at 0 and stay contiguous.
 ALTER TABLE "product_fragrances" ADD CONSTRAINT "product_fragrances_position_chk" CHECK ("position" >= 0 AND "position" <= 1);
 
--- One-time login codes must expire and must not accumulate attempts forever.
+-- One-time login codes must not accumulate attempts without limit.
 ALTER TABLE "login_codes" ADD CONSTRAINT "login_codes_attempts_chk" CHECK ("attempts" >= 0 AND "attempts" <= 5);

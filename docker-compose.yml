@@ -19,10 +19,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-arumi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arumi_dev_password}
       POSTGRES_DB: ${POSTGRES_DB:-arumi}
-      # Russian text: force a predictable collation so ORDER BY is stable
-      # across machines regardless of the host locale.
+      # LC_CTYPE must be UTF-8 aware or pg_trgm extracts ZERO trigrams from
+      # Cyrillic and Russian typo tolerance silently cannot work at all
+      # (show_trgm('шанель') returns {} under plain C). C.UTF-8 on this image
+      # gives datctype=C.UTF-8 with datcollate=C, which is exactly what is
+      # wanted: UTF-8 character classification for the trigram index, plus a
+      # deterministic byte collation that cannot drift between machines.
+      # Russian А–Я ordering is applied per query with COLLATE "ru-RU-x-icu"
+      # rather than by making the whole database locale-dependent.
       LANG: C.UTF-8
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
     ports:
       - "${POSTGRES_PORT:-5434}:5432"
     volumes:

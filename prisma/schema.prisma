@@ -12,11 +12,13 @@
 // Money is always Int kopecks. Never a float, never rubles.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [pg_trgm, unaccent]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -97,6 +99,10 @@ model Brand {
   sortOrder Int      @default(0)
   isPublished Boolean @default(true)
 
+  /// Seeded demo rows carry this so real catalog data can be told apart from
+  /// sample data, and so `pnpm seed:clear` removes only what the seed created.
+  isDemo    Boolean  @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -124,6 +130,10 @@ model Fragrance {
 
   description String?
 
+  /// Seeded demo rows carry this so real catalog data can be told apart from
+  /// sample data, and so `pnpm seed:clear` removes only what the seed created.
+  isDemo    Boolean  @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -145,6 +155,10 @@ model Category {
 
   sortOrder   Int     @default(0)
   isPublished Boolean @default(true)
+
+  /// Seeded demo rows carry this so real catalog data can be told apart from
+  /// sample data, and so `pnpm seed:clear` removes only what the seed created.
+  isDemo    Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -210,6 +224,12 @@ model Product {
   images     ProductImage[]
   orderItems OrderItem[]
 
+  // Trigram indexes for typo-tolerant search. Declared here rather than as raw
+  // SQL in a migration: Prisma diffs the database against this schema, so an
+  // index it cannot see is an index it will drop the next time anything else
+  // changes.
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([searchNotes(ops: raw("gin_trgm_ops"))], type: Gin)
   // Category listing: the default browse path.
   @@index([categoryId, status, sortOrder])
   // "Новинки" and "Хиты" lanes on the home screen.
