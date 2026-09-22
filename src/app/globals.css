@@ -3,17 +3,30 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    ÁRUMI — design tokens, direction "Оливковый шёлк"
    ───────────────────────────────────────────────────────────────────────────
-   Every namespace below is reset with `initial` before being redefined. That
-   is deliberate: it deletes Tailwind's default palette, type scale, radii and
-   font stacks, so `bg-red-500`, `text-3xl` or `rounded-xl` do not compile at
-   all. A stray value becomes a build error rather than something a reviewer
-   has to catch by eye.
+   Every namespace below is reset with `initial` before being redefined, which
+   deletes Tailwind's default palette, type scale, radii and font stacks.
+
+   What that buys, precisely: Tailwind 4.2 added an `olive` palette to its own
+   default theme, so without the reset `bg-olive-600` would silently resolve to
+   Tailwind's oklch olive instead of the ÁRUMI brand colour. The reset removes
+   that shadowing, and the ordering matters — a token declared before its
+   namespace reset is wiped by it, so every `*: initial` comes first.
+
+   What it does NOT buy: enforcement. An undefined utility does not fail the
+   build in v4, it emits no rule and the element simply renders unstyled; only
+   `@apply` of an unknown class errors. Arbitrary values such as `bg-[#ff0000]`
+   compile regardless. `pnpm check:tokens` is therefore the actual guard, and it
+   runs in CI — not a belt-and-braces extra.
 
    Colours are measured from brand/logo-source.jpg where the logo carries them;
    see brand/README.md for the sampling method.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-@theme {
+/* Colours are `@theme static` so every one is emitted to :root even when no
+   utility references it. Tailwind tree-shakes unused theme variables by
+   default, and the Telegram bridge reads --color-canvas at runtime through
+   getComputedStyle to set the header, background and bottom-bar colours. */
+@theme static {
   /* ── Colour ───────────────────────────────────────────────────────────── */
   --color-*: initial;
 
@@ -47,6 +60,9 @@
   --color-danger: #a33a2b;   /* 6.0:1 on canvas */
   --color-danger-wash: #f7ebe8;
 
+}
+
+@theme {
   /* ── Type ─────────────────────────────────────────────────────────────── */
   --font-*: initial;
   /* Display is reserved for 24px and up; below that its low x-height and thin
