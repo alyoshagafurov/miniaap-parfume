@@ -12,7 +12,7 @@ import {
 import { loadDotEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
 import { assertSearchHealth } from "@/server/db-health";
-import { getSettings } from "@/server/settings";
+import { readSettings } from "@/server/settings";
 import { clientOptions, installAutoRetry } from "@/server/telegram/client";
 
 /**
@@ -106,7 +106,7 @@ bot.on("my_chat_member", async (ctx) => {
 bot.command("start", (ctx) => handleStart(ctx, { miniAppUrl, isAdmin }));
 
 bot.command("catalog", async (ctx) => {
-  const settings = await getSettings();
+  const settings = await readSettings();
   await ctx.reply(BUTTON.menu, {
     reply_markup: mainKeyboard({
       miniAppUrl,
@@ -116,7 +116,7 @@ bot.command("catalog", async (ctx) => {
 });
 
 bot.command("contacts", async (ctx) => {
-  await ctx.reply(contacts(await getSettings()));
+  await ctx.reply(contacts(await readSettings()));
 });
 
 bot.command("admin", async (ctx) => {
@@ -126,7 +126,7 @@ bot.command("admin", async (ctx) => {
     await ctx.reply(NOT_ADMIN);
     return;
   }
-  const settings = await getSettings();
+  const settings = await readSettings();
   await ctx.reply(BUTTON.admin, {
     reply_markup: mainKeyboard({
       miniAppUrl,
@@ -138,7 +138,7 @@ bot.command("admin", async (ctx) => {
 
 bot.callbackQuery("terms", async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.reply(terms(await getSettings()));
+  await ctx.reply(terms(await readSettings()));
 });
 
 // ── Errors ──────────────────────────────────────────────────────────────────

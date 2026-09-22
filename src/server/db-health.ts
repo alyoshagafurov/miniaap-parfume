@@ -37,13 +37,13 @@ export async function checkSearchHealth(): Promise<SearchHealth> {
     | undefined;
   try {
     [row] = await prisma.$queryRaw<
-    Array<{
-      trigrams: number;
-      hasCollation: boolean;
-      ctype: string;
-      collate: string;
-    }>
-  >`
+      Array<{
+        trigrams: number;
+        hasCollation: boolean;
+        ctype: string;
+        collate: string;
+      }>
+    >`
     SELECT
       coalesce(array_length(show_trgm('шанель'), 1), 0)::int AS "trigrams",
       EXISTS (SELECT 1 FROM pg_collation WHERE collname = 'ru-RU-x-icu') AS "hasCollation",

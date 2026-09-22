@@ -4,7 +4,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { GoldRule, RuledHeading } from "@/components/ui/GoldRule";
 import { formatRub } from "@/lib/money";
 import { getCategories, getHits, getNewArrivals } from "@/server/catalog/queries";
-import { getSettings } from "@/server/settings";
+import { getSettings } from "@/server/settings.cached";
 
 /**
  * The home screen.

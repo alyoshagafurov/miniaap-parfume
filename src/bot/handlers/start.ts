@@ -2,7 +2,7 @@ import { InputFile, type Context } from "grammy";
 
 import { mainKeyboard } from "@/bot/keyboards/main";
 import { greeting } from "@/bot/texts/ru";
-import { getSettings, rememberBannerFileId } from "@/server/settings";
+import { readSettings, rememberBannerFileId } from "@/server/settings";
 import { objectUrl } from "@/server/storage/urls";
 
 /**
@@ -22,7 +22,7 @@ export interface StartDeps {
 }
 
 export async function handleStart(ctx: Context, deps: StartDeps): Promise<void> {
-  const settings = await getSettings();
+  const settings = await readSettings();
   const from = ctx.from;
   if (!from) return;
 

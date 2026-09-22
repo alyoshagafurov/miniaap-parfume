@@ -4,15 +4,34 @@ import { matchHeaders } from "./columns";
 import { parseRows } from "./rows";
 
 const HEADERS = [
-  "Артикул", "Бренд", "Аромат", "Категория", "Объём", "Цена",
-  "Старая цена", "Кратность", "Наличие", "Второй аромат",
+  "Артикул",
+  "Бренд",
+  "Аромат",
+  "Категория",
+  "Объём",
+  "Цена",
+  "Старая цена",
+  "Кратность",
+  "Наличие",
+  "Второй аромат",
 ];
 
 function parse(...rows: string[][]) {
   return parseRows([HEADERS, ...rows], matchHeaders(HEADERS));
 }
 
-const GOOD = ["ARM-1001", "Chanel", "Coco Mademoiselle", "Парфюм 100 мл", "100", "1 500", "", "", "", ""];
+const GOOD = [
+  "ARM-1001",
+  "Chanel",
+  "Coco Mademoiselle",
+  "Парфюм 100 мл",
+  "100",
+  "1 500",
+  "",
+  "",
+  "",
+  "",
+];
 
 describe("parseRows", () => {
   it("parses a good row into kopecks and integers", () => {
@@ -31,13 +50,46 @@ describe("parseRows", () => {
   it("reports the spreadsheet row number, counting the header", () => {
     // Row 1 is the header, so the first data row is 2 — what the person
     // looking at Excel sees.
-    const r = parse(["", "Chanel", "X", "Парфюм 100 мл", "100", "1 500", "", "", "", ""]);
+    const r = parse([
+      "",
+      "Chanel",
+      "X",
+      "Парфюм 100 мл",
+      "100",
+      "1 500",
+      "",
+      "",
+      "",
+      "",
+    ]);
     expect(r.errors[0]?.row).toBe(2);
   });
 
   it("keeps going after a bad row instead of failing the file", () => {
-    const bad = ["ARM-2", "Chanel", "X", "Парфюм 100 мл", "100", "не число", "", "", "", ""];
-    const r = parse(GOOD, bad, ["ARM-3", "Dior", "Y", "Парфюм 100 мл", "35", "900", "", "", "", ""]);
+    const bad = [
+      "ARM-2",
+      "Chanel",
+      "X",
+      "Парфюм 100 мл",
+      "100",
+      "не число",
+      "",
+      "",
+      "",
+      "",
+    ];
+    const r = parse(GOOD, bad, [
+      "ARM-3",
+      "Dior",
+      "Y",
+      "Парфюм 100 мл",
+      "35",
+      "900",
+      "",
+      "",
+      "",
+      "",
+    ]);
     expect(r.rows).toHaveLength(2);
     expect(r.errors).toHaveLength(1);
     expect(r.errors[0]?.row).toBe(3);
@@ -112,7 +164,9 @@ describe("parseRows", () => {
     // Re-importing the same file must not duplicate, but neither should one
     // file contain the same article twice — the second silently wins otherwise.
     const r = parse(GOOD, GOOD);
-    expect(r.errors.some((e) => e.field === "sku" && /дубл/i.test(e.message))).toBe(true);
+    expect(r.errors.some((e) => e.field === "sku" && /дубл/i.test(e.message))).toBe(
+      true,
+    );
   });
 
   it("skips entirely blank rows without complaining", () => {

@@ -92,18 +92,28 @@ const fold = (v: string) => v.trim().toLowerCase().replace(/ё/g, "е");
 
 const TRUTHY = new Set(["да", "1", "true", "+", "yes", "x"]);
 
-export function parseRows(table: readonly string[][], headers: HeaderMatch): ParseResult {
+export function parseRows(
+  table: readonly string[][],
+  headers: HeaderMatch,
+): ParseResult {
   const rows: ParsedRow[] = [];
   const errors: RowError[] = [];
   let truncatedErrors = false;
   const seenSku = new Map<string, number>();
 
-  const fail = (row: number, field: RowError["field"], message: string, value?: string) => {
+  const fail = (
+    row: number,
+    field: RowError["field"],
+    message: string,
+    value?: string,
+  ) => {
     if (errors.length >= MAX_ERRORS) {
       truncatedErrors = true;
       return;
     }
-    errors.push(value === undefined ? { row, field, message } : { row, field, message, value });
+    errors.push(
+      value === undefined ? { row, field, message } : { row, field, message, value },
+    );
   };
 
   // Index 0 is the header row.
@@ -140,7 +150,12 @@ export function parseRows(table: readonly string[][], headers: HeaderMatch): Par
     if (sku !== "") {
       const previous = seenSku.get(sku.toLowerCase());
       if (previous !== undefined) {
-        fail(rowNumber, "sku", `Дубликат артикула — уже встречался в строке ${previous}`, sku);
+        fail(
+          rowNumber,
+          "sku",
+          `Дубликат артикула — уже встречался в строке ${previous}`,
+          sku,
+        );
         ok = false;
       } else {
         seenSku.set(sku.toLowerCase(), rowNumber);
@@ -153,7 +168,12 @@ export function parseRows(table: readonly string[][], headers: HeaderMatch): Par
       fail(rowNumber, "volumeMl", "Объём не заполнен");
       ok = false;
     } else if (!Number.isFinite(volumeMl) || volumeMl <= 0) {
-      fail(rowNumber, "volumeMl", "Объём должен быть целым числом больше нуля", volumeRaw);
+      fail(
+        rowNumber,
+        "volumeMl",
+        "Объём должен быть целым числом больше нуля",
+        volumeRaw,
+      );
       ok = false;
     }
 
@@ -179,7 +199,12 @@ export function parseRows(table: readonly string[][], headers: HeaderMatch): Par
         if (oldPriceKop <= priceKop) {
           // A struck-through price below the real one reads as a mistake,
           // because it is one.
-          fail(rowNumber, "oldPriceKop", "Старая цена должна быть больше текущей", oldRaw);
+          fail(
+            rowNumber,
+            "oldPriceKop",
+            "Старая цена должна быть больше текущей",
+            oldRaw,
+          );
           ok = false;
         }
       } catch {

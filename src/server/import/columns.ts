@@ -82,7 +82,13 @@ export const COLUMNS: Record<ImportField, ColumnDef> = {
   oldPriceKop: {
     label: "Старая цена",
     required: false,
-    synonyms: ["Старая цена", "Цена до скидки", "Розница", "Розничная цена", "Old price"],
+    synonyms: [
+      "Старая цена",
+      "Цена до скидки",
+      "Розница",
+      "Розничная цена",
+      "Old price",
+    ],
   },
   packSize: {
     label: "Кратность",

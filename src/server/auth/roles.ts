@@ -2,7 +2,12 @@ import { cookies } from "next/headers";
 
 import { prisma } from "@/server/db";
 
-import { COOKIE_NAME, verifySession, type AdminRoleName, type SessionPayload } from "./session";
+import {
+  COOKIE_NAME,
+  verifySession,
+  type AdminRoleName,
+  type SessionPayload,
+} from "./session";
 
 /**
  * Authorisation.
@@ -93,7 +98,9 @@ export async function requireAdmin(): Promise<SessionPayload> {
 }
 
 /** The guard every Server Action that changes something must call. */
-export async function requirePermission(permission: Permission): Promise<SessionPayload> {
+export async function requirePermission(
+  permission: Permission,
+): Promise<SessionPayload> {
   const session = await requireAdmin();
   if (!can(session.role, permission)) throw new NotAuthorisedError(permission);
   return session;

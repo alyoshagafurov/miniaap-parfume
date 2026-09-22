@@ -1,8 +1,5 @@
 import type { Settings } from "@prisma/client";
 
-import { cacheLife, cacheTag } from "next/cache";
-
-import { SETTINGS_TAG } from "@/server/catalog/tags";
 import { prisma } from "@/server/db";
 
 /**
@@ -29,21 +26,23 @@ const DEFAULTS = {
 } as const;
 
 /**
- * Reads settings.
+ * Reads settings, uncached.
  *
- * Cached and tagged, so an administrator changing the order minimum sees it
- * take effect on the next request rather than after a revalidation window —
- * the admin action calls updateTag(SETTINGS_TAG).
+ * This is what server logic uses — order submission, the bot — for two reasons.
  *
- * A missing row returns the defaults rather than creating one. A read path that
- * writes cannot be cached: it would either write on every cache miss or, worse,
- * have its write skipped entirely once the value is cached. The row is created
- * by the seed and by the settings screen, which are write paths.
+ * It must not depend on Next. The bot is a separate process with no request
+ * context, and a 'use cache' function there throws the moment it runs.
+ *
+ * And it must be current. If the owner raises the minimum order, a request
+ * submitted a minute later has to be judged against the new figure, not against
+ * an hour-old copy. Rendering can afford to be stale; deciding whether money
+ * clears a threshold cannot.
+ *
+ * A missing row returns the defaults rather than creating one: a read path that
+ * writes cannot be cached by its caller, and would either write on every miss
+ * or have its write skipped once cached.
  */
-export async function getSettings(): Promise<Settings> {
-  "use cache";
-  cacheTag(SETTINGS_TAG);
-  cacheLife("hours");
+export async function readSettings(): Promise<Settings> {
   const existing = await prisma.settings.findUnique({ where: { id: 1 } });
   return existing ?? ({ ...DEFAULTS, updatedAt: new Date(0) } as Settings);
 }
