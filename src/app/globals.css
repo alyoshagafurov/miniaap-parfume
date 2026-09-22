@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ÁRUMI — design tokens, direction "Оливковый шёлк"
+   ───────────────────────────────────────────────────────────────────────────
+   Every namespace below is reset with `initial` before being redefined. That
+   is deliberate: it deletes Tailwind's default palette, type scale, radii and
+   font stacks, so `bg-red-500`, `text-3xl` or `rounded-xl` do not compile at
+   all. A stray value becomes a build error rather than something a reviewer
+   has to catch by eye.
+
+   Colours are measured from brand/logo-source.jpg where the logo carries them;
+   see brand/README.md for the sampling method.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Colour ───────────────────────────────────────────────────────────── */
+  --color-*: initial;
+
+  /* Grounds */
+  --color-canvas: #f8f5ee;   /* page background */
+  --color-surface: #fffdf8;  /* raised: cards, sheets, inputs */
+
+  /* Ink */
+  --color-ink: #23241e;      /* body text — 14.4:1 on canvas */
+  --color-muted: #6b6a5e;    /* secondary text — 5.0:1 on canvas */
+
+  /* Brand. Olive is sampled from the ÁRUMI wordmark (#4D522C); the direction
+     specified #4D5527, a difference of 5.8/255 — below the perceptual
+     threshold, so the logo's value is the one that ships. */
+  --color-olive: #4d522c;       /* brand, CTA, active — 7.5:1 on canvas */
+  --color-olive-hover: #3f4620;
+  /* Tint for selected chips and subtle brand washes. */
+  --color-olive-wash: #eceade;
+
+  /* Gold is a rule, never a voice. At 2.14:1 on canvas it cannot legibly
+     carry text or signal state, which is why no text token maps to it. */
+  --color-gold: #c9a646;
+
+  /* Lines. Two tokens because they answer to different rules: `rule` is
+     decorative (dividers, card edges) and exempt from contrast minimums;
+     `control` bounds a form field and must clear WCAG 1.4.11's 3:1. */
+  --color-rule: #e7e0cf;
+  --color-control: #858277;  /* 3.53:1 on canvas, 3.79:1 on surface */
+
+  /* State. Success is the brand olive — this palette has no second green. */
+  --color-danger: #a33a2b;   /* 6.0:1 on canvas */
+  --color-danger-wash: #f7ebe8;
+
+  /* ── Type ─────────────────────────────────────────────────────────────── */
+  --font-*: initial;
+  /* Display is reserved for 24px and up; below that its low x-height and thin
+     strokes fail on a market-stall phone in daylight. */
+  --font-display: var(--font-cormorant), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-manrope), system-ui, -apple-system, sans-serif;
+
+  --text-*: initial;
+  --text-xs: 0.75rem;    /* 12 — captions, spaced caps */
+  --text-sm: 0.875rem;   /* 14 — secondary, metadata */
+  --text-base: 1rem;     /* 16 — body, never smaller for prices */
+  --text-lg: 1.25rem;    /* 20 — card titles, section heads */
+  --text-2xl: 1.75rem;   /* 28 — display floor */
+  --text-4xl: 2.5rem;    /* 40 — display ceiling */
+
+  --tracking-*: initial;
+  --tracking-normal: 0;
+  --tracking-tight: -0.01em;
+  /* The direction's "разреженный капс". Only ever on 12–14px caps. */
+  --tracking-caps: 0.18em;
+  --tracking-caps-wide: 0.22em;
+
+  --leading-*: initial;
+  --leading-tight: 1.15;   /* display */
+  --leading-snug: 1.35;    /* titles */
+  --leading-normal: 1.55;  /* body */
+
+  /* ── Form ─────────────────────────────────────────────────────────────── */
+  --radius-*: initial;
+  --radius-md: 10px;    /* cards, inputs, sheets, buttons */
+  --radius-full: 999px; /* filter chips only */
+
+  /* Warm shadows: neutral grey shadows read as dirt against a cream ground. */
+  --shadow-*: initial;
+  --shadow-sm: 0 1px 2px rgb(77 82 44 / 0.06);
+  --shadow-md: 0 4px 16px rgb(77 82 44 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(77 82 44 / 0.10);
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  /* Stage 1 animates sheets and modals only. Nothing exceeds 250ms and
+     nothing animates a property that triggers layout. */
+  --ease-*: initial;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-*: initial;
+}
+
+/* Bridge to next/font/local, which sets --font-cormorant and --font-manrope on
+   <html>. Declared inline so Tailwind resolves them at build time. */
+@theme inline {
+  --color-focus: var(--color-olive);
+}
+
+@layer base {
+  :root {
+    /* Telegram's safe-area insets, bound by the Mini App SDK at runtime.
+       They default to 0 so the same CSS is correct in a plain browser. */
+    --tg-safe-top: 0px;
+    --tg-safe-bottom: 0px;
+    --tg-safe-left: 0px;
+    --tg-safe-right: 0px;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Buyers read this outdoors; never let iOS shrink the text. */
+    text-rendering: optimizeLegibility;
+  }
+
+  /* A single, consistent focus ring. Never removed — only restyled. */
+  :focus-visible {
+    outline: 2px solid var(--color-olive);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Touch targets are 44px minimum per the operating context. Scoped to
+     controls that size by their box: a checkbox or radio keeps its intrinsic
+     size and earns its target from surrounding padding instead, and an inline
+     link is not a box at all. */
+  button,
+  [role="button"],
+  select,
+  textarea,
+  input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 44px;
+  }
+
+  /* Inputs inherit nothing useful from the UA on iOS. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+}
+
+/* ── The golden thread ──────────────────────────────────────────────────────
+   The single repeating divider of this interface, taken from the braided rule
+   under the logo's wordmark. It is decorative: always aria-hidden, never the
+   only thing separating two meanings. */
+@utility gold-rule {
+  height: 1px;
+  background-color: var(--color-gold);
+  border: 0;
+}
+
+/* The flanked section heading "— Категории —" is built from two of these
+   either side of the label, not from a fading line: the direction bans
+   gradients, and the logo's own flourish is a solid braided rule. */
+
+/* Spaced caps used for brand names and section labels. */
+@utility caps {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

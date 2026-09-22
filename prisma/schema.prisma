@@ -1,0 +1,415 @@
+// ÁRUMI Parfum & Care — data model
+//
+// Catalog shape:  Brand → Fragrance → Product
+//
+// A fragrance is the thing a buyer is looking for; a Product is one sellable
+// format of it (a 35 ml "pencil", a 100 ml bottle, a 200 ml deodorant). That
+// inversion is what lets a product page offer "this fragrance in other formats"
+// and is the reason ProductFragrance exists rather than a fragranceId column:
+// a "twin" (двойняшка) is one 100 ml bottle carrying two fragrances, so the
+// relation is many-to-many with an explicit position.
+//
+// Money is always Int kopecks. Never a float, never rubles.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Gender {
+  FEMALE
+  MALE
+  UNISEX
+}
+
+/// Olfactive families. Kept deliberately short — this is a wholesale catalog
+/// filter, not a perfumery taxonomy.
+enum Family {
+  FLORAL
+  ORIENTAL
+  WOODY
+  FRESH
+  CITRUS
+  AQUATIC
+  FOUGERE
+  CHYPRE
+  GOURMAND
+  SPICY
+  LEATHER
+  MUSK
+}
+
+enum StockState {
+  IN_STOCK
+  LOW
+  OUT
+  PREORDER
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderSource {
+  TELEGRAM
+  WEB
+}
+
+enum OrderStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  CDEK
+  RUSSIAN_POST
+  TRANSPORT_COMPANY
+  PICKUP
+}
+
+enum AdminRole {
+  OWNER
+  EDITOR
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Catalog
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  /// Russian transliterations and misspellings the buyer actually types:
+  /// Chanel → ["шанель", "шанел"]. Folded into Product.searchText.
+  aliases   String[] @default([])
+  sortOrder Int      @default(0)
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fragrances Fragrance[]
+
+  @@index([isPublished, sortOrder])
+  @@map("brands")
+}
+
+model Fragrance {
+  id      String @id @default(cuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+
+  name    String
+  slug    String   @unique
+  aliases String[] @default([])
+
+  gender   Gender   @default(UNISEX)
+  families Family[] @default([])
+
+  notesTop   String[] @default([])
+  notesHeart String[] @default([])
+  notesBase  String[] @default([])
+
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products ProductFragrance[]
+
+  /// Two fragrances of the same brand may not share a name; across brands they
+  /// may (several houses sell an "Aqua").
+  @@unique([brandId, name])
+  @@index([brandId])
+  @@map("fragrances")
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  name     String
+  subtitle String?
+  slug     String  @unique
+  coverKey String?
+
+  sortOrder   Int     @default(0)
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isPublished, sortOrder])
+  @@map("categories")
+}
+
+model Product {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  /// The article number the warehouse already uses. It is the import key:
+  /// re-importing the same spreadsheet upserts on this and must not duplicate.
+  sku   String  @unique
+  /// Generated from brand + fragrance + volume unless an administrator
+  /// overrides it.
+  title String
+  slug  String  @unique
+
+  volumeMl Int
+
+  priceKop    Int
+  oldPriceKop Int?
+  /// Sold in multiples of this many units. The stepper and the server-side
+  /// recalculation both enforce it.
+  packSize    Int        @default(1)
+  stock       StockState @default(IN_STOCK)
+
+  status      PublishStatus @default(DRAFT)
+  isNew       Boolean       @default(false)
+  isHit       Boolean       @default(false)
+  popularity  Int           @default(0)
+  sortOrder   Int           @default(0)
+  publishedAt DateTime?
+
+  /// Seeded demo rows carry this so a real catalog can be told apart from
+  /// sample data, and so `pnpm seed:clear` can remove only what it created.
+  isDemo Boolean @default(false)
+
+  // ── Search ────────────────────────────────────────────────────────────────
+  // Denormalised because the haystack spans four tables and PostgreSQL's
+  // GENERATED columns may only read the row they belong to. Maintained inside
+  // the same transaction as every write path, and rebuildable with
+  // `pnpm search:reindex`.
+  //
+  // Split in two so that a long list of notes cannot dilute the trigram
+  // similarity of a brand or fragrance match:
+  //   searchText  — brand + aliases + fragrance + aliases + title + sku (ranked)
+  //   searchNotes — notes + description (recall only, never ranked)
+  // Both are normalised: lower-cased, ё folded to е, accents stripped,
+  // whitespace collapsed.
+  searchText  String @default("")
+  searchNotes String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fragrances ProductFragrance[]
+  images     ProductImage[]
+  orderItems OrderItem[]
+
+  // Category listing: the default browse path.
+  @@index([categoryId, status, sortOrder])
+  // "Новинки" and "Хиты" lanes on the home screen.
+  @@index([status, publishedAt])
+  @@index([status, isNew, publishedAt])
+  @@index([status, isHit, popularity])
+  @@map("products")
+}
+
+/// Join between a product and the fragrance(s) it carries. A normal product has
+/// one row; a "twin" has two, at positions 0 and 1.
+model ProductFragrance {
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  fragranceId String
+  fragrance   Fragrance @relation(fields: [fragranceId], references: [id], onDelete: Restrict)
+
+  /// 0 is the primary fragrance — the one that names the product.
+  position Int @default(0)
+
+  @@id([productId, fragranceId])
+  @@unique([productId, position])
+  @@index([fragranceId])
+  @@map("product_fragrances")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  /// Object-storage key of the original. Derived AVIF/WebP renditions live at
+  /// deterministic suffixes of it; see src/server/storage.
+  key    String
+  width  Int
+  height Int
+  /// Tiny inline placeholder so a card reserves its space and never shifts.
+  blurDataUrl String
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId, sortOrder])
+  @@map("product_images")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Buyers and requests
+// ─────────────────────────────────────────────────────────────────────────────
+
+model TelegramUser {
+  id         String   @id @default(cuid())
+  /// Telegram ids exceed Int32, so BigInt. Never logged — it is personal data.
+  telegramId BigInt   @unique
+  firstName  String?
+  username   String?
+  lastSeenAt DateTime @default(now())
+  /// Set when the Bot API answers 403 for this user, so the notifier stops
+  /// retrying them.
+  botBlocked Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  orders Order[]
+
+  @@map("telegram_users")
+}
+
+model Order {
+  id     String @id @default(cuid())
+  /// Human-facing, ARM-000123. Drawn from a PostgreSQL sequence so two
+  /// simultaneous submissions cannot collide.
+  number String @unique
+
+  telegramUserId String?
+  telegramUser   TelegramUser? @relation(fields: [telegramUserId], references: [id], onDelete: SetNull)
+  source         OrderSource
+
+  name     String
+  phone    String
+  city     String
+  delivery DeliveryMethod
+  comment  String?
+
+  status   OrderStatus @default(NEW)
+  /// Recomputed on the server from the items at submission time. Never trusted
+  /// from the client.
+  totalKop Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+
+  @@index([status, createdAt])
+  @@index([telegramUserId, createdAt])
+  @@map("orders")
+}
+
+/// A line of a request, snapshotted. The product may later be renamed,
+/// repriced, archived or deleted; a past request must still render exactly as
+/// it was submitted, and "Повторить" needs enough to show what is no longer
+/// available.
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  /// Null once the product is gone. Kept as a soft link so "Повторить" can
+  /// re-add what still exists.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  // ── snapshot ──
+  sku       String
+  title     String
+  brandName String
+  /// Rendered format, e.g. "100 мл".
+  format    String
+  priceKop  Int
+  qty       Int
+  /// So order history shows a thumbnail even after the product is deleted.
+  imageKey  String?
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Administration
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id         String  @id @default(cuid())
+  /// Allow-list. Presence here is necessary but not sufficient: a password is
+  /// always required as well.
+  telegramId BigInt  @unique
+  name       String
+  /// argon2id. Never a plain or reversibly-encoded value.
+  passwordHash String
+  role       AdminRole @default(EDITOR)
+  isActive   Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  loginCodes LoginCode[]
+
+  @@map("admin_users")
+}
+
+/// One-time 6-digit code the bot sends when an administrator signs in from a
+/// browser. Hashed, short-lived, attempt-limited.
+model LoginCode {
+  id      String    @id @default(cuid())
+  adminId String
+  admin   AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([adminId, expiresAt])
+  @@map("login_codes")
+}
+
+/// Single row (id is pinned to 1). Everything the client can change without a
+/// deploy — contacts, the order minimum, delivery copy, the bot's greeting.
+/// Nothing here is hardcoded anywhere in the application.
+model Settings {
+  id Int @id @default(1)
+
+  // Contacts
+  companyName String @default("ÁRUMI Parfum & Care")
+  address     String @default("")
+  phone       String @default("")
+  whatsappPhone String @default("")
+
+  // Commerce
+  minOrderKop Int     @default(500000)
+  /// When false the catalog shows "цена по запросу" and requests are collected
+  /// without totals. Confirmed default: prices are public.
+  showPrices  Boolean @default(true)
+
+  // Copy
+  deliveryTerms String @default("")
+  botGreeting   String @default("")
+
+  // Bot greeting banner
+  bannerKey     String?
+  /// Cached after the first upload so the bot re-sends the banner by id rather
+  /// than re-uploading the file on every /start.
+  bannerFileId  String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
