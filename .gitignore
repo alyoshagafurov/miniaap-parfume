@@ -39,3 +39,7 @@ Thumbs.db
 # impeccable local state
 .impeccable/config.local.json
 .impeccable/live/
+
+# transient probe files written by research subagents into the repo root
+__tx_probe*
+tsconfig.tsbuildinfo

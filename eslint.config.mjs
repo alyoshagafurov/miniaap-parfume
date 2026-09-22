@@ -3,19 +3,32 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 export default defineConfig([
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "src/generated/**"]),
   ...nextVitals,
   ...nextTs,
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "next-env.d.ts",
+  ]),
   {
-    files: ["**/*.{ts,tsx}"],
     rules: {
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      // Money, ids and Telegram ids are easy to widen by accident.
       "@typescript-eslint/no-explicit-any": "error",
-      "no-restricted-syntax": [
+      "@typescript-eslint/no-unused-vars": [
         "error",
-        { selector: "NewExpression[callee.name='Date'][arguments.length=0]", message: "Inject a clock instead of new Date()." },
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       eqeqeq: ["error", "always", { null: "ignore" }],
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
+  },
+  {
+    // CLI scripts and seeds report progress on stdout; that is their interface.
+    files: ["scripts/**", "prisma/seed.ts", "*.config.*"],
+    rules: { "no-console": "off" },
   },
 ]);
