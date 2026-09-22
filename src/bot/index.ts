@@ -11,6 +11,7 @@ import {
 } from "@/bot/texts/ru";
 import { loadDotEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
+import { assertSearchHealth } from "@/server/db-health";
 import { getSettings } from "@/server/settings";
 import { clientOptions, installAutoRetry } from "@/server/telegram/client";
 
@@ -158,6 +159,12 @@ bot.catch((err) => {
 // ── Boot ────────────────────────────────────────────────────────────────────
 
 async function boot(): Promise<void> {
+  // Refuse to start against a database whose search is silently broken. The bot
+  // does not search itself, but it shares the database with the catalog, and a
+  // process that starts cleanly against a misconfigured one is how the defect
+  // stays invisible.
+  await assertSearchHealth();
+
   // If a webhook was ever registered, getUpdates returns 409 forever.
   await bot.api.deleteWebhook({ drop_pending_updates: false });
 

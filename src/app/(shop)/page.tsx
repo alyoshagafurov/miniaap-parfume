@@ -97,7 +97,7 @@ export default async function HomePage() {
                   ) : null}
                 </span>
                 <span className="text-muted shrink-0 text-sm tabular-nums">
-                  {c._count.products}
+                  {c.productCount}
                 </span>
               </Link>
             </li>

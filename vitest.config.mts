@@ -2,6 +2,13 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vitest/config";
 
+// Database-backed tests need DATABASE_URL; they skip themselves without it.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // No .env — the DB-backed suites skip rather than fail.
+}
+
 export default defineConfig({
   test: {
     // Server-side logic only. Nothing here boots Next, so these stay fast

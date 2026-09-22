@@ -309,13 +309,19 @@ async function main() {
         });
 
         // Replace the fragrance links so a re-seed cannot accumulate them.
-        await prisma.productFragrance.deleteMany({ where: { productId: product.id } });
-        await prisma.productFragrance.createMany({
-          data: p.fragrances.map(([brandName, fragranceName], position) => {
-            const fragranceId = fragranceIds.get(`${brandName}::${fragranceName}`);
-            if (!fragranceId) throw new Error(`Аромат не найден: ${brandName} ${fragranceName}`);
-            return { productId: product.id, fragranceId, position };
-          }),
+        //
+        // Both statements in ONE transaction: a deferred constraint trigger
+        // requires every product to keep at least one fragrance, and the delete
+        // on its own would commit a product with none.
+        await prisma.$transaction(async (tx) => {
+          await tx.productFragrance.deleteMany({ where: { productId: product.id } });
+          await tx.productFragrance.createMany({
+            data: p.fragrances.map(([brandName, fragranceName], position) => {
+              const fragranceId = fragranceIds.get(`${brandName}::${fragranceName}`);
+              if (!fragranceId) throw new Error(`Аромат не найден: ${brandName} ${fragranceName}`);
+              return { productId: product.id, fragranceId, position };
+            }),
+          });
         });
 
         written++;

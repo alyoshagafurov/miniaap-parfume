@@ -103,9 +103,8 @@ model Brand {
   /// sample data, and so `pnpm seed:clear` removes only what the seed created.
   isDemo    Boolean  @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   fragrances Fragrance[]
 
   @@index([isPublished, sortOrder])
@@ -134,15 +133,17 @@ model Fragrance {
   /// sample data, and so `pnpm seed:clear` removes only what the seed created.
   isDemo    Boolean  @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   products ProductFragrance[]
 
   /// Two fragrances of the same brand may not share a name; across brands they
   /// may (several houses sell an "Aqua").
+  ///
+  /// No separate @@index([brandId]): this unique constraint's leftmost column
+  /// already serves every brand lookup by prefix match, so a second index would
+  /// only cost writes.
   @@unique([brandId, name])
-  @@index([brandId])
   @@map("fragrances")
 }
 
@@ -160,9 +161,8 @@ model Category {
   /// sample data, and so `pnpm seed:clear` removes only what the seed created.
   isDemo    Boolean  @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   products Product[]
 
   @@index([isPublished, sortOrder])
@@ -196,8 +196,7 @@ model Product {
   isHit       Boolean       @default(false)
   popularity  Int           @default(0)
   sortOrder   Int           @default(0)
-  publishedAt DateTime?
-
+  publishedAt DateTime? @db.Timestamptz(3)
   /// Seeded demo rows carry this so a real catalog can be told apart from
   /// sample data, and so `pnpm seed:clear` can remove only what it created.
   isDemo Boolean @default(false)
@@ -217,9 +216,8 @@ model Product {
   searchText  String @default("")
   searchNotes String @default("")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   fragrances ProductFragrance[]
   images     ProductImage[]
   orderItems OrderItem[]
@@ -271,8 +269,7 @@ model ProductImage {
 
   sortOrder Int @default(0)
 
-  createdAt DateTime @default(now())
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
   @@index([productId, sortOrder])
   @@map("product_images")
 }
@@ -287,13 +284,12 @@ model TelegramUser {
   telegramId BigInt   @unique
   firstName  String?
   username   String?
-  lastSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now()) @db.Timestamptz(3)
   /// Set when the Bot API answers 403 for this user, so the notifier stops
   /// retrying them.
   botBlocked Boolean  @default(false)
 
-  createdAt DateTime @default(now())
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
   orders Order[]
 
   @@map("telegram_users")
@@ -320,9 +316,8 @@ model Order {
   /// from the client.
   totalKop Int
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   items OrderItem[]
 
   @@index([status, createdAt])
@@ -375,9 +370,8 @@ model AdminUser {
   role       AdminRole @default(EDITOR)
   isActive   Boolean   @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   loginCodes LoginCode[]
 
   @@map("admin_users")
@@ -391,12 +385,10 @@ model LoginCode {
   admin   AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   codeHash  String
-  expiresAt DateTime
+  expiresAt DateTime @db.Timestamptz(3)
   attempts  Int      @default(0)
-  usedAt    DateTime?
-
-  createdAt DateTime @default(now())
-
+  usedAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
   @@index([adminId, expiresAt])
   @@map("login_codes")
 }
@@ -429,7 +421,6 @@ model Settings {
   /// than re-uploading the file on every /start.
   bannerFileId  String?
 
-  updatedAt DateTime @updatedAt
-
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
   @@map("settings")
 }

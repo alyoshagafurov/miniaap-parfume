@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { prisma } from "@/server/db";
@@ -42,22 +43,39 @@ const CARD_SELECT = {
 
 export type ProductCard = Awaited<ReturnType<typeof getNewArrivals>>[number];
 
-export async function getCategories() {
+export interface CategoryRow {
+  id: string;
+  name: string;
+  subtitle: string | null;
+  slug: string;
+  coverKey: string | null;
+  productCount: number;
+}
+
+/**
+ * Categories, in display order.
+ *
+ * Raw SQL rather than Prisma's orderBy because the tiebreak sorts Cyrillic and
+ * Prisma cannot emit COLLATE. The database is created with datcollate=C — a
+ * deterministic byte order that cannot drift between machines — under which
+ * "ёлка" sorts after "яблоко" and capitals sort before all lower case. Both
+ * category sortOrder values default to 0, so the moment two categories share
+ * that default the name becomes the effective sort key and the mis-ordering
+ * becomes visible.
+ */
+export async function getCategories(): Promise<CategoryRow[]> {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");
-  return prisma.category.findMany({
-    where: { isPublished: true },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      subtitle: true,
-      slug: true,
-      coverKey: true,
-      _count: { select: { products: { where: { status: "PUBLISHED" } } } },
-    },
-  });
+  return prisma.$queryRaw<CategoryRow[]>`
+    SELECT
+      c.id, c.name, c.subtitle, c.slug, c."coverKey",
+      (SELECT count(*)::int FROM products p
+        WHERE p."categoryId" = c.id AND p.status = 'PUBLISHED') AS "productCount"
+    FROM categories c
+    WHERE c."isPublished" = true
+    ORDER BY c."sortOrder" ASC, c.name COLLATE "ru-RU-x-icu" ASC, c.id ASC
+  `;
 }
 
 export async function getNewArrivals(limit = 12) {
@@ -96,7 +114,15 @@ export async function getHits(limit = 12) {
  */
 export type SortKey = "popular" | "new" | "price_asc" | "price_desc" | "alpha";
 
-export function orderFor(sort: SortKey) {
+/**
+ * Ordering for Prisma-built listings.
+ *
+ * "alpha" is deliberately NOT here. Sorting product titles alphabetically means
+ * sorting Cyrillic, and Prisma's typed orderBy cannot emit COLLATE — under the
+ * database's C collation it would put "Ёлка" after "Яблоко". The А–Я listing is
+ * built with raw SQL instead; see orderByClause below.
+ */
+export function orderFor(sort: Exclude<SortKey, "alpha">) {
   switch (sort) {
     case "new":
       return [{ publishedAt: "desc" as const }, { id: "asc" as const }];
@@ -104,11 +130,30 @@ export function orderFor(sort: SortKey) {
       return [{ priceKop: "asc" as const }, { id: "asc" as const }];
     case "price_desc":
       return [{ priceKop: "desc" as const }, { id: "asc" as const }];
-    case "alpha":
-      return [{ title: "asc" as const }, { id: "asc" as const }];
     case "popular":
     default:
       return [{ popularity: "desc" as const }, { id: "asc" as const }];
+  }
+}
+
+/**
+ * The ORDER BY clause for a raw product listing, including the Cyrillic-aware
+ * alphabetical case. Every ordering ends in id so it is total — without a
+ * unique tiebreak a cursor cannot be resumed reliably.
+ */
+export function orderByClause(sort: SortKey): Prisma.Sql {
+  switch (sort) {
+    case "new":
+      return Prisma.sql`p."publishedAt" DESC NULLS LAST, p.id ASC`;
+    case "price_asc":
+      return Prisma.sql`p."priceKop" ASC, p.id ASC`;
+    case "price_desc":
+      return Prisma.sql`p."priceKop" DESC, p.id ASC`;
+    case "alpha":
+      return Prisma.sql`p.title COLLATE "ru-RU-x-icu" ASC, p.id ASC`;
+    case "popular":
+    default:
+      return Prisma.sql`p.popularity DESC, p.id ASC`;
   }
 }
 
