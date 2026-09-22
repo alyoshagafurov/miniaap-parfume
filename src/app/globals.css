@@ -77,6 +77,9 @@
   --text-lg: 1.25rem;    /* 20 — card titles, section heads */
   --text-2xl: 1.75rem;   /* 28 — display floor */
   --text-4xl: 2.5rem;    /* 40 — display ceiling */
+  /* The one fluid step: an H1 that fits a 390px phone and still carries a
+     1440px desktop. Declared here so it cannot be re-improvised per page. */
+  --text-h1: clamp(1.75rem, 7vw, 2.5rem);
 
   --tracking-*: initial;
   --tracking-normal: 0;

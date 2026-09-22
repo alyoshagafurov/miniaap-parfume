@@ -1,5 +1,8 @@
 import type { Settings } from "@prisma/client";
 
+import { cacheLife, cacheTag } from "next/cache";
+
+import { SETTINGS_TAG } from "@/server/catalog/tags";
 import { prisma } from "@/server/db";
 
 /**
@@ -26,14 +29,32 @@ const DEFAULTS = {
 } as const;
 
 /**
- * Reads settings, creating the row on first use so a fresh database is never a
- * crash. Not cached in module scope: an administrator changing the minimum
- * order must see it take effect on the next request, not on the next restart.
+ * Reads settings.
+ *
+ * Cached and tagged, so an administrator changing the order minimum sees it
+ * take effect on the next request rather than after a revalidation window —
+ * the admin action calls updateTag(SETTINGS_TAG).
+ *
+ * A missing row returns the defaults rather than creating one. A read path that
+ * writes cannot be cached: it would either write on every cache miss or, worse,
+ * have its write skipped entirely once the value is cached. The row is created
+ * by the seed and by the settings screen, which are write paths.
  */
 export async function getSettings(): Promise<Settings> {
+  "use cache";
+  cacheTag(SETTINGS_TAG);
+  cacheLife("hours");
   const existing = await prisma.settings.findUnique({ where: { id: 1 } });
-  if (existing) return existing;
-  return prisma.settings.create({ data: { ...DEFAULTS } });
+  return existing ?? ({ ...DEFAULTS, updatedAt: new Date(0) } as Settings);
+}
+
+/** Creates the singleton if it is missing. Called from write paths only. */
+export async function ensureSettings(): Promise<Settings> {
+  return prisma.settings.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { ...DEFAULTS },
+  });
 }
 
 /**

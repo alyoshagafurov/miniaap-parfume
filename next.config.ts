@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Storefront reads are cached with 'use cache' and invalidated by tag from
+  // the admin Server Actions. Without this flag those directives are inert and
+  // the catalog is baked in at build time — the build output said
+  // "prerendered as static content" for a page that reads the database.
+  // Top-level in Next 16: experimental.dynamicIO and experimental.useCache were
+  // removed, and experimental.ppr is now implied by this.
+  cacheComponents: true,
+
   // Fail the production build on a type error rather than shipping it. Next 16
   // removed the eslint key along with `next lint`, so linting is its own step
   // in `pnpm verify` and in CI.

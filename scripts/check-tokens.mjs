@@ -30,6 +30,13 @@ const SKIP_FILES = new Set([join("scripts", "check-tokens.mjs")]);
 const TOKEN_SOURCE = join("src", "app", "globals.css");
 
 /**
+ * Mirrors a handful of those values for JavaScript, where an API takes a colour
+ * string and cannot read a CSS variable. Kept honest by src/lib/tokens.test.ts,
+ * which parses globals.css and fails on drift.
+ */
+const TOKEN_MIRROR = join("src", "lib", "tokens.ts");
+
+/**
  * Blanks out comments and preserves line numbers, so a comment that names a
  * banned pattern in order to explain it is not reported as a violation of
  * itself. A line-prefix test is not enough — the continuation lines of a CSS
@@ -82,7 +89,7 @@ const RULES = [
     id: "raw-hex",
     why: "Colour literals belong in the token file. Use a token utility or var(--color-…).",
     test: /#[0-9a-fA-F]{3,8}\b/g,
-    skipFiles: [TOKEN_SOURCE],
+    skipFiles: [TOKEN_SOURCE, TOKEN_MIRROR],
   },
   {
     id: "raw-colour-function",
