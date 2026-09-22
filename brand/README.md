@@ -33,3 +33,31 @@ says nothing about the brand surface.
 
 The braided gold rule beneath the wordmark is the origin of the "golden thread"
 divider used throughout the interface.
+
+---
+
+## `logo.png` / `logo.webp` — temporary derivatives
+
+Cropped to the mark's true bounding box (700×360 from the 1024×1024 source, a
+1.94 ratio) and the JPEG's near-white paper lifted to **exactly** 255,255,255.
+
+That lift is what makes the temporary display technique work. The supplied file
+has an opaque background, so the mark is rendered with:
+
+```css
+mix-blend-mode: multiply;
+```
+
+Multiplying by pure white is a no-op, so the white field vanishes against the
+cream canvas. Left at the JPEG's #FDFDFD it would instead darken the canvas
+very slightly and unevenly, because JPEG noise means the "white" is not one
+value — visible as faint mottling behind the wordmark. Lifting it also took the
+PNG from 126 KB to 95 KB and the WebP to 22 KB, since a field of identical
+pixels compresses to almost nothing.
+
+**This is a workaround, not the answer.** It fails anywhere the mark must sit on
+a dark or photographic background, because multiply darkens rather than masks.
+A transparent PNG or, preferably, an SVG is still outstanding from the client;
+when it arrives, delete these derivatives and drop `mix-blend-mode`.
+
+`public/logo.webp` is the served copy.
