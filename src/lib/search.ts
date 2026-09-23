@@ -23,6 +23,21 @@
  * into "маискии" and quietly breaks every match for it. The mark strip below is
  * therefore anchored to a Latin base character.
  */
+/**
+ * One page of results, and how deep paging is allowed to go.
+ *
+ * Here rather than in the Server Action, because a 'use server' file may only
+ * export async functions — a number exported beside them fails the build.
+ *
+ * The depth is bounded on purpose. Results are ordered by a relevance score
+ * computed per query, so there is no stable column to anchor a cursor to and
+ * paging has to use OFFSET; an unbounded one is a way to ask the database to
+ * sort the whole catalog. Nobody scrolls to the six-hundredth result of a
+ * wholesale search.
+ */
+export const SEARCH_PAGE_SIZE = 24;
+export const SEARCH_MAX_OFFSET = 240;
+
 export function normalizeSearch(input: string): string {
   return (
     input

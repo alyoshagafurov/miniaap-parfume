@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Mark } from "@/components/ui/Mark";
 import { Price } from "@/components/ui/Price";
 import { ProductImage } from "@/components/shop/ProductImage";
 import type { ProductCard as ProductCardData } from "@/server/catalog/queries";
@@ -24,10 +25,13 @@ export function ProductCard({
   product,
   showPrices = true,
   priority = false,
+  query,
 }: {
   product: ProductCardData;
   showPrices?: boolean;
   priority?: boolean;
+  /** The search a buyer typed, so the card can show why it is here. */
+  query?: string | undefined;
 }) {
   const primary = product.fragrances[0];
   const brandName = primary?.fragrance.brand.name ?? "ÁRUMI";
@@ -43,11 +47,13 @@ export function ProductCard({
         priority={priority}
       />
 
-      <p className="caps text-muted">{brandName}</p>
+      <p className="caps text-muted">
+        <Mark text={brandName} query={query} />
+      </p>
 
       <h3 className="text-ink text-sm leading-snug font-medium">
         <Link href={`/p/${product.slug}`} className="after:absolute after:inset-0">
-          {names.join(" + ") || product.title}
+          <Mark text={names.join(" + ") || product.title} query={query} />
         </Link>
       </h3>
 

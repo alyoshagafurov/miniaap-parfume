@@ -10,9 +10,12 @@ import type { ListedProduct } from "@/server/catalog/list";
 export function ProductGrid({
   products,
   showPrices,
+  query,
 }: {
   products: readonly ListedProduct[];
   showPrices: boolean;
+  /** Passed through to mark what the buyer typed. Absent outside search. */
+  query?: string | undefined;
 }) {
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
@@ -47,6 +50,7 @@ export function ProductGrid({
               })),
             }}
             showPrices={showPrices}
+            query={query}
             // The first row is above the fold on every viewport.
             priority={i < 2}
           />
