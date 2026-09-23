@@ -1,7 +1,11 @@
 import type { Api } from "grammy";
 
 import { orderKeyboard } from "@/bot/keyboards/main";
-import { loginCode as loginCodeText, orderAccepted, orderForManager } from "@/bot/texts/ru";
+import {
+  loginCode as loginCodeText,
+  orderAccepted,
+  orderForManager,
+} from "@/bot/texts/ru";
 
 /**
  * Telling people about a request.

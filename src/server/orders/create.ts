@@ -72,7 +72,8 @@ export function parseOrderInput(raw: unknown): ParseResult {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
       const key = issue.path[0];
-      if (typeof key === "string" && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      if (typeof key === "string" && !fieldErrors[key])
+        fieldErrors[key] = issue.message;
     }
     // A filled honeypot is the only failure not worth a message.
     return { ok: false, fieldErrors, honeypot: "website" in fieldErrors };
@@ -80,7 +81,11 @@ export function parseOrderInput(raw: unknown): ParseResult {
 
   const phone = normalizePhone(parsed.data.phone);
   if (!phone) {
-    return { ok: false, fieldErrors: { phone: "Неверный номер телефона" }, honeypot: false };
+    return {
+      ok: false,
+      fieldErrors: { phone: "Неверный номер телефона" },
+      honeypot: false,
+    };
   }
 
   const { website: _honeypot, ...data } = parsed.data;
@@ -116,7 +121,9 @@ export async function createOrder(
     return {
       ok: false,
       reason: "VALIDATION",
-      message: parsed.honeypot ? "Не удалось отправить заявку" : "Проверьте заполнение формы",
+      message: parsed.honeypot
+        ? "Не удалось отправить заявку"
+        : "Проверьте заполнение формы",
       fieldErrors: parsed.honeypot ? {} : parsed.fieldErrors,
     };
   }
@@ -130,7 +137,10 @@ export async function createOrder(
 
   // Both limits, because either alone is trivially evaded: one Telegram account
   // can change networks, and one network can hold many accounts.
-  const keys = [`order:ip:${ctx.ip}`, ...(telegramId ? [`order:tg:${telegramId}`] : [])];
+  const keys = [
+    `order:ip:${ctx.ip}`,
+    ...(telegramId ? [`order:tg:${telegramId}`] : []),
+  ];
   for (const key of keys) {
     const limited = await rateLimit(key, RATE_LIMIT);
     if (!limited.allowed) {

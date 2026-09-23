@@ -80,7 +80,9 @@ export async function readTable(buffer: Buffer, filename: string): Promise<strin
     // Cells come back typed; everything downstream wants strings, and an
     // article arriving as a number would lose its leading zeros.
     return rows.map((row) =>
-      row.map((cell) => (cell === null || cell === undefined ? "" : String(cell).trim())),
+      row.map((cell) =>
+        cell === null || cell === undefined ? "" : String(cell).trim(),
+      ),
     );
   }
 
