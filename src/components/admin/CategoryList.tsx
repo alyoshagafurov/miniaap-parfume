@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
 import type { CategoryRow } from "@/server/admin/dictionaries";
+import { GOODS, plural } from "@/lib/format";
 
 /**
  * Categories — the formats.
@@ -111,7 +112,7 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
 
               <div className="flex items-center gap-3">
                 <span className="text-muted text-sm tabular-nums">
-                  {category.productCount} товаров
+                  {category.productCount} {plural(category.productCount, GOODS)}
                 </span>
                 <Link
                   href={`/admin/products?category=${category.slug}`}

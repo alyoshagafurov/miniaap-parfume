@@ -55,6 +55,10 @@ export function ProductGrid({
             }}
             showPrices={showPrices}
             query={query}
+            // Two columns on a phone, three at `sm`, four at `md` — inside a
+            // 768px column, so the widest a card is ever painted is 192px.
+            // Without this every card asks for the full-bleed rendition.
+            sizes={"(max-width: 639px) 50vw, (max-width: 767px) 33vw, 192px"}
             // The first row is above the fold on every viewport.
             priority={i < 2}
           />

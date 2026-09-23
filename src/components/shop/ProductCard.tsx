@@ -20,16 +20,29 @@ const STOCK_LABEL: Record<string, string> = {
  *
  * A twin shows both of its fragrances; that is the whole point of the format
  * and hiding the second one would make the card a lie.
+ *
+ * The spacing is deliberately uneven. Brand, name and format are one thought
+ * and sit tight together; the price is a second thought and is given air. An
+ * even gap between all five lines — which is what this had — reads as a list of
+ * fields rather than as a card, and on a screen showing sixteen of them at once
+ * that is the difference between a catalog and a spreadsheet.
  */
 export function ProductCard({
   product,
   showPrices = true,
   priority = false,
+  sizes,
   query,
 }: {
   product: ProductCardData;
   showPrices?: boolean;
   priority?: boolean;
+  /**
+   * What width this card will actually be rendered at. A rail card is 45vw on
+   * a phone and a grid card is 50vw; without this every one of them downloads
+   * the widest rendition on the assumption that it might be full-bleed.
+   */
+  sizes?: string;
   /** The search a buyer typed, so the card can show why it is here. */
   query?: string | undefined;
 }) {
@@ -39,25 +52,26 @@ export function ProductCard({
   const stock = STOCK_LABEL[product.stock];
 
   return (
-    <article className="group relative flex flex-col gap-2">
+    <article className="group relative flex flex-col">
       <ProductImage
         image={product.images[0]}
         title={product.title}
         brandName={brandName}
         priority={priority}
+        {...(sizes ? { sizes } : {})}
       />
 
-      <p className="caps text-muted">
+      <p className="caps text-muted mt-3">
         <Mark text={brandName} query={query} />
       </p>
 
-      <h3 className="text-ink text-sm leading-snug font-medium">
+      <h3 className="text-ink mt-1 text-sm leading-snug font-medium">
         <Link href={`/p/${product.slug}`} className="after:absolute after:inset-0">
           <Mark text={names.join(" + ") || product.title} query={query} />
         </Link>
       </h3>
 
-      <p className="text-muted text-xs">
+      <p className="text-muted mt-0.5 text-xs">
         {product.volumeMl} мл
         {product.packSize > 1 ? ` · кратно ${product.packSize}` : ""}
       </p>
@@ -66,11 +80,12 @@ export function ProductCard({
         kop={product.priceKop}
         oldKop={product.oldPriceKop}
         showPrices={showPrices}
+        className="mt-2"
       />
 
       {stock ? (
         <p
-          className={`text-xs ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}
+          className={`mt-1 text-xs ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}
         >
           {stock}
         </p>

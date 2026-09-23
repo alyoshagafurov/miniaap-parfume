@@ -82,3 +82,36 @@ export function productName(brandName: string, title: string): string {
   }
   return `${brand} ${name}`;
 }
+
+/**
+ * Russian plural agreement.
+ *
+ * Russian has three forms and picks between them by the last two digits, not by
+ * "one or many": 1 товар, 2 товара, 5 товаров, and then 21 товар, 111 товаров,
+ * because 11 to 14 take the third form whatever their last digit says.
+ *
+ * Nothing in this project handled that, so every count read as written by a
+ * machine — «ещё 1 товаров» in a refusal the owner sees when a category will
+ * not delete, «400 товаров» beside a category that happens to hold one. It is a
+ * small thing that makes a Russian interface feel unattended.
+ *
+ * Not `Intl.PluralRules`, for the same reason money is not `Intl.NumberFormat`:
+ * the rules live in ICU, ICU ships with the runtime, and two machines on
+ * different Node builds would then disagree about the client's own catalog.
+ * The rule is four lines and has not changed in a thousand years.
+ */
+export function plural(
+  count: number,
+  forms: readonly [string, string, string],
+): string {
+  const n = Math.abs(Math.trunc(count));
+  const tens = n % 100;
+  if (tens >= 11 && tens <= 14) return forms[2];
+  const ones = n % 10;
+  if (ones === 1) return forms[0];
+  if (ones >= 2 && ones <= 4) return forms[1];
+  return forms[2];
+}
+
+/** The common case: «1 товар», «3 товара», «400 товаров». */
+export const GOODS = ["товар", "товара", "товаров"] as const;

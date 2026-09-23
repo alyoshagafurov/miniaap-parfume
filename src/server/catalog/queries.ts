@@ -82,28 +82,80 @@ export async function getCategories(): Promise<CategoryRow[]> {
   `;
 }
 
+/**
+ * What a card actually shows, as a key.
+ *
+ * A card prints the brand and the fragrance names and nothing that separates
+ * one volume of a scent from another, so two products of the same scent are,
+ * on a shelf of cards, the same card twice. This catalog is built around
+ * exactly that: one fragrance in four formats is the normal case, not the
+ * exception. A lane picked by popularity therefore fills with Chanel №5 at 35,
+ * at 100, in a twin and as a deodorant, and reads as a broken page.
+ *
+ * Twins key on both scents in order, so «Bleu de Chanel + Sauvage» is one
+ * entry and collides with neither scent on its own.
+ */
+export function cardIdentity(product: {
+  fragrances: readonly { fragrance: { slug: string } }[];
+}): string {
+  return product.fragrances.map((f) => f.fragrance.slug).join("+");
+}
+
+/**
+ * One card per scent, keeping the order the database returned.
+ *
+ * Done after the query rather than inside it. The ordering that matters is
+ * popularity or publication date; keeping "the most popular of each scent" in
+ * SQL needs a window function over a join, and these lanes are a dozen rows.
+ * Over-fetching a few times the limit and thinning in code is the same answer
+ * for a fraction of the query.
+ *
+ * Exported for its own test. Every function that uses it carries `'use cache'`
+ * and therefore throws outside a request context, so the rule it encodes could
+ * not otherwise be asserted anywhere.
+ */
+export function oneCardPerScent<
+  T extends { fragrances: readonly { fragrance: { slug: string } }[] },
+>(products: readonly T[], limit: number): T[] {
+  const seen = new Set<string>();
+  const kept: T[] = [];
+  for (const product of products) {
+    const key = cardIdentity(product);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    kept.push(product);
+    if (kept.length === limit) break;
+  }
+  return kept;
+}
+
+/** How far to over-fetch before thinning. Four formats per scent is the norm. */
+const SCENT_SPREAD = 6;
+
 export async function getNewArrivals(limit = 12) {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");
-  return prisma.product.findMany({
+  const rows = await prisma.product.findMany({
     where: { status: "PUBLISHED", isNew: true },
     orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
-    take: limit,
+    take: limit * SCENT_SPREAD,
     select: CARD_SELECT,
   });
+  return oneCardPerScent(rows, limit);
 }
 
 export async function getHits(limit = 12) {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");
-  return prisma.product.findMany({
+  const rows = await prisma.product.findMany({
     where: { status: "PUBLISHED", isHit: true },
     orderBy: [{ popularity: "desc" }, { id: "asc" }],
-    take: limit,
+    take: limit * SCENT_SPREAD,
     select: CARD_SELECT,
   });
+  return oneCardPerScent(rows, limit);
 }
 
 /**
@@ -213,15 +265,31 @@ export async function getProductBySlug(slug: string) {
 /**
  * The same fragrance in other formats — the pivot the whole catalog is
  * organised around. Excludes the product being viewed.
+ *
+ * Bounded twice, and both bounds earn their place.
+ *
+ * A row here says a volume, a category and a price, so two products that agree
+ * on all three are one line printed twice — which is what a re-import under a
+ * second article number produces, and what the bulk fixture produced fifty of
+ * on a single page. The first of each wins, which is the cheapest by the
+ * ordering already in force.
+ *
+ * And a hard ceiling after that, because this query had none at all: a scent
+ * carried in four formats is the design, but nothing in the schema stops an
+ * import from attaching six hundred products to one fragrance, and this list
+ * renders every row it is handed.
  */
+const MAX_OTHER_FORMATS = 12;
+
 export async function getOtherFormats(fragranceId: string, exceptProductId: string) {
-  return prisma.product.findMany({
+  const rows = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
       id: { not: exceptProductId },
       fragrances: { some: { fragranceId } },
     },
-    orderBy: [{ volumeMl: "asc" }, { id: "asc" }],
+    orderBy: [{ volumeMl: "asc" }, { priceKop: "asc" }, { id: "asc" }],
+    take: MAX_OTHER_FORMATS * SCENT_SPREAD,
     select: {
       id: true,
       slug: true,
@@ -233,23 +301,51 @@ export async function getOtherFormats(fragranceId: string, exceptProductId: stri
       category: { select: { name: true, slug: true } },
     },
   });
+
+  const seen = new Set<string>();
+  const kept: typeof rows = [];
+  for (const row of rows) {
+    const key = `${row.volumeMl}:${row.category.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    kept.push(row);
+    if (kept.length === MAX_OTHER_FORMATS) break;
+  }
+  return kept;
 }
 
+/**
+ * More of the same house.
+ *
+ * One card per scent, for the reason in `cardIdentity`: a brand's four most
+ * popular products are very often one scent in its four formats, and a row of
+ * four identical cards under «Ещё от Lancôme» invites nothing.
+ *
+ * The scent being viewed is left out entirely, not merely the product. Its
+ * other formats already have a section of their own directly above, and a
+ * buyer who has just read that list does not need it again as cards.
+ */
 export async function getMoreFromBrand(
   brandId: string,
-  exceptProductId: string,
+  except: { productId: string; scentSlugs: readonly string[] },
   limit = 8,
 ) {
-  return prisma.product.findMany({
+  const rows = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
-      id: { not: exceptProductId },
+      id: { not: except.productId },
       fragrances: { some: { fragrance: { brandId } } },
     },
     orderBy: [{ popularity: "desc" }, { id: "asc" }],
-    take: limit,
+    take: limit * SCENT_SPREAD,
     select: CARD_SELECT,
   });
+
+  const excluded = new Set(except.scentSlugs);
+  const others = rows.filter((row) =>
+    row.fragrances.every((f) => !excluded.has(f.fragrance.slug)),
+  );
+  return oneCardPerScent(others, limit);
 }
 
 /**

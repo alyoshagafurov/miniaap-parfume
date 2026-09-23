@@ -2,6 +2,7 @@ import { CATALOG_TAG, categoryTag } from "@/server/catalog/tags";
 
 import { allocateSlug } from "./slugs";
 import { CatalogConflict, inTransaction, Tags, type Mutation, type Tx } from "./run";
+import { GOODS, plural } from "@/lib/format";
 
 /**
  * Categories.
@@ -131,8 +132,9 @@ export async function deleteCategory(id: string): Promise<Mutation<{ slug: strin
     });
     if (category._count.products > 0) {
       throw new CatalogConflict(
-        `В категории ещё ${category._count.products} товаров. ` +
-          "Перенесите их в другую категорию или удалите.",
+        `В категории ещё ${category._count.products} ${plural(category._count.products, GOODS)}. ` +
+          `${plural(category._count.products, ["Перенесите его", "Перенесите их", "Перенесите их"])} ` +
+          "в другую категорию или удалите.",
       );
     }
 

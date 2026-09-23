@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateRu, formatDateTimeRu, productName } from "./format";
+import { formatDateRu, formatDateTimeRu, plural, productName } from "./format";
 
 describe("formatDateRu", () => {
   it("renders a Russian date", () => {
@@ -82,5 +82,48 @@ describe("productName", () => {
     expect(productName("Hermès", "Hermès — Terre d'Hermès")).toBe(
       "Hermès — Terre d'Hermès",
     );
+  });
+});
+
+describe("plural", () => {
+  const forms = ["товар", "товара", "товаров"] as const;
+  const say = (n: number) => `${n} ${plural(n, forms)}`;
+
+  it("picks the singular for one", () => {
+    expect(say(1)).toBe("1 товар");
+    expect(say(21)).toBe("21 товар");
+    expect(say(101)).toBe("101 товар");
+  });
+
+  it("picks the few-form for two to four", () => {
+    expect(say(2)).toBe("2 товара");
+    expect(say(3)).toBe("3 товара");
+    expect(say(4)).toBe("4 товара");
+    expect(say(22)).toBe("22 товара");
+  });
+
+  it("picks the many-form for five and up", () => {
+    expect(say(5)).toBe("5 товаров");
+    expect(say(10)).toBe("10 товаров");
+    expect(say(400)).toBe("400 товаров");
+  });
+
+  it("gives eleven to fourteen the many-form whatever they end in", () => {
+    // The trap: 11 ends in 1 and 12 ends in 2, and both take «товаров».
+    expect(say(11)).toBe("11 товаров");
+    expect(say(12)).toBe("12 товаров");
+    expect(say(13)).toBe("13 товаров");
+    expect(say(14)).toBe("14 товаров");
+    expect(say(111)).toBe("111 товаров");
+    expect(say(112)).toBe("112 товаров");
+  });
+
+  it("handles zero", () => {
+    expect(say(0)).toBe("0 товаров");
+  });
+
+  it("ignores a sign and a fraction rather than inventing a form", () => {
+    expect(plural(-1, forms)).toBe("товар");
+    expect(plural(1.7, forms)).toBe("товар");
   });
 });

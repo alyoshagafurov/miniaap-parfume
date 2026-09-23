@@ -6,6 +6,7 @@ import { normalizeAliases } from "./brands";
 import { allocateSlug } from "./slugs";
 import { productIdsOfFragrance, productSlugs, reindexProducts } from "./search-text";
 import { CatalogConflict, inTransaction, Tags, type Mutation } from "./run";
+import { GOODS, plural } from "@/lib/format";
 
 /**
  * Fragrances.
@@ -187,7 +188,9 @@ export async function deleteFragrance(id: string): Promise<Mutation<{ slug: stri
     });
     if (fragrance._count.products > 0) {
       throw new CatalogConflict(
-        `Аромат используют ${fragrance._count.products} товаров. Сначала удалите или перепривяжите их.`,
+        `${plural(fragrance._count.products, ["Аромат использует", "Аромат используют", "Аромат используют"])} ` +
+          `${fragrance._count.products} ${plural(fragrance._count.products, GOODS)}. ` +
+          `Сначала ${plural(fragrance._count.products, ["удалите или перепривяжите его", "удалите или перепривяжите их", "удалите или перепривяжите их"])}.`,
       );
     }
 
