@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ÁRUMI">
+  <!--
+    The tab icon. The monogram from the logo, in the brand olive on the catalog's
+    cream, because the supplied logo.jpg has an opaque white background and
+    cannot sit on a coloured surface until the client sends a transparent file.
+
+    It exists mainly so the browser stops asking for /favicon.ico: that request
+    404'd on every page load, which is a failed request on a metered mobile
+    connection and a console error on every screen.
+  -->
+  <rect width="64" height="64" rx="12" fill="#f8f5ee"/>
+  <text x="32" y="45" font-family="Georgia, 'Times New Roman', serif" font-size="40"
+        font-weight="600" text-anchor="middle" fill="#4d522c">Á</text>
+</svg>
