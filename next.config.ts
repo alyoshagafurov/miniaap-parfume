@@ -26,6 +26,52 @@ const nextConfig: NextConfig = {
   // may depend on a Telegram-only origin.
   poweredByHeader: false,
   reactStrictMode: true,
+
+  /**
+   * Response headers.
+   *
+   * Only the ones that cannot break a Mini App. Telegram Desktop loads a Mini
+   * App inside an iframe, so `X-Frame-Options: DENY` would blank the catalog
+   * for every desktop user — the clickjacking defence has to be
+   * `frame-ancestors` naming Telegram instead, which is both stricter and
+   * correct here.
+   *
+   * `nosniff` matters more than usual: this application serves files an
+   * administrator uploaded, and although they are decoded and re-encoded by
+   * sharp before storage, a browser that sniffs a response body for a type is
+   * one bad content-type away from executing it.
+   *
+   * Deliberately NOT here, and recorded as stage-3 work at the reverse proxy:
+   * a full Content-Security-Policy, which needs a nonce and middleware and
+   * would be tuned against the real Telegram webview rather than guessed at;
+   * and Strict-Transport-Security, which is meaningless until there is HTTPS
+   * and dangerous to set from an application that might be served over http.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
+          },
+        ],
+      },
+      {
+        // The back office has no business in an index, header as well as meta:
+        // a crawler that ignores one may respect the other.
+        source: "/admin/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
