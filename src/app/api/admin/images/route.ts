@@ -38,6 +38,19 @@ function refuse(message: string, status = 400) {
   return NextResponse.json<Failure>({ error: message }, { status });
 }
 
+async function findBySku(candidates: readonly string[]) {
+  for (const sku of candidates) {
+    const found = await prisma.product.findFirst({
+      // Case-insensitive: shelf labels are printed in capitals and file names
+      // arrive from a phone in whatever case the camera app chose.
+      where: { sku: { equals: sku.trim(), mode: "insensitive" } },
+      select: { id: true, sku: true },
+    });
+    if (found) return found;
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   try {
     await requirePermission("catalog:write");
@@ -55,9 +68,14 @@ export async function POST(request: Request) {
   }
 
   const productId = form.get("productId");
+  // Either an id, from the product form, or an article, from the bulk screen
+  // where the filename is all there is to go on.
+  const candidates = form.getAll("sku").filter((v): v is string => typeof v === "string");
   const file = form.get("file");
 
-  if (typeof productId !== "string" || productId === "") return refuse("Не указан товар");
+  if (typeof productId !== "string" && candidates.length === 0) {
+    return refuse("Не указан товар");
+  }
   if (!(file instanceof File)) return refuse("Файл не получен");
   // Checked before the bytes are read into memory, not after.
   if (file.size > MAX_UPLOAD_BYTES) {
@@ -66,11 +84,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { id: true, sku: true },
-  });
-  if (!product) return refuse("Товар не найден", 404);
+  // Candidates are tried in the order the parser gave them, so `ARM-1005.jpg`
+  // matches ARM-1005 rather than looking for ARM.
+  const product =
+    typeof productId === "string" && productId !== ""
+      ? await prisma.product.findUnique({ where: { id: productId }, select: { id: true, sku: true } })
+      : await findBySku(candidates);
+
+  if (!product) {
+    // The LAST candidate is the documented reading — `ARM-9999-1.jpg` means
+    // "article ARM-9999, photo 1". The first is the fallback for an article
+    // that genuinely ends in a number, and naming it here would tell the owner
+    // to look for something they never wrote.
+    const meant = candidates[candidates.length - 1];
+    return refuse(meant ? `Нет товара с артикулом ${meant}` : "Товар не найден", 404);
+  }
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -111,5 +139,6 @@ export async function POST(request: Request) {
     key: processed.key,
     width: processed.width,
     height: processed.height,
+    sku: product.sku,
   });
 }

@@ -18,6 +18,7 @@ const NAV = [
   { href: "/admin/fragrances", label: "Ароматы" },
   { href: "/admin/brands", label: "Бренды" },
   { href: "/admin/categories", label: "Категории" },
+  { href: "/admin/photos", label: "Фото" },
   { href: "/admin/import", label: "Импорт" },
   { href: "/admin/settings", label: "Настройки" },
   { href: "/admin/admins", label: "Админы" },
