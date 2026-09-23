@@ -9,8 +9,20 @@ const VALID = {
   delivery: "CDEK",
   comment: "",
   consent: true,
-  items: [{ productId: "p1", qty: 6 }],
+  items: [
+    { productId: "p1", qty: 6, seenPriceKop: 100_000, seenPackSize: 1, seenStock: "IN_STOCK" },
+  ],
 };
+
+/** A basket line as the storefront would have built it. */
+const line = (over: Record<string, unknown> = {}) => ({
+  productId: "p1",
+  qty: 6,
+  seenPriceKop: 100_000,
+  seenPackSize: 1,
+  seenStock: "IN_STOCK",
+  ...over,
+});
 
 describe("normalizePhone", () => {
   it.each([
@@ -73,7 +85,7 @@ describe("parseOrderInput", () => {
     // can never reach the total — the server prices from the catalog.
     const r = parseOrderInput({
       ...VALID,
-      items: [{ productId: "p1", qty: 6, priceKop: 1 }],
+      items: [line({ priceKop: 1 })],
       totalKop: 1,
     });
     expect(r.ok).toBe(true);
@@ -83,7 +95,14 @@ describe("parseOrderInput", () => {
   });
 
   it.each([0, -1, 1.5, 100000])("rejects quantity %s", (qty) => {
-    expect(parseOrderInput({ ...VALID, items: [{ productId: "p1", qty }] }).ok).toBe(false);
+    expect(parseOrderInput({ ...VALID, items: [line({ qty })] }).ok).toBe(false);
+  });
+
+  it("requires the storefront snapshot on every line", () => {
+    // Without it the staleness check is skippable, which is the same as not
+    // having it: a request could go through on a price nobody was shown.
+    const r = parseOrderInput({ ...VALID, items: [{ productId: "p1", qty: 6 }] });
+    expect(r.ok).toBe(false);
   });
 
   it("caps the comment rather than storing an essay", () => {
@@ -103,7 +122,7 @@ describe("parseOrderInput", () => {
   });
 
   it("refuses a basket with absurdly many lines", () => {
-    const items = Array.from({ length: 500 }, (_, i) => ({ productId: `p${i}`, qty: 1 }));
+    const items = Array.from({ length: 500 }, (_, i) => line({ productId: `p${i}`, qty: 1 }));
     expect(parseOrderInput({ ...VALID, items }).ok).toBe(false);
   });
 });
@@ -116,6 +135,15 @@ describe.skipIf(!hasDb)("createOrder", () => {
   let productId = "";
   let packSize = 1;
   let priceKop = 0;
+
+  /** A line whose snapshot matches the catalog, so nothing is reported changed. */
+  const current = (qty: number) => ({
+    productId,
+    qty,
+    seenPriceKop: priceKop,
+    seenPackSize: packSize,
+    seenStock: "IN_STOCK" as const,
+  });
 
   beforeAll(async () => {
     const { prisma } = await import("@/server/db");
@@ -137,7 +165,7 @@ describe.skipIf(!hasDb)("createOrder", () => {
     // Enough to clear the 5 000 ₽ minimum.
     const qty = Math.max(packSize, Math.ceil(500_000 / priceKop / packSize) * packSize);
     const r = await createOrder(
-      { ...VALID, items: [{ productId, qty }] },
+      { ...VALID, items: [current(qty)] },
       { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
     );
 
@@ -167,7 +195,7 @@ describe.skipIf(!hasDb)("createOrder", () => {
     const qty = Math.max(packSize, Math.ceil(500_000 / priceKop / packSize) * packSize);
 
     const r = await createOrder(
-      { ...VALID, items: [{ productId, qty, priceKop: 1 }] },
+      { ...VALID, items: [{ ...current(qty), priceKop: 1 }] },
       { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
     );
     expect(r.ok).toBe(true);
@@ -179,7 +207,7 @@ describe.skipIf(!hasDb)("createOrder", () => {
   it("refuses below the minimum order", async () => {
     const { createOrder } = await import("./create");
     const r = await createOrder(
-      { ...VALID, items: [{ productId, qty: packSize }] },
+      { ...VALID, items: [current(packSize)] },
       { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
     );
     // One pack of anything is under 5 000 ₽ in this catalog.
@@ -195,7 +223,7 @@ describe.skipIf(!hasDb)("createOrder", () => {
     const qty = Math.max(packSize, Math.ceil(500_000 / priceKop / packSize) * packSize);
     const mk = () =>
       createOrder(
-        { ...VALID, items: [{ productId, qty }] },
+        { ...VALID, items: [current(qty)] },
         { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
       );
     const [a, b] = await Promise.all([mk(), mk()]);
@@ -206,9 +234,97 @@ describe.skipIf(!hasDb)("createOrder", () => {
   it("refuses a product that does not exist", async () => {
     const { createOrder } = await import("./create");
     const r = await createOrder(
-      { ...VALID, items: [{ productId: "no-such-product", qty: 10 }] },
+      { ...VALID, items: [line({ productId: "no-such-product", qty: 10 })] },
       { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
     );
     expect(r.ok).toBe(false);
+  });
+});
+
+describe.skipIf(!hasDb)("createOrder refuses a stale basket", () => {
+  let productId = "";
+  let packSize = 1;
+  let priceKop = 0;
+
+  beforeAll(async () => {
+    const { prisma } = await import("@/server/db");
+    const p = await prisma.product.findFirst({
+      where: { status: "PUBLISHED", stock: "IN_STOCK" },
+      select: { id: true, packSize: true, priceKop: true },
+      orderBy: { priceKop: "desc" },
+    });
+    if (!p) throw new Error("seed the database first: pnpm seed");
+    productId = p.id;
+    packSize = p.packSize;
+    priceKop = p.priceKop;
+  });
+
+  it("reports было → стало instead of submitting on a price nobody saw", async () => {
+    const { createOrder } = await import("./create");
+    const qty = Math.max(packSize, Math.ceil(500_000 / priceKop / packSize) * packSize);
+
+    const r = await createOrder(
+      {
+        ...VALID,
+        items: [
+          {
+            productId,
+            qty,
+            // What a storefront cached an hour ago would have shown.
+            seenPriceKop: priceKop - 10_000,
+            seenPackSize: packSize,
+            seenStock: "IN_STOCK",
+          },
+        ],
+      },
+      { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
+    );
+
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.reason).toBe("CHANGED");
+    expect(r.changes?.[0]).toMatchObject({
+      kind: "PRICE",
+      fromKop: priceKop - 10_000,
+      toKop: priceKop,
+    });
+    expect(r.totalKop).toBe(priceKop * qty);
+    expect(r.previousTotalKop).toBe((priceKop - 10_000) * qty);
+  });
+
+  it("writes no order when it reports a change", async () => {
+    const { createOrder } = await import("./create");
+    const { prisma } = await import("@/server/db");
+    const before = await prisma.order.count();
+
+    await createOrder(
+      {
+        ...VALID,
+        items: [{ productId, qty: packSize * 40, seenPriceKop: 1, seenPackSize: packSize, seenStock: "IN_STOCK" }],
+      },
+      { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
+    );
+
+    expect(await prisma.order.count()).toBe(before);
+  });
+
+  it("goes through once the corrected basket is resubmitted", async () => {
+    // The loop must terminate: accepting the change and resubmitting succeeds.
+    const { createOrder } = await import("./create");
+    const qty = Math.max(packSize, Math.ceil(500_000 / priceKop / packSize) * packSize);
+    const ip = `test-${Math.random()}`;
+
+    const stale = await createOrder(
+      { ...VALID, items: [{ productId, qty, seenPriceKop: priceKop - 5_000, seenPackSize: packSize, seenStock: "IN_STOCK" }] },
+      { ip, initDataRaw: null, botToken: null },
+    );
+    expect(stale.ok).toBe(false);
+    if (stale.ok) return;
+
+    const retry = await createOrder(
+      { ...VALID, items: stale.correctedLines },
+      { ip, initDataRaw: null, botToken: null },
+    );
+    expect(retry.ok, JSON.stringify(retry)).toBe(true);
   });
 });

@@ -8,6 +8,7 @@ import { verifyInitData } from "@/server/telegram/init-data";
 import { notifyNewOrder } from "@/server/telegram/notify";
 
 import { quoteCart, type CatalogEntry, type Quote } from "./quote";
+import { reconcileCart, type LineChange, type CartSnapshotLine } from "./reconcile";
 
 /**
  * Submitting a request.
@@ -40,9 +41,22 @@ export function normalizePhone(input: string): string | null {
   return `+7${national}`;
 }
 
+/**
+ * A basket line carries what the storefront displayed alongside the quantity.
+ *
+ * Required, not optional. The storefront is cached for an hour, so its price
+ * can lag the catalog; these fields are how the server detects that and refuses
+ * to submit on a total the buyer never saw. Making them optional would make the
+ * check skippable, which is the same as not having it.
+ *
+ * They are never used for pricing — only for comparison.
+ */
 const itemSchema = z.object({
   productId: z.string().min(1).max(64),
   qty: z.number().int().positive().max(9999),
+  seenPriceKop: z.number().int().min(0).max(2_147_483_647),
+  seenPackSize: z.number().int().min(1).max(9999),
+  seenStock: z.enum(["IN_STOCK", "LOW", "OUT", "PREORDER"]),
 });
 
 export const createOrderSchema = z.object({
@@ -104,10 +118,16 @@ export type CreateOrderResult =
   | { ok: true; orderId: string; number: string; totalKop: number; quote: Quote }
   | {
       ok: false;
-      reason: "VALIDATION" | "RATE_LIMITED" | "BELOW_MINIMUM" | "UNAVAILABLE";
+      reason: "VALIDATION" | "RATE_LIMITED" | "BELOW_MINIMUM" | "UNAVAILABLE" | "CHANGED";
       message: string;
       fieldErrors?: Record<string, string>;
       quote?: Quote;
+      /** Present on CHANGED: what moved, so the screen can show было → стало. */
+      changes?: LineChange[];
+      totalKop?: number;
+      previousTotalKop?: number;
+      /** The basket as it now is; the client stores this and resubmits. */
+      correctedLines?: CartSnapshotLine[];
     };
 
 export async function createOrder(
@@ -206,6 +226,23 @@ export async function createOrder(
       quote,
     };
   }
+  // Did the catalog move under the buyer between the storefront and here?
+  // Checked before the minimum, because a buyer told "you are 300 ₽ short"
+  // when the real news is "the price went up" has been told the wrong thing.
+  const reconciliation = reconcileCart(input.items, quote);
+  if (reconciliation.changed) {
+    return {
+      ok: false,
+      reason: "CHANGED",
+      message: "Каталог изменился с момента добавления в заявку",
+      quote,
+      changes: reconciliation.changes,
+      totalKop: reconciliation.totalKop,
+      previousTotalKop: reconciliation.previousTotalKop,
+      correctedLines: reconciliation.correctedLines,
+    };
+  }
+
   if (!quote.meetsMinimum) {
     return {
       ok: false,
