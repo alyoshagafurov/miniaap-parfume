@@ -20,8 +20,8 @@ const NAV = [
   { href: "/admin/categories", label: "Категории" },
   { href: "/admin/photos", label: "Фото" },
   { href: "/admin/import", label: "Импорт" },
-  { href: "/admin/settings", label: "Настройки" },
-  { href: "/admin/admins", label: "Админы" },
+  { href: "/admin/settings", label: "Настройки", owner: true },
+  { href: "/admin/admins", label: "Админы", owner: true },
 ] as const;
 
 /**
@@ -75,7 +75,7 @@ async function Guard({ children }: { children: ReactNode }) {
         */}
         <nav aria-label="Разделы админки" className="border-rule border-b">
           <ul className="mx-auto flex w-full max-w-6xl gap-1 overflow-x-auto px-2 pb-2">
-            {NAV.map((item) => (
+            {NAV.filter((item) => !("owner" in item) || session.role === "OWNER").map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

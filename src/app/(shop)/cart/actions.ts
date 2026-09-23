@@ -1,7 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
-
+import { clientIp } from "@/server/client-ip";
 import { createOrder, type CreateOrderResult } from "@/server/orders/create";
 
 /**
@@ -16,13 +15,18 @@ import { createOrder, type CreateOrderResult } from "@/server/orders/create";
  * the only thing that decides what a request is.
  */
 export async function submitOrder(input: unknown): Promise<CreateOrderResult> {
-  const h = await headers();
+  const ip = await clientIp();
 
-  // Behind a proxy the socket address is the proxy's. The first entry of
-  // x-forwarded-for is the client — spoofable in principle, which is why it is
-  // only ever used for rate limiting and never for a decision about the order.
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = forwarded || h.get("x-real-ip") || "unknown";
+  // No address, no submission. The alternative — one shared bucket called
+  // "unknown" — would put every caller on a single five-per-ten-minutes budget
+  // the moment a header went missing, and quietly stop the shop taking orders.
+  if (!ip) {
+    return {
+      ok: false,
+      reason: "RATE_LIMITED",
+      message: "Сервис временно недоступен. Попробуйте через минуту.",
+    };
+  }
 
   const payload = input as { initDataRaw?: unknown } | null;
   const initDataRaw =

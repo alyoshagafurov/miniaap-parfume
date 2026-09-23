@@ -24,8 +24,15 @@ const Fields = z.object({
   name: z.string().trim().min(1).max(120),
   telegramId: z.string().trim().min(1).max(32),
   role: z.enum(["OWNER", "EDITOR"]),
-  // Never trimmed, never logged, never echoed back to the screen.
-  password: z.string().max(200).default(""),
+  // Never trimmed, never logged, never echoed back to the screen. Empty means
+  // "leave the existing one alone" on an edit; anything else meets the floor.
+  // The same rule is enforced in admins.ts, because that module is reachable
+  // from places other than this action.
+  password: z
+    .string()
+    .max(200)
+    .default("")
+    .refine((v) => v === "" || v.length >= 10, "Пароль не короче 10 символов"),
 });
 
 async function run(work: () => Promise<unknown>): Promise<AdminResult> {

@@ -1,5 +1,5 @@
 import { hashPassword } from "@/server/auth/password";
-import { requireAdminPage, requirePermission } from "@/server/auth/roles";
+import { requirePermission } from "@/server/auth/roles";
 import { prisma } from "@/server/db";
 
 /**
@@ -29,7 +29,11 @@ export interface AdminRow {
 }
 
 export async function listAdmins(): Promise<AdminRow[]> {
-  await requireAdminPage();
+  // admins:write, not merely "signed in". login.ts goes out of its way not to
+  // tell an anonymous caller which Telegram ids are administrators; handing an
+  // EDITOR the whole list — logins, names, ids, roles — contradicts that for no
+  // reason, since an EDITOR cannot change any of it.
+  await requirePermission("admins:write");
   const rows = await prisma.adminUser.findMany({
     orderBy: [{ isActive: "desc" }, { createdAt: "asc" }],
     select: {
@@ -79,14 +83,33 @@ function normalizeLogin(value: string): string {
   return login;
 }
 
+/**
+ * The password floor, in one place.
+ *
+ * It lived only in createAdmin, so an OWNER editing anyone — including
+ * themselves — could set a one-character password and nothing refused it.
+ * Against a limiter of ten attempts per ten minutes that is hours of work, and
+ * saveAdmin takes `unknown`, so the schema was the only other gate and it had
+ * no minimum either.
+ *
+ * An empty string is the documented "leave the existing password alone", and
+ * only reaches here from the edit path.
+ */
+const MIN_PASSWORD = 10;
+
+function assertPassword(password: string, { allowEmpty }: { allowEmpty: boolean }): void {
+  if (allowEmpty && password === "") return;
+  if (password.length < MIN_PASSWORD) {
+    throw new AdminConflict(`Пароль не короче ${MIN_PASSWORD} символов`);
+  }
+}
+
 export async function createAdmin(input: AdminInput): Promise<{ id: string }> {
   await requirePermission("admins:write");
 
   const login = normalizeLogin(input.login);
   const telegramId = parseTelegramId(input.telegramId);
-  if (input.password.length < 10) {
-    throw new AdminConflict("Пароль не короче 10 символов");
-  }
+  assertPassword(input.password, { allowEmpty: false });
 
   const clash = await prisma.adminUser.findFirst({
     where: { OR: [{ login }, { telegramId }] },
@@ -116,6 +139,7 @@ export async function updateAdmin(id: string, input: AdminInput): Promise<void> 
 
   const login = normalizeLogin(input.login);
   const telegramId = parseTelegramId(input.telegramId);
+  assertPassword(input.password, { allowEmpty: true });
 
   const clash = await prisma.adminUser.findFirst({
     where: { id: { not: id }, OR: [{ login }, { telegramId }] },

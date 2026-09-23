@@ -2,6 +2,9 @@
 
 import { z } from "zod";
 
+import { clientIp } from "@/server/client-ip";
+import { rateLimit } from "@/server/rate-limit";
+
 import { FAMILIES, GENDERS, SORT_KEYS } from "@/lib/list-url";
 import { listProducts, PAGE_SIZE, type ListResult } from "@/server/catalog/list";
 
@@ -31,7 +34,25 @@ const Params = z.object({
   cursor: z.string().max(256).nullish(),
 });
 
+/**
+ * Generous, because this is the shop.
+ *
+ * Sixty a minute is far more than a person scrolling and far less than a script
+ * can extract. Each call runs a multi-join raw query with a LATERAL subquery
+ * per row against a host this project sizes as a small VPS, and until now
+ * nothing bounded how often an anonymous caller could ask for one.
+ */
+const BROWSE_LIMIT = { limit: 60, windowSeconds: 60 } as const;
+
 export async function loadMoreProducts(input: unknown): Promise<ListResult> {
+  const ip = await clientIp();
+  if (ip) {
+    const allowed = await rateLimit(`browse:${ip}`, BROWSE_LIMIT);
+    // An empty page, not an error: this is a "load more" the buyer did not ask
+    // for by name, and the list simply stops rather than showing a failure.
+    if (!allowed.allowed) return { items: [], nextCursor: null, total: 0 };
+  }
+
   const parsed = Params.safeParse(input);
   // Nothing is logged: the argument came from a buyer's session.
   if (!parsed.success) return { items: [], nextCursor: null, total: 0 };

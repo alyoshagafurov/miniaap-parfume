@@ -1,8 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { z } from "zod";
 
+import { clientIp } from "@/server/client-ip";
 import {
   confirmLoginCode,
   loginFromBrowser,
@@ -35,16 +35,16 @@ const Code = z.object({
 /** Never logged and never echoed: it is what an attacker is probing for. */
 const GENERIC = "Неверный логин или пароль";
 
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-}
+
 
 export async function login(input: unknown): Promise<LoginResult> {
   const parsed = Credentials.safeParse(input);
   if (!parsed.success) return { outcome: "REJECT", message: GENERIC };
 
   const ip = await clientIp();
+  // An unattributable request is refused rather than sharing one bucket with
+  // every other unattributable request.
+  if (!ip) return { outcome: "RATE_LIMITED", message: "Сервис временно недоступен." };
   const { login: id, password, initDataRaw } = parsed.data;
 
   // Inside Telegram the launch string is the second factor and the session is
@@ -59,7 +59,10 @@ export async function confirmCode(input: unknown): Promise<CodeResult> {
   const parsed = Code.safeParse(input);
   if (!parsed.success) return { outcome: "REJECT", message: "Неверный код" };
 
-  return confirmLoginCode({ ...parsed.data, ip: await clientIp() });
+  const ip = await clientIp();
+  if (!ip) return { outcome: "REJECT", message: "Сервис временно недоступен." };
+
+  return confirmLoginCode({ ...parsed.data, ip });
 }
 
 export async function logout(): Promise<void> {

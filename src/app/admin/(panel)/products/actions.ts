@@ -114,7 +114,16 @@ export async function editStock(input: unknown): Promise<ActionResult> {
 const ProductInputSchema = z.object({
   categoryId: z.string().min(1).max(64),
   fragranceIds: z.array(z.string().min(1).max(64)).min(1).max(2),
-  sku: z.string().trim().min(1).max(64),
+  // A charset, because this value is concatenated into an S3 object key and
+  // into a URL. A SKU of "../../banner" is not a write-anywhere primitive —
+  // S3 treats ".." as a literal segment — but the browser normalises it before
+  // fetching, so the URL requested stops being the URL stored.
+  sku: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Za-z0-9._-]+$/, "Артикул: латиница, цифры, точка, дефис, подчёркивание"),
   title: z.string().trim().max(200).nullish(),
   slug: z.string().trim().max(200).nullish(),
   volumeMl: z.number().int().positive().max(100_000),
@@ -155,7 +164,16 @@ export async function saveProduct(input: unknown): Promise<SaveResult> {
 const CopyInput = z.object({
   id: z.string().min(1).max(64),
   categoryId: z.string().min(1).max(64),
-  sku: z.string().trim().min(1).max(64),
+  // A charset, because this value is concatenated into an S3 object key and
+  // into a URL. A SKU of "../../banner" is not a write-anywhere primitive —
+  // S3 treats ".." as a literal segment — but the browser normalises it before
+  // fetching, so the URL requested stops being the URL stored.
+  sku: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Za-z0-9._-]+$/, "Артикул: латиница, цифры, точка, дефис, подчёркивание"),
   volumeMl: z.number().int().positive().max(100_000),
   priceKop: z.number().int().positive().max(2_147_483_647),
   packSize: z.number().int().min(1).max(9999),

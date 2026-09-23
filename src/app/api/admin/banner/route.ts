@@ -19,11 +19,28 @@ import { putObjects } from "@/server/storage/s3";
  * id after the first upload, so an id pointing at the previous picture would go
  * on showing it to every new buyer with nothing to explain why.
  */
+function refuseTooLarge() {
+  return NextResponse.json(
+    { error: `Файл больше ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} МБ` },
+    { status: 413 },
+  );
+}
+
 export async function POST(request: Request) {
   try {
     await requirePermission("settings:write");
   } catch {
     return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+  }
+
+  // Before formData(), which reads and buffers the entire body. The check that
+  // used to sit after it asserted a protection it did not provide: a 2 GB
+  // multipart upload was absorbed in full before the 10 MB limit was consulted.
+  // The declared length is the client's to write, so the real ceiling belongs
+  // at the relay (`client_max_body_size`); this is the cheap first refusal.
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES + 64 * 1024) {
+    return refuseTooLarge();
   }
 
   let form: FormData;
@@ -37,12 +54,7 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Файл не получен" }, { status: 400 });
   }
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json(
-      { error: `Файл больше ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} МБ` },
-      { status: 400 },
-    );
-  }
+  if (file.size > MAX_UPLOAD_BYTES) return refuseTooLarge();
 
   const prefix = `banner/${randomBytes(6).toString("hex")}`;
   let processed;

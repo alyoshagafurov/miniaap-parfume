@@ -2,6 +2,9 @@
 
 import { z } from "zod";
 
+import { clientIp } from "@/server/client-ip";
+import { rateLimit } from "@/server/rate-limit";
+
 import { SEARCH_MAX_OFFSET, SEARCH_PAGE_SIZE } from "@/lib/search";
 import { searchProducts, type SearchRow } from "@/server/catalog/search";
 
@@ -18,9 +21,24 @@ const Params = z.object({
   offset: z.number().int().min(0).max(SEARCH_MAX_OFFSET),
 });
 
+/**
+ * Same budget as the listing, and for a heavier query.
+ *
+ * Each call opens a transaction, sets a per-session GUC, counts the whole
+ * match set and then runs a trigram scan with an OFFSET up to 240. Cheap to
+ * ask for, expensive to serve.
+ */
+const SEARCH_LIMIT = { limit: 60, windowSeconds: 60 } as const;
+
 export async function loadMoreResults(
   input: unknown,
 ): Promise<{ rows: SearchRow[]; total: number }> {
+  const ip = await clientIp();
+  if (ip) {
+    const allowed = await rateLimit(`browse:${ip}`, SEARCH_LIMIT);
+    if (!allowed.allowed) return { rows: [], total: 0 };
+  }
+
   const parsed = Params.safeParse(input);
   // Nothing is logged: a search query is the buyer's, and so is the session.
   if (!parsed.success) return { rows: [], total: 0 };

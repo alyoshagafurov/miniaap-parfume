@@ -25,8 +25,14 @@ import { join, relative } from "node:path";
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 
-/** Any of these satisfies the requirement. */
-const GUARDS = ["requirePermission", "requireAdmin", "requireAdminPage"];
+/**
+ * Any of these satisfies the requirement.
+ *
+ * `requireAdminPage` is deliberately NOT here. It proves only that *some*
+ * administrator is signed in, so an admins:write-class action using it would
+ * satisfy the script while letting an EDITOR through.
+ */
+const GUARDS = ["requirePermission", "requireAdmin"];
 
 /**
  * Actions that are public on purpose, each with the reason.
@@ -73,7 +79,10 @@ for (const file of listSources(SRC)) {
   const allowed = new Set(PUBLIC.get(rel) ?? []);
 
   // Each exported async function, and the text from it to the next one.
-  const pattern = /export\s+async\s+function\s+([A-Za-z_$][\w$]*)\s*\(/g;
+  // Both declaration forms. `export const doThing = async (...) => {}` is a
+  // perfectly good Server Action and was invisible to the first version of this
+  // script — neither checked nor counted.
+  const pattern = /export\s+(?:async\s+function|const|let|var)\s+([A-Za-z_$][\w$]*)/g;
   const found = [...code.matchAll(pattern)];
 
   for (const [index, match] of found.entries()) {

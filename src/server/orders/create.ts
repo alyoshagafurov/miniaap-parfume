@@ -213,10 +213,24 @@ export async function createOrder(
     };
   }
 
-  const quote = quoteCart(input.items, catalog, {
-    minOrderKop: settings.minOrderKop,
-    showPrices: settings.showPrices,
-  });
+  // quoteCart throws RangeError once the running total passes the Int column's
+  // ceiling, which 200 lines of 9999 units reaches for any product priced above
+  // about eleven roubles — that is every product here. Nothing is written by
+  // then, so the only defect was the buyer getting an opaque server error
+  // instead of something they could act on.
+  let quote: Quote;
+  try {
+    quote = quoteCart(input.items, catalog, {
+      minOrderKop: settings.minOrderKop,
+      showPrices: settings.showPrices,
+    });
+  } catch {
+    return {
+      ok: false,
+      reason: "VALIDATION",
+      message: "Сумма заявки слишком велика. Разделите её на несколько заявок.",
+    };
+  }
 
   if (quote.lines.length === 0) {
     return {

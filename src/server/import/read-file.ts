@@ -1,3 +1,5 @@
+import { unzipSync } from "fflate";
+
 import { parse as parseCsv } from "csv-parse/sync";
 import iconv from "iconv-lite";
 import { readSheet } from "read-excel-file/node";
@@ -18,6 +20,50 @@ import { readSheet } from "read-excel-file/node";
 
 /** A price list larger than this is not a price list. */
 const MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * How much the .xlsx is allowed to become once unzipped.
+ *
+ * MAX_BYTES measures the compressed size, which is the one quantity a zip bomb
+ * does not care about: a 10 MB .xlsx whose sharedStrings.xml is one long run of
+ * repeated text expands to gigabytes before a single row is parsed.
+ *
+ * The declared sizes in the archive are the attacker's to write, so this is a
+ * first line and not a proof. The second line is fflate itself: an entry that
+ * inflates past its declared size fails to decompress and throws, which the
+ * caller turns into "файл повреждён". Between the two, a lie is caught either
+ * way — either it is declared and refused here, or it is not declared and the
+ * inflate rejects it.
+ */
+const MAX_INFLATED_BYTES = 80 * 1024 * 1024;
+
+/**
+ * Refuses an .xlsx that claims to expand past the budget.
+ *
+ * Reads the archive's own table of contents rather than decompressing: fflate's
+ * filter is consulted before an entry is inflated, so an oversized member is
+ * never expanded at all.
+ */
+function assertNotAZipBomb(buffer: Buffer): void {
+  let declared = 0;
+  try {
+    unzipSync(new Uint8Array(buffer), {
+      filter(file: { originalSize: number }) {
+        declared += file.originalSize;
+        // Never actually extract: this pass is only here to read the sizes.
+        return false;
+      },
+    });
+  } catch {
+    throw new Error("Не удалось прочитать .xlsx — файл повреждён");
+  }
+
+  if (declared > MAX_INFLATED_BYTES) {
+    throw new Error(
+      `Файл распаковывается в ${Math.round(declared / 1024 / 1024)} МБ — это не прайс-лист`,
+    );
+  }
+}
 
 /**
  * Picks the delimiter from the header line.
@@ -72,6 +118,8 @@ export async function readTable(buffer: Buffer, filename: string): Promise<strin
   const extension = filename.toLowerCase().split(".").pop() ?? "";
 
   if (extension === "xlsx") {
+    assertNotAZipBomb(buffer);
+
     // readSheet, not the default export: in read-excel-file v9 the default
     // returns an array of SHEETS, so treating its result as rows silently
     // yields nonsense. readSheet returns the rows of one sheet, the first by

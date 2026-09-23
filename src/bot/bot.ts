@@ -42,20 +42,32 @@ export function createBot({ token, miniAppUrl, botInfo }: BotDeps): Bot {
 
   // ── Identity ──────────────────────────────────────────────────────────────
 
-  // Per-process. The set is two or three people, so a restart is a fine way to
-  // pick up a newly promoted administrator.
-  const adminCache = new Map<string, boolean>();
+  /**
+   * Per-process, and short-lived.
+   *
+   * It had no expiry, so an administrator deactivated in the panel kept their
+   * «Админ-панель» button until the bot process restarted. What leaks is only
+   * the existence of the panel and its URL — the panel itself re-reads
+   * `isActive` on every request — but to somebody who was an administrator
+   * until a minute ago, which is exactly the person the deactivation was about.
+   *
+   * A minute is short enough that the revocation is effectively immediate and
+   * long enough that a burst of messages from one person is still one query.
+   */
+  const ADMIN_CACHE_TTL_MS = 60_000;
+  const adminCache = new Map<string, { value: boolean; at: number }>();
 
   async function isAdmin(telegramId: bigint): Promise<boolean> {
     const key = telegramId.toString();
     const cached = adminCache.get(key);
-    if (cached !== undefined) return cached;
+    if (cached && Date.now() - cached.at < ADMIN_CACHE_TTL_MS) return cached.value;
+
     const row = await prisma.adminUser.findFirst({
       where: { telegramId, isActive: true },
       select: { id: true },
     });
     const result = row !== null;
-    adminCache.set(key, result);
+    adminCache.set(key, { value: result, at: Date.now() });
     return result;
   }
 

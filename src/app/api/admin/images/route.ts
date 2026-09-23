@@ -38,6 +38,13 @@ function refuse(message: string, status = 400) {
   return NextResponse.json<Failure>({ error: message }, { status });
 }
 
+function refuseTooLarge() {
+  return refuse(
+    `Файл больше ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} МБ. Уменьшите его и попробуйте снова.`,
+    413,
+  );
+}
+
 async function findBySku(candidates: readonly string[]) {
   for (const sku of candidates) {
     const found = await prisma.product.findFirst({
@@ -60,6 +67,16 @@ export async function POST(request: Request) {
     return refuse("Нет доступа", 403);
   }
 
+  // Before formData(), which reads and buffers the entire body. The check that
+  // used to sit after it asserted a protection it did not provide: a 2 GB
+  // multipart upload was absorbed in full before the 10 MB limit was consulted.
+  // The declared length is the client's to write, so the real ceiling belongs
+  // at the relay (`client_max_body_size`); this is the cheap first refusal.
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES + 64 * 1024) {
+    return refuseTooLarge();
+  }
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -77,12 +94,9 @@ export async function POST(request: Request) {
     return refuse("Не указан товар");
   }
   if (!(file instanceof File)) return refuse("Файл не получен");
-  // Checked before the bytes are read into memory, not after.
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return refuse(
-      `Файл больше ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} МБ. Уменьшите его и попробуйте снова.`,
-    );
-  }
+  // The real size, now that it is known. The content-length check above is the
+  // cheap one; this is the true one.
+  if (file.size > MAX_UPLOAD_BYTES) return refuseTooLarge();
 
   // Candidates are tried in the order the parser gave them, so `ARM-1005.jpg`
   // matches ARM-1005 rather than looking for ARM.
@@ -105,7 +119,11 @@ export async function POST(request: Request) {
   // The article makes the key readable in a bucket listing; the random suffix
   // makes a re-upload a new key, so nothing is ever served from a cache that
   // holds the previous picture.
-  const prefix = `products/${product.sku.toLowerCase()}/${randomBytes(6).toString("hex")}`;
+  // Sanitised again here even though the schema constrains it: this key is
+  // built from a stored value, and rows predating the constraint — or arriving
+  // through the importer — have not been through it.
+  const safeSku = product.sku.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  const prefix = `products/${safeSku}/${randomBytes(6).toString("hex")}`;
 
   let processed;
   try {

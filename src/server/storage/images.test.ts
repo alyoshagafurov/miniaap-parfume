@@ -103,3 +103,33 @@ describe("processImage — фото с телефона", () => {
     await expect(processImage(await plainPng(120, 120), "test/tiny")).rejects.toThrow(/120×120/);
   });
 });
+
+describe("processImage — бюджет ресурсов", () => {
+  it("отказывает бомбе сжатия по числу пикселей", async () => {
+    // Measured before the cap existed: a single-colour PNG of these dimensions
+    // compresses to 776 KB — comfortably inside the 10 MB upload limit — and
+    // decoded to 326 MB of RSS in 5.1 s. The upload cap measured the only
+    // quantity that did not matter.
+    const bomb = await sharp({
+      create: { width: 16000, height: 16000, channels: 3, background: { r: 0, g: 0, b: 0 } },
+    })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+
+    expect(bomb.byteLength).toBeLessThan(MAX_UPLOAD_BYTES);
+    await expect(processImage(bomb, "test/bomb")).rejects.toBeInstanceOf(ImageRejected);
+  }, 60_000);
+
+  it("пропускает большое, но разумное фото", async () => {
+    // A 12 MP phone photograph: the cap must refuse the bomb without refusing
+    // the thing the owner actually uploads.
+    const real = await sharp({
+      create: { width: 4000, height: 3000, channels: 3, background: { r: 77, g: 82, b: 44 } },
+    })
+      .jpeg()
+      .toBuffer();
+
+    const processed = await processImage(real, "test/real");
+    expect(processed.width).toBe(4000);
+  }, 60_000);
+});

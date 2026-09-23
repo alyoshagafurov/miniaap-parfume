@@ -19,6 +19,19 @@ import type { HeaderMatch, ImportField } from "./columns";
 /** Beyond this the preview is unreadable and the file is simply the wrong one. */
 const MAX_ERRORS = 200;
 
+/**
+ * The most rows one import may carry.
+ *
+ * Nothing bounded this before. A million-row .xlsx — comfortably inside 10 MB
+ * compressed — produced a million parsed rows and then forty thousand
+ * sequential transactions, each with a sixty-second budget, holding a
+ * connection for hours with no way to cancel.
+ *
+ * Five thousand is several times the client's whole range and a file larger
+ * than that is a mistake worth telling someone about rather than absorbing.
+ */
+const MAX_ROWS = 5000;
+
 export interface ParsedRow {
   row: number;
   sku: string;
@@ -100,6 +113,24 @@ export function parseRows(
   const errors: RowError[] = [];
   let truncatedErrors = false;
   const seenSku = new Map<string, number>();
+
+  // Refused whole, not truncated: importing the first five thousand rows of a
+  // file somebody believes is complete is worse than importing none of it.
+  const dataRows = Math.max(0, table.length - 1);
+  if (dataRows > MAX_ROWS) {
+    return {
+      rows: [],
+      errors: [
+        {
+          row: 1,
+          field: "row",
+          message:
+            `Слишком много строк: ${dataRows}. Максимум ${MAX_ROWS} — разделите файл на части.`,
+        },
+      ],
+      truncatedErrors: false,
+    };
+  }
 
   const fail = (
     row: number,

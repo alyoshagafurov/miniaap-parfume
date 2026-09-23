@@ -25,6 +25,24 @@ import { MAX_UPLOAD_BYTES } from "@/lib/images";
 /** The widths a card, a grid and a product page actually ask for. */
 const WIDTHS = [400, 800, 1600] as const;
 
+/**
+ * The pixel budget, and why the byte budget was not enough.
+ *
+ * sharp's default limit is 268 megapixels, so a 16384² image sails through —
+ * and a single-colour PNG that size compresses to well under the 10 MB upload
+ * cap. Measured against this project's own sharp: a 776 KB upload decoded to
+ * 16000×16000, peaked at 326 MB of RSS and took 5.1 seconds. That is a 420×
+ * memory amplification per request on a host this project describes as a small
+ * VPS, and an out-of-memory there takes the storefront down with the panel.
+ *
+ * 25 megapixels is past any phone this catalog will meet — a 50 MP sensor is
+ * already far more than a 1600px rendition can use — and the dimension cap
+ * below refuses the pathological shapes (1×250000000) that fit the pixel budget
+ * while being useless as photographs.
+ */
+const SHARP_LIMITS = { limitInputPixels: 25_000_000, sequentialRead: true } as const;
+const MAX_DIMENSION = 8000;
+
 export class ImageRejected extends Error {
   constructor(message: string) {
     super(message);
@@ -90,6 +108,11 @@ function assertUsable(meta: Metadata, bytes: number): void {
       `Слишком маленькое фото (${width}×${height}). Нужно хотя бы 400×400.`,
     );
   }
+  if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+    throw new ImageRejected(
+      `Слишком большое фото (${width}×${height}). Максимум ${MAX_DIMENSION}×${MAX_DIMENSION}.`,
+    );
+  }
 }
 
 /**
@@ -132,7 +155,7 @@ export async function processImage(
 
   let meta: Metadata;
   try {
-    meta = await sharp(input).metadata();
+    meta = await sharp(input, SHARP_LIMITS).metadata();
   } catch {
     throw new ImageRejected("Не удалось прочитать файл. Нужен JPEG, PNG или WebP.");
   }
@@ -140,7 +163,7 @@ export async function processImage(
 
   // Applied before anything else reads the pixels, and before every writer
   // below drops metadata.
-  const upright = sharp(input).rotate();
+  const upright = sharp(input, SHARP_LIMITS).rotate();
   const { width, height } = uprightSize(meta);
 
   const renditions: ProcessedImage["renditions"] = [];

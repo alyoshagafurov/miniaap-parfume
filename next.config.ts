@@ -36,10 +36,12 @@ const nextConfig: NextConfig = {
    * `frame-ancestors` naming Telegram instead, which is both stricter and
    * correct here.
    *
-   * `nosniff` matters more than usual: this application serves files an
-   * administrator uploaded, and although they are decoded and re-encoded by
-   * sharp before storage, a browser that sniffs a response body for a type is
-   * one bad content-type away from executing it.
+   * `nosniff` covers what Next serves. It does NOT cover the product
+   * photographs: those come from the object store on its own origin, and these
+   * headers do not reach it. The same header belongs on the bucket, and that is
+   * stage-3 work at the storage configuration — noted here because the previous
+   * version of this comment claimed a protection that was not in place, which
+   * is how a gap survives a review.
    *
    * Deliberately NOT here, and recorded as stage-3 work at the reverse proxy:
    * a full Content-Security-Policy, which needs a nonce and middleware and

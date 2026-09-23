@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 import { prisma } from "@/server/db";
-import { rateLimit } from "@/server/rate-limit";
+import { rateLimit, resetLimit } from "@/server/rate-limit";
 import { telegramApi } from "@/server/telegram/client";
 import { verifyInitData } from "@/server/telegram/init-data";
 import { sendLoginCode } from "@/server/telegram/notify";
@@ -26,7 +26,18 @@ import { COOKIE_NAME, sessionCookieOptions, signSession, type SessionPayload } f
  * permission, the split has failed.
  */
 
-/** Per identifier and per address, because either alone is trivially evaded. */
+/**
+ * Two buckets, and they are not the same kind of thing.
+ *
+ * The per-address one refuses outright: an attacker changing accounts from one
+ * place is still one place.
+ *
+ * The per-login one is consumed only by a FAILED attempt. Refusing on it up
+ * front was an account-lockout lever — ten bad guesses every ten minutes, from
+ * anywhere, and the owner is locked out of their own back office indefinitely
+ * for the cost of a request a minute. Now a correct password always gets
+ * through, and only wrong ones burn the budget.
+ */
 const LOGIN_LIMIT = { limit: 10, windowSeconds: 600 } as const;
 const CODE_LIMIT = { limit: 10, windowSeconds: 600 } as const;
 
@@ -56,6 +67,23 @@ async function throttled(keys: readonly string[], config: typeof LOGIN_LIMIT): P
   return false;
 }
 
+/**
+ * Charges a failed attempt to the login, and slows the next one down.
+ *
+ * Consumed only by failures, and it never refuses. That is the whole design:
+ * an exhausted budget delays the answer instead of rejecting it, so an attacker
+ * rotating addresses against one account loses throughput while the owner, who
+ * types the right password, is never made to wait at all.
+ */
+const LOCKOUT_DELAY_MS = 1000;
+
+async function chargeFailure(login: string): Promise<void> {
+  const result = await rateLimit(`login:id:${login.trim().toLowerCase()}`, LOGIN_LIMIT);
+  if (!result.allowed) {
+    await new Promise((resolve) => setTimeout(resolve, LOCKOUT_DELAY_MS));
+  }
+}
+
 async function issueSession(payload: SessionPayload): Promise<void> {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("AUTH_SECRET не задан");
@@ -77,10 +105,7 @@ export async function loginFromTelegram(input: {
   initDataRaw: string;
   ip: string;
 }): Promise<LoginResult> {
-  const rateLimited = await throttled(
-    [`login:ip:${input.ip}`, `login:id:${input.login.trim().toLowerCase()}`],
-    LOGIN_LIMIT,
-  );
+  const rateLimited = await throttled([`login:ip:${input.ip}`], LOGIN_LIMIT);
 
   const admin = rateLimited ? null : await findAdmin(input.login);
   const identity = verifyInitData(input.initDataRaw, process.env.BOT_TOKEN);
@@ -109,7 +134,8 @@ export async function loginFromTelegram(input: {
     rateLimited,
   });
 
-  return finish(decision, admin?.telegramId ?? null);
+  if (decision.outcome === "REJECT") await chargeFailure(input.login);
+  return finish(decision, admin?.telegramId ?? null, input.login);
 }
 
 /**
@@ -124,10 +150,7 @@ export async function loginFromBrowser(input: {
   password: string;
   ip: string;
 }): Promise<LoginResult> {
-  const rateLimited = await throttled(
-    [`login:ip:${input.ip}`, `login:id:${input.login.trim().toLowerCase()}`],
-    LOGIN_LIMIT,
-  );
+  const rateLimited = await throttled([`login:ip:${input.ip}`], LOGIN_LIMIT);
 
   const admin = rateLimited ? null : await findAdmin(input.login);
   const passwordMatches = admin
@@ -148,15 +171,20 @@ export async function loginFromBrowser(input: {
     rateLimited,
   });
 
-  return finish(decision, admin?.telegramId ?? null);
+  if (decision.outcome === "REJECT") await chargeFailure(input.login);
+  return finish(decision, admin?.telegramId ?? null, input.login);
 }
 
 async function finish(
   decision: LoginDecision,
   telegramId: bigint | null,
+  loginName?: string,
 ): Promise<LoginResult> {
   if (decision.outcome === "SESSION" && decision.adminId && decision.role) {
     await issueSession({ adminId: decision.adminId, role: decision.role });
+    // Clear the failure budget: four mistyped passwords should not follow
+    // somebody around for the rest of the window once they have got in.
+    if (loginName) await resetLimit(`login:id:${loginName.trim().toLowerCase()}`);
     return { outcome: "SESSION", message: decision.message };
   }
 
@@ -252,12 +280,23 @@ export async function confirmLoginCode(input: {
   });
 
   if (decision.consumeAttempt && stored) {
-    await prisma.loginCode.update({
-      where: { id: stored.id },
-      // Clamped, so the stored counter can never run past the CHECK constraint
-      // even if two attempts land at once.
-      data: { attempts: Math.min(stored.attempts + 1, LOGIN_CODE_MAX_ATTEMPTS) },
+    // Atomic, and conditional on still being under the budget. The previous
+    // version read `attempts` in one query and wrote `attempts + 1` in another,
+    // so ten concurrent guesses all read the same number and all wrote the same
+    // N+1 — five attempts meant five *sequential* attempts. The WHERE clause is
+    // what makes the budget real, and it also keeps the counter inside the
+    // CHECK constraint without clamping.
+    const bumped = await prisma.loginCode.updateMany({
+      where: {
+        id: stored.id,
+        usedAt: null,
+        attempts: { lt: LOGIN_CODE_MAX_ATTEMPTS },
+      },
+      data: { attempts: { increment: 1 } },
     });
+    if (bumped.count === 0) {
+      return { outcome: "REJECT", message: "Попытки исчерпаны — запросите новый код" };
+    }
   }
 
   if (decision.outcome === "SESSION" && admin && stored) {

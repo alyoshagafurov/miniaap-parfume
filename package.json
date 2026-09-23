@@ -55,6 +55,7 @@
     "@tma.js/sdk-react": "3.0.23",
     "argon2": "0.45.1",
     "csv-parse": "7.0.2",
+    "fflate": "0.8.3",
     "grammy": "1.46.0",
     "iconv-lite": "0.7.3",
     "ioredis": "6.0.0",
