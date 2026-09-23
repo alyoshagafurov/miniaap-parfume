@@ -22,8 +22,13 @@ coverage/
 playwright-report/
 test-results/
 /qa/**/*.png
+# Кроме иллюстраций к docs/HANDOFF.md: это часть документа для клиента, а не
+# улика прогона. Девять кадров на 660 КБ, снимаются одним спеком и меняются
+# только вместе с самой админкой.
+!/qa/final/handoff/*.png
 # Машинные артефакты прогона: отчёт, трассы, сводка. Пересоздаются pnpm test:e2e.
 /qa/stage-1/playwright-results.json
+/qa/final/playwright-results.json
 /qa/**/*.webm
 /qa/**/*.zip
 

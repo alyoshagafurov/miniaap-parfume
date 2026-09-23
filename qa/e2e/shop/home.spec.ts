@@ -12,9 +12,18 @@ test.describe("Главная", () => {
   test("открывается в обычном браузере", async ({ page }, info) => {
     await page.goto("/");
 
+    // The four things the brief requires the first screen to say, each checked
+    // separately: that this is a warehouse, that the brands are known ones,
+    // what it takes to order, and that it reaches the buyer. Asserting the
+    // heading alone would pass with three of the four missing.
     await expect(
-      page.getByRole("heading", { level: 1, name: "Оптовый каталог" }),
+      page.getByRole("heading", { level: 1, name: /Оптовый склад/ }),
     ).toBeVisible();
+    await expect(page.getByText(/Известные бренды/)).toBeVisible();
+    // The figure comes from Settings, so this asserts the shape rather than
+    // the number — the owner raises it from the panel and the line follows.
+    await expect(page.getByText(/Оптом от\s+[\d\s ]+₽/)).toBeVisible();
+    await expect(page.getByText(/Доставка по России/)).toBeVisible();
 
     // The four categories from the brief, as links rather than as decoration.
     for (const name of [
@@ -56,7 +65,7 @@ test.describe("Главная", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { level: 1, name: "Оптовый каталог" }),
+      page.getByRole("heading", { level: 1, name: /Оптовый склад/ }),
     ).toBeVisible();
 
     // The provider only reaches isTelegram: true after init() succeeded and

@@ -32,13 +32,18 @@ try {
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3100";
 
-/** Screenshots live with the rest of the stage-1 evidence, not in test-results. */
-export const SHOTS = "qa/stage-1/screens";
+/**
+ * Where the evidence goes.
+ *
+ * `qa/final` rather than `qa/stage-1`: these are the screens as delivered, and
+ * the stage-1 set is kept where it is as the before-picture of the visual pass.
+ */
+export const SHOTS = "qa/final/screens";
 
 export default defineConfig({
   testDir: "qa/e2e",
   globalSetup: "./qa/e2e/global-setup.ts",
-  outputDir: "qa/stage-1/test-results",
+  outputDir: "qa/final/test-results",
   // Storefront specs are read-only and safe together; the admin specs write to
   // the same catalog, so they declare their own serial mode.
   fullyParallel: true,
@@ -49,8 +54,8 @@ export default defineConfig({
   workers: 4,
   reporter: [
     ["list"],
-    ["html", { outputFolder: "qa/stage-1/playwright-report", open: "never" }],
-    ["json", { outputFile: "qa/stage-1/playwright-results.json" }],
+    ["html", { outputFolder: "qa/final/playwright-report", open: "never" }],
+    ["json", { outputFile: "qa/final/playwright-results.json" }],
   ],
   expect: {
     // A cold production server compiles nothing but does hit Postgres; the
