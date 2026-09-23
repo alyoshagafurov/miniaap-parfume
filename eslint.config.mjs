@@ -75,4 +75,19 @@ export default defineConfig([
     files: ["scripts/**", "prisma/seed.ts", "src/bot/index.ts", "*.config.*"],
     rules: { "no-console": "off" },
   },
+  {
+    // The end-to-end suite. No React here at all — but Playwright's fixtures
+    // are written as `async ({ page }, use) => { … await use(value) }`, and the
+    // hooks rule sees a bare call named `use` inside a function that is not a
+    // component and reports every fixture in the harness as a misplaced hook.
+    // It is the same word, not the same thing.
+    //
+    // The suite also prints: which counters it cleared, what it wrote where.
+    // A test harness that runs for a minute and says nothing is worse.
+    files: ["qa/e2e/**"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+      "no-console": "off",
+    },
+  },
 ]);

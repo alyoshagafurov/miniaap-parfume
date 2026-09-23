@@ -25,7 +25,7 @@ export default function SettingsPage() {
 }
 
 async function Form() {
-  await requireAdminPage();
+  await requireAdminPage("settings:write");
   // readSettings, not the cached wrapper: this screen is where the figures are
   // changed, and showing an hour-old copy of what you just saved is the one
   // thing it must not do.

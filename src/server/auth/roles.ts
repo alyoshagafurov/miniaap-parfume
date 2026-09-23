@@ -111,9 +111,21 @@ export async function requireAdmin(): Promise<SessionPayload> {
  * A Server Action must keep throwing: an action that quietly redirects looks to
  * its caller like an action that succeeded.
  */
-export async function requireAdminPage(): Promise<SessionPayload> {
+export async function requireAdminPage(permission?: Permission): Promise<SessionPayload> {
   const session = await currentSession();
   if (!session) redirect("/admin/login");
+  // Without the permission argument this guard only ever asked "is anybody
+  // signed in", which meant the owner-only screens were owner-only in the
+  // navigation and nowhere else: an editor who typed /admin/settings read the
+  // contacts, the order minimum and the bot's texts in full, and one who typed
+  // /admin/admins got a 500 from the read's own guard rather than a refusal —
+  // an authorisation event logged as a server fault.
+  //
+  // Back to the dashboard rather than an explanation: neither address is
+  // reachable from an editor's navigation, so arriving here is a stale bookmark
+  // or a typed path, and there is nothing to explain to somebody who was not
+  // looking for it.
+  if (permission && !can(session.role, permission)) redirect("/admin");
   return session;
 }
 

@@ -54,3 +54,31 @@ export function formatDateTimeRu(date: Date): string {
   const p = mskParts(date);
   return `${formatDateRu(date)}, ${pad(p.hours)}:${pad(p.minutes)}`;
 }
+
+/**
+ * How a product is named out loud.
+ *
+ * The client writes their price list with the brand in the title — «Chanel Coco
+ * Mademoiselle», «Dior Sauvage» — so the brand is usually already the first
+ * words. Composing an accessible name as brand + title therefore produced
+ * «Chanel Chanel Coco Mademoiselle» on every photograph and every placeholder
+ * in the catalog: a screen reader said the brand twice, on every card, on every
+ * screen.
+ *
+ * Titles that genuinely lack the brand still need it, so the brand is added
+ * only when it is missing. Case-insensitive, because an imported row may say
+ * «CHANEL Coco Mademoiselle».
+ */
+export function productName(brandName: string, title: string): string {
+  const name = title.trim();
+  const brand = brandName.trim();
+  if (!brand) return name;
+  const lower = name.toLowerCase();
+  const prefix = brand.toLowerCase();
+  // Guard the boundary: a brand «Dior» must not swallow a title «Diorama».
+  if (lower === prefix) return name;
+  if (lower.startsWith(prefix) && !/[\p{L}\p{N}]/u.test(name.charAt(brand.length))) {
+    return name;
+  }
+  return `${brand} ${name}`;
+}

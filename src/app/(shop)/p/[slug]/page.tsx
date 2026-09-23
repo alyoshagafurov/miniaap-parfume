@@ -17,6 +17,7 @@ import {
   getProductBySlug,
 } from "@/server/catalog/queries";
 import { getSettings } from "@/server/settings.cached";
+import { productName } from "@/lib/format";
 import { objectUrl } from "@/lib/media";
 
 interface PageProps {
@@ -109,7 +110,7 @@ async function Product({ params }: PageProps) {
       </nav>
 
       {gallery.length > 0 ? (
-        <Gallery images={gallery} alt={`${brandName} ${displayTitle}`} />
+        <Gallery images={gallery} alt={productName(brandName, displayTitle)} />
       ) : (
         // No label: the brand sits twenty pixels below in the same spaced caps,
         // and printing it inside the placeholder too reads as a mistake.
@@ -173,7 +174,7 @@ async function Product({ params }: PageProps) {
         </div>
 
         <div className="mt-4">
-          <ShareButton url={shareUrl} title={`${brandName} ${displayTitle}`} />
+          <ShareButton url={shareUrl} title={productName(brandName, displayTitle)} />
         </div>
       </div>
 

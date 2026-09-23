@@ -24,6 +24,6 @@ export default function AdminsPage() {
 }
 
 async function List() {
-  const session = await requireAdminPage();
+  const session = await requireAdminPage("admins:write");
   return <AdminList admins={await listAdmins()} currentId={session.adminId} />;
 }

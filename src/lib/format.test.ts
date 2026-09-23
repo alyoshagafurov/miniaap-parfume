@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateRu, formatDateTimeRu } from "./format";
+import { formatDateRu, formatDateTimeRu, productName } from "./format";
 
 describe("formatDateRu", () => {
   it("renders a Russian date", () => {
@@ -28,5 +28,40 @@ describe("formatDateRu", () => {
       "января", "февраля", "марта", "апреля", "мая", "июня",
       "июля", "августа", "сентября", "октября", "ноября", "декабря",
     ]);
+  });
+});
+
+describe("productName", () => {
+  it("does not repeat a brand the title already carries", () => {
+    // How every seeded and imported row actually looks.
+    expect(productName("Chanel", "Chanel Coco Mademoiselle")).toBe("Chanel Coco Mademoiselle");
+    expect(productName("Yves Saint Laurent", "Yves Saint Laurent Black Opium")).toBe(
+      "Yves Saint Laurent Black Opium",
+    );
+  });
+
+  it("adds the brand when the title lacks it", () => {
+    expect(productName("Chanel", "Coco Mademoiselle")).toBe("Chanel Coco Mademoiselle");
+  });
+
+  it("ignores case, because an imported row may shout", () => {
+    expect(productName("Chanel", "CHANEL Coco Mademoiselle")).toBe("CHANEL Coco Mademoiselle");
+  });
+
+  it("does not let a brand swallow a longer word", () => {
+    // «Dior» is a prefix of «Diorama» as a string but not as a name.
+    expect(productName("Dior", "Diorama")).toBe("Dior Diorama");
+  });
+
+  it("treats a title that is only the brand as complete", () => {
+    expect(productName("Chanel", "Chanel")).toBe("Chanel");
+  });
+
+  it("survives a product with no brand", () => {
+    expect(productName("", "Дезодорант 200 мл")).toBe("Дезодорант 200 мл");
+  });
+
+  it("accepts punctuation right after the brand", () => {
+    expect(productName("Hermès", "Hermès — Terre d'Hermès")).toBe("Hermès — Terre d'Hermès");
   });
 });

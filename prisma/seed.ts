@@ -302,18 +302,25 @@ async function main() {
           isDemo: true,
         } satisfies Omit<Prisma.ProductUncheckedCreateInput, "sku">;
 
-        const product = await prisma.product.upsert({
-          where: { sku },
-          update: data,
-          create: { sku, ...data },
-        });
-
-        // Replace the fragrance links so a re-seed cannot accumulate them.
+        // The product AND its fragrance links in one transaction.
         //
-        // Both statements in ONE transaction: a deferred constraint trigger
-        // requires every product to keep at least one fragrance, and the delete
-        // on its own would commit a product with none.
+        // A deferred trigger requires every product to hold at least one
+        // fragrance, and "deferred" means it is checked when the transaction
+        // commits. Writing the product on its own therefore commits a product
+        // with no fragrances and trips it — which is exactly what `seed:bulk`
+        // did on its first genuinely new article: the demo articles already
+        // existed with their links, so the upsert was an UPDATE and the row was
+        // never momentarily fragrance-less. The bug was invisible for as long
+        // as nothing new was created.
+        //
+        // The delete belongs here for the same reason, and for one more: on a
+        // re-seed it must not accumulate a second copy of each link.
         await prisma.$transaction(async (tx) => {
+          const product = await tx.product.upsert({
+            where: { sku },
+            update: data,
+            create: { sku, ...data },
+          });
           await tx.productFragrance.deleteMany({ where: { productId: product.id } });
           await tx.productFragrance.createMany({
             data: p.fragrances.map(([brandName, fragranceName], position) => {

@@ -1,3 +1,4 @@
+import { productName } from "@/lib/format";
 import { objectUrl } from "@/lib/media";
 
 /**
@@ -14,6 +15,11 @@ import { objectUrl } from "@/lib/media";
  * and made a screen reader announce it three times. It is on where the
  * placeholder stands alone, such as a product page, and needs to say what it
  * is.
+ *
+ * The accessible name goes through `productName` rather than being composed
+ * here, because the client's titles already begin with the brand: spelling it
+ * out as brand + title made every photo in the catalog announce «Chanel Chanel
+ * Coco Mademoiselle».
  *
  * Always 4:5, always with width and height, so a card reserves its space and
  * the list never shifts as images arrive.
@@ -46,7 +52,7 @@ export function ProductImage({
       <div
         className="bg-surface border-rule flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 rounded-md border px-4 text-center"
         role="img"
-        aria-label={`${brandName} ${title} — фотография готовится`}
+        aria-label={`${productName(brandName, title)} — фотография готовится`}
       >
         <span aria-hidden className="font-display text-olive text-4xl leading-tight">
           Á
@@ -68,7 +74,7 @@ export function ProductImage({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={objectUrl(image.key)}
-      alt={`${brandName} ${title}`}
+      alt={productName(brandName, title)}
       width={image.width}
       height={image.height}
       sizes={sizes}
