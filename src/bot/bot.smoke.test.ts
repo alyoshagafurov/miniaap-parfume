@@ -47,7 +47,11 @@ const USER_ID = 90_000_001;
 
 function harness() {
   const calls: Array<{ method: string; payload: Record<string, unknown> }> = [];
-  const bot = createBot({ token: "1:test", miniAppUrl: MINI_APP_URL, botInfo: BOT_INFO });
+  const bot = createBot({
+    token: "1:test",
+    miniAppUrl: MINI_APP_URL,
+    botInfo: BOT_INFO,
+  });
   bot.api.config.use((_prev, method, payload) => {
     calls.push({ method, payload: payload as Record<string, unknown> });
     return Promise.resolve({ ok: true, result: { message_id: 1 } } as never);
@@ -91,103 +95,113 @@ function callbackUpdate(data: string): Update {
   } as Update;
 }
 
-describe.skipIf(!hasDb)("the bot runs in plain Node, with no Next and no network", () => {
-  beforeAll(async () => {
-    // A settings row must exist; the handlers read it.
-    const { ensureSettings } = await import("@/server/settings");
-    await ensureSettings();
-  });
-
-  it("builds without touching the network", async () => {
-    // botInfo supplied means grammY skips getMe entirely.
-    const { bot, calls } = harness();
-    await bot.init();
-    expect(calls).toHaveLength(0);
-  });
-
-  it("answers /start", async () => {
-    const { bot, calls } = harness();
-    await bot.init();
-    await bot.handleUpdate(messageUpdate("/start"));
-
-    // No banner is configured, so the greeting is text — a complete state.
-    const sent = calls.find((c) => c.method === "sendMessage" || c.method === "sendPhoto");
-    expect(sent, JSON.stringify(calls)).toBeDefined();
-    const markup = sent?.payload.reply_markup as
-      | { inline_keyboard: Array<Array<{ text: string }>> }
-      | undefined;
-    expect(markup?.inline_keyboard.flat().map((b) => b.text)).toContain("Открыть каталог");
-  });
-
-  it("answers /catalog with a Mini App button", async () => {
-    const { bot, calls } = harness();
-    await bot.init();
-    await bot.handleUpdate(messageUpdate("/catalog"));
-
-    const sent = calls.find((c) => c.method === "sendMessage");
-    expect(sent).toBeDefined();
-    const markup = sent?.payload.reply_markup as
-      | { inline_keyboard: Array<Array<{ text: string; web_app?: { url: string } }>> }
-      | undefined;
-    const button = markup?.inline_keyboard.flat().find((b) => b.web_app);
-    expect(button?.web_app?.url).toBe(MINI_APP_URL);
-  });
-
-  it("answers /contacts from Settings, not from a literal", async () => {
-    const { bot, calls } = harness();
-    const { readSettings } = await import("@/server/settings");
-    const settings = await readSettings();
-
-    await bot.init();
-    await bot.handleUpdate(messageUpdate("/contacts"));
-
-    const text = String(calls.find((c) => c.method === "sendMessage")?.payload.text ?? "");
-    expect(text).toContain(settings.companyName);
-  });
-
-  it("refuses /admin to someone who is not an administrator", async () => {
-    const { bot, calls } = harness();
-    await bot.init();
-    await bot.handleUpdate(messageUpdate("/admin"));
-
-    const text = String(calls.find((c) => c.method === "sendMessage")?.payload.text ?? "");
-    expect(text).toContain("администратор");
-    // It must not link to the panel, or its existence is confirmed anyway.
-    expect(JSON.stringify(calls)).not.toContain("/admin");
-  });
-
-  it("answers the «Условия и доставка» callback", async () => {
-    const { bot, calls } = harness();
-    await bot.init();
-    await bot.handleUpdate(callbackUpdate("terms"));
-
-    // The callback must be acknowledged, or Telegram shows a spinner forever.
-    expect(calls.some((c) => c.method === "answerCallbackQuery")).toBe(true);
-    expect(calls.some((c) => c.method === "sendMessage")).toBe(true);
-  });
-
-  it("records the sender, so the notifier knows who is reachable", async () => {
-    const { bot } = harness();
-    const { prisma } = await import("@/server/db");
-    await bot.init();
-    await bot.handleUpdate(messageUpdate("/start"));
-
-    const user = await prisma.telegramUser.findUnique({
-      where: { telegramId: BigInt(USER_ID) },
-      select: { firstName: true, botBlocked: true },
+describe.skipIf(!hasDb)(
+  "the bot runs in plain Node, with no Next and no network",
+  () => {
+    beforeAll(async () => {
+      // A settings row must exist; the handlers read it.
+      const { ensureSettings } = await import("@/server/settings");
+      await ensureSettings();
     });
-    expect(user?.firstName).toBe("Тест");
-    expect(user?.botBlocked).toBe(false);
-  });
 
-  it("uses no emoji in anything it says", async () => {
-    const { bot, calls } = harness();
-    await bot.init();
-    for (const command of ["/start", "/catalog", "/contacts", "/admin"]) {
-      await bot.handleUpdate(messageUpdate(command));
-    }
-    await bot.handleUpdate(callbackUpdate("terms"));
+    it("builds without touching the network", async () => {
+      // botInfo supplied means grammY skips getMe entirely.
+      const { bot, calls } = harness();
+      await bot.init();
+      expect(calls).toHaveLength(0);
+    });
 
-    expect(/\p{Extended_Pictographic}/u.test(JSON.stringify(calls))).toBe(false);
-  });
-});
+    it("answers /start", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      await bot.handleUpdate(messageUpdate("/start"));
+
+      // No banner is configured, so the greeting is text — a complete state.
+      const sent = calls.find(
+        (c) => c.method === "sendMessage" || c.method === "sendPhoto",
+      );
+      expect(sent, JSON.stringify(calls)).toBeDefined();
+      const markup = sent?.payload.reply_markup as
+        { inline_keyboard: Array<Array<{ text: string }>> } | undefined;
+      expect(markup?.inline_keyboard.flat().map((b) => b.text)).toContain(
+        "Открыть каталог",
+      );
+    });
+
+    it("answers /catalog with a Mini App button", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      await bot.handleUpdate(messageUpdate("/catalog"));
+
+      const sent = calls.find((c) => c.method === "sendMessage");
+      expect(sent).toBeDefined();
+      const markup = sent?.payload.reply_markup as
+        | { inline_keyboard: Array<Array<{ text: string; web_app?: { url: string } }>> }
+        | undefined;
+      const button = markup?.inline_keyboard.flat().find((b) => b.web_app);
+      expect(button?.web_app?.url).toBe(MINI_APP_URL);
+    });
+
+    it("answers /contacts from Settings, not from a literal", async () => {
+      const { bot, calls } = harness();
+      const { readSettings } = await import("@/server/settings");
+      const settings = await readSettings();
+
+      await bot.init();
+      await bot.handleUpdate(messageUpdate("/contacts"));
+
+      const text = String(
+        calls.find((c) => c.method === "sendMessage")?.payload.text ?? "",
+      );
+      expect(text).toContain(settings.companyName);
+    });
+
+    it("refuses /admin to someone who is not an administrator", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      await bot.handleUpdate(messageUpdate("/admin"));
+
+      const text = String(
+        calls.find((c) => c.method === "sendMessage")?.payload.text ?? "",
+      );
+      expect(text).toContain("администратор");
+      // It must not link to the panel, or its existence is confirmed anyway.
+      expect(JSON.stringify(calls)).not.toContain("/admin");
+    });
+
+    it("answers the «Условия и доставка» callback", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      await bot.handleUpdate(callbackUpdate("terms"));
+
+      // The callback must be acknowledged, or Telegram shows a spinner forever.
+      expect(calls.some((c) => c.method === "answerCallbackQuery")).toBe(true);
+      expect(calls.some((c) => c.method === "sendMessage")).toBe(true);
+    });
+
+    it("records the sender, so the notifier knows who is reachable", async () => {
+      const { bot } = harness();
+      const { prisma } = await import("@/server/db");
+      await bot.init();
+      await bot.handleUpdate(messageUpdate("/start"));
+
+      const user = await prisma.telegramUser.findUnique({
+        where: { telegramId: BigInt(USER_ID) },
+        select: { firstName: true, botBlocked: true },
+      });
+      expect(user?.firstName).toBe("Тест");
+      expect(user?.botBlocked).toBe(false);
+    });
+
+    it("uses no emoji in anything it says", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      for (const command of ["/start", "/catalog", "/contacts", "/admin"]) {
+        await bot.handleUpdate(messageUpdate(command));
+      }
+      await bot.handleUpdate(callbackUpdate("terms"));
+
+      expect(/\p{Extended_Pictographic}/u.test(JSON.stringify(calls))).toBe(false);
+    });
+  },
+);
