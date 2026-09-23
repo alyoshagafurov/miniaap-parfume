@@ -14,6 +14,11 @@ export default defineConfig({
     // Server-side logic only. Nothing here boots Next, so these stay fast
     // enough to run on every save.
     environment: "node",
+    // The basket is browser code. Its test opts into jsdom with a docblock;
+    // this gives that jsdom a real origin, because the about:blank default is
+    // an opaque origin where localStorage throws SecurityError — which the
+    // cart survives by design, so the storage tests would pass vacuously.
+    environmentOptions: { jsdom: { url: "http://localhost" } },
     include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
     coverage: {
       include: ["src/lib/**", "src/server/**"],
