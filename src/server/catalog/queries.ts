@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { prisma } from "@/server/db";
-import { CATALOG_TAG, categoryTag, productTag } from "@/server/catalog/tags";
+import { brandTag, CATALOG_TAG, categoryTag, productTag } from "@/server/catalog/tags";
 
 /**
  * Storefront reads.
@@ -230,4 +230,47 @@ export async function getMoreFromBrand(brandId: string, exceptProductId: string,
     take: limit,
     select: CARD_SELECT,
   });
+}
+
+/**
+ * A brand and everything of theirs in the catalog, grouped by category.
+ *
+ * Grouped by category rather than listed flat because that is how this catalog
+ * is actually shopped: a buyer stocking the 35 ml pencils wants Chanel's
+ * pencils, not Chanel's everything interleaved by popularity. The category is
+ * the format, which is the pivot the whole catalog turns on.
+ */
+export async function getBrandBySlug(slug: string) {
+  "use cache";
+  cacheTag(CATALOG_TAG, brandTag(slug));
+  cacheLife("hours");
+  return prisma.brand.findFirst({
+    where: { slug, isPublished: true },
+    select: { id: true, name: true, slug: true },
+  });
+}
+
+export async function getBrandProducts(brandId: string) {
+  "use cache";
+  cacheTag(CATALOG_TAG);
+  cacheLife("hours");
+  const products = await prisma.product.findMany({
+    where: { status: "PUBLISHED", fragrances: { some: { fragrance: { brandId } } } },
+    orderBy: [{ categoryId: "asc" }, { popularity: "desc" }, { id: "asc" }],
+    select: { ...CARD_SELECT, category: { select: { name: true, slug: true, sortOrder: true } } },
+  });
+
+  // Grouped in code rather than in N queries: the whole of one brand is tens of
+  // rows, not thousands, and one round trip beats one per category.
+  const groups = new Map<string, { name: string; slug: string; sortOrder: number; products: typeof products }>();
+  for (const p of products) {
+    const key = p.category.slug;
+    const group = groups.get(key);
+    if (group) group.products.push(p);
+    else groups.set(key, { ...p.category, products: [p] });
+  }
+
+  return [...groups.values()].sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "ru"),
+  );
 }
