@@ -17,15 +17,23 @@ import { useEffect, useRef, useState, useTransition } from "react";
 export function SearchField({ autoFocus = false }: { autoFocus?: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const [value, setValue] = useState(() => params.get("q") ?? "");
+  const urlQuery = params.get("q") ?? "";
+  const [value, setValue] = useState(urlQuery);
+  const [lastUrlQuery, setLastUrlQuery] = useState(urlQuery);
   const [isPending, startTransition] = useTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Reflect a query that arrived from the URL — a shared link, or the back
-  // button returning to a previous search.
-  useEffect(() => {
-    setValue(params.get("q") ?? "");
-  }, [params]);
+  // button returning to a previous search — without an effect.
+  //
+  // Adjusting during render is React's own answer to "reset state when a prop
+  // changes": React discards this render and re-runs immediately, so nothing is
+  // painted twice. Doing it in an effect paints the stale value first and, as
+  // eslint pointed out, cascades renders.
+  if (urlQuery !== lastUrlQuery) {
+    setLastUrlQuery(urlQuery);
+    setValue(urlQuery);
+  }
 
   const go = (query: string, replace: boolean) => {
     const trimmed = query.trim();
