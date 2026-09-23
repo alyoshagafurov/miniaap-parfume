@@ -39,7 +39,8 @@
     "relay:stub": "node scripts/relay-stub.mjs",
     "check:client-boundary": "node scripts/check-client-boundary.mjs",
     "check:catalog-writes": "node scripts/check-catalog-writes.mjs",
-    "check:action-guards": "node scripts/check-action-guards.mjs"
+    "check:action-guards": "node scripts/check-action-guards.mjs",
+    "brand:banner": "tsx scripts/make-bot-banner.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -29,6 +29,7 @@ export function ProductImage({
   title,
   brandName,
   label = false,
+  prominent = false,
   sizes = "(max-width: 767px) 50vw, 240px",
   priority = false,
   onError,
@@ -38,6 +39,13 @@ export function ProductImage({
   title: string;
   brandName: string;
   label?: boolean;
+  /**
+   * The placeholder stands alone on a product page, where the box is two to
+   * three times the width of a card. The monogram was sized for the card, so
+   * at that scale it read as a small mark adrift in an empty rectangle rather
+   * than as a designed surface.
+   */
+  prominent?: boolean;
   sizes?: string;
   priority?: boolean;
   /**
@@ -55,7 +63,10 @@ export function ProductImage({
         role="img"
         aria-label={`${productName(brandName, title)} — фотография готовится`}
       >
-        <span aria-hidden className="font-display text-olive text-4xl leading-tight">
+        <span
+          aria-hidden
+          className={`font-display text-olive leading-tight ${prominent ? "text-4xl sm:text-6xl" : "text-4xl"}`}
+        >
           Á
         </span>
         {label ? (

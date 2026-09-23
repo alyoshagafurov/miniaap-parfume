@@ -185,9 +185,13 @@ export function ProductTable({
                 </td>
 
                 <td className="block md:table-cell md:py-3 md:align-top">
+                  {/* A 44px target on a phone, an ordinary inline link at the
+                      desk. This is the row's primary action — opening the
+                      product — and on the card layout it was a 16px line of
+                      text with nothing around it to catch a thumb. */}
                   <Link
                     href={`/admin/products/${row.id}`}
-                    className="text-ink font-medium underline-offset-4 hover:underline"
+                    className="text-ink inline-flex min-h-11 items-center font-medium underline-offset-4 hover:underline md:min-h-0"
                   >
                     {row.title}
                   </Link>

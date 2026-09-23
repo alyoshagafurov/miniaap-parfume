@@ -138,6 +138,7 @@ async function Product({ params }: PageProps) {
               image={undefined}
               title={displayTitle}
               brandName={brandName}
+              prominent
               sizes="(max-width: 767px) 100vw, 360px"
             />
           )}
@@ -417,13 +418,19 @@ function ProductSkeleton() {
   return (
     <div aria-hidden>
       <div className="bg-surface mb-4 h-5 w-32 rounded-md" />
-      <div className="bg-surface border-rule aspect-[4/5] w-full rounded-md border" />
-      <div className="mt-6 flex flex-col gap-3">
-        <div className="bg-surface h-4 w-24 rounded-md" />
-        <div className="bg-surface h-8 w-3/4 rounded-md" />
-        <div className="bg-surface h-4 w-1/2 rounded-md" />
-        <div className="bg-surface mt-2 h-8 w-32 rounded-md" />
-        <div className="bg-surface mt-4 h-11 w-full rounded-md" />
+      {/* The same two columns as the page it stands in for. A skeleton that
+          lays out differently from what replaces it is not a placeholder, it is
+          a guaranteed reflow — and on this page the difference was a 960-pixel
+          photograph moving everything below it. */}
+      <div className="md:grid md:grid-cols-2 md:items-start md:gap-10">
+        <div className="bg-surface border-rule aspect-[4/5] w-full rounded-md border" />
+        <div className="mt-6 flex flex-col gap-3 md:mt-0">
+          <div className="bg-surface h-4 w-24 rounded-md" />
+          <div className="bg-surface h-8 w-3/4 rounded-md" />
+          <div className="bg-surface h-4 w-1/2 rounded-md" />
+          <div className="bg-surface mt-2 h-8 w-32 rounded-md" />
+          <div className="bg-surface mt-4 h-11 w-full rounded-md" />
+        </div>
       </div>
     </div>
   );

@@ -54,7 +54,14 @@ test.describe("Заявка", () => {
     await expect(page.getByText(/До минимального заказа .* не хватает/)).toBeVisible();
 
     await fillForm(page);
-    await expect(page.getByRole("button", { name: /^Оформить/ })).toBeDisabled();
+
+    // The control names its own blocker. A disabled button reading «Оформить ·
+    // 890 ₽» states what it will not do and hides why, and the shortfall was
+    // then printed three times on one screen to make up for it.
+    const submit = page.getByRole("button", { name: /^Ещё .* до минимума$/ });
+    await expect(submit).toBeVisible();
+    await expect(submit).toBeDisabled();
+    await expect(page.getByRole("button", { name: /^Оформить/ })).toBeHidden();
 
     await shot(page, info, "12-cart-below-minimum");
   });

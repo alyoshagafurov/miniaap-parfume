@@ -141,10 +141,25 @@ export function OrderScreen({
     if (result && !result.ok) panel.current?.scrollIntoView({ block: "center" });
   }, [result]);
 
+  /**
+   * What the submit control says.
+   *
+   * A disabled button reading «Оформить · 890 ₽» states the thing it will not
+   * do and hides the reason, so the screen carried a separate line above it
+   * explaining the shortfall — and the shortfall was then on screen three
+   * times, counting the progress bar's own caption. The button says the
+   * blocker when there is one and the total when there is not.
+   */
+  const submitLabel = !meetsMinimum
+    ? `Ещё ${formatRub(shortfall)} до минимума`
+    : showPrices
+      ? `Оформить · ${formatRub(totalKop)}`
+      : "Оформить заявку";
+
   // Telegram's own submit button, gated on the provider's ready flag — nothing
   // here touches it before the SDK has mounted.
   useMainButton({
-    text: showPrices ? `Оформить · ${formatRub(totalKop)}` : "Оформить заявку",
+    text: submitLabel,
     visible: !done && count > 0,
     enabled: canSubmit,
     loading: pending,
@@ -291,11 +306,14 @@ export function OrderScreen({
           />
         </Field>
 
+        {/* No hint. The placeholder already shows «+7 (900) 000-00-00» and the
+            field formats as it is typed, so a second line reading «+7 (___)
+            ___-__-__» underneath said the same thing a third time and made the
+            one required field on the screen look like the difficult one. */}
         <Field
           label="Телефон"
           htmlFor="phone"
           error={form.formState.errors.phone?.message}
-          hint="+7 (___) ___-__-__"
         >
           <TextInput
             id="phone"
@@ -410,12 +428,6 @@ export function OrderScreen({
           ) : null}
         </div>
 
-        {!meetsMinimum ? (
-          <p className="text-muted text-sm">
-            До минимального заказа не хватает {formatRub(shortfall)}.
-          </p>
-        ) : null}
-
         {/*
           Rendered outside Telegram, where there is no MainButton — and also
           inside it, because the MainButton sits below the keyboard while the
@@ -423,7 +435,7 @@ export function OrderScreen({
           should not have to dismiss it to find the way forward.
         */}
         <Button type="submit" fullWidth disabled={!canSubmit} loading={pending}>
-          {showPrices ? `Оформить · ${formatRub(totalKop)}` : "Оформить заявку"}
+          {submitLabel}
         </Button>
       </form>
     </>

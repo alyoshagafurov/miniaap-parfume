@@ -13,8 +13,13 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 type Variant = "primary" | "secondary" | "quiet";
 
 const VARIANT: Record<Variant, string> = {
+  // Disabled is a line and a whisper, not a filled slab. `bg-control` is the
+  // 3:1 colour that bounds an input, and a full-width button painted in it read
+  // as a button mid-request rather than one that will not go — which on the
+  // request screen is exactly the wrong reading, because the buyer is waiting
+  // to find out whether anything is happening.
   primary:
-    "bg-olive text-surface hover:bg-olive-hover active:bg-olive-hover disabled:bg-control",
+    "bg-olive text-surface hover:bg-olive-hover active:bg-olive-hover disabled:border disabled:border-rule disabled:bg-transparent disabled:text-muted",
   secondary:
     "bg-surface text-ink border border-control hover:bg-olive-wash active:bg-olive-wash disabled:text-muted",
   quiet:
