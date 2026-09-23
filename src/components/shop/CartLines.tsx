@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { useState } from "react";
+
 import { useCart } from "@/components/shop/CartProvider";
 import { useHaptics } from "@/components/telegram/provider";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +25,19 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
   const { lines, setQuantity, remove } = useCart();
   const haptics = useHaptics();
 
+  /**
+   * Basket lines whose photograph will not load.
+   *
+   * The basket is the one place a picture is addressed by a key the browser has
+   * been holding for days. An administrator who replaced or removed that
+   * photograph leaves the key pointing at nothing, and the buyer gets a broken
+   * image in the middle of their own request — which reads as the shop being
+   * broken, not as a missing file. Falling back to the monogram is the state
+   * this catalog already has for a product with no photograph at all, and it
+   * looks deliberate because it is.
+   */
+  const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
+
   return (
     <ul className="flex flex-col">
       {lines.map((line) => (
@@ -31,13 +46,14 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
             <Link href={`/p/${line.slug}`} className="w-20 shrink-0">
               <ProductImage
                 image={
-                  line.imageKey
+                  line.imageKey && !broken.has(line.productId)
                     ? { key: line.imageKey, width: 400, height: 500, blurDataUrl: "" }
                     : undefined
                 }
                 title={line.title}
                 brandName={line.brandName}
                 sizes="80px"
+                onError={() => setBroken((b) => new Set(b).add(line.productId))}
               />
             </Link>
 

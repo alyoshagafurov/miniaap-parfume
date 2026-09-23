@@ -77,7 +77,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
             className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full rounded-md border px-3 py-2 text-base"
           />
         </div>
-        <div>
+        <div className="min-w-0 max-w-full">
           <label htmlFor="brand" className="caps text-muted mb-1 block">
             Бренд
           </label>
@@ -85,7 +85,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
             id="brand"
             name="brand"
             defaultValue={brandSlug ?? ""}
-            className="bg-surface text-ink border-control rounded-md border px-3 py-2 text-base"
+            className="bg-surface text-ink border-control w-full max-w-full rounded-md border px-3 py-2 text-base"
           >
             <option value="">Все</option>
             {brands.map((b) => (

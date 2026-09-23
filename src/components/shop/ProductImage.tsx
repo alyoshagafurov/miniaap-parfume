@@ -25,6 +25,7 @@ export function ProductImage({
   label = false,
   sizes = "(max-width: 767px) 50vw, 240px",
   priority = false,
+  onError,
 }: {
   image: { key: string; width: number; height: number; blurDataUrl: string } | undefined;
   title: string;
@@ -32,6 +33,13 @@ export function ProductImage({
   label?: boolean;
   sizes?: string;
   priority?: boolean;
+  /**
+   * Only a client caller passes this. The basket is the one place a picture is
+   * addressed by a key the browser has held for days, so it is the one place
+   * that needs to notice the file is gone. `error` does not bubble, so the
+   * handler has to be on the <img> itself — a wrapper cannot catch it.
+   */
+  onError?: () => void;
 }) {
   if (!image) {
     return (
@@ -67,6 +75,7 @@ export function ProductImage({
       loading={priority ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={priority ? "high" : "auto"}
+      onError={onError}
       className="bg-surface aspect-[4/5] w-full rounded-md object-cover"
       style={{ backgroundImage: `url(${image.blurDataUrl})`, backgroundSize: "cover" }}
     />

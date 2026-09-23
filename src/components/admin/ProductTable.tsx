@@ -238,7 +238,7 @@ function BulkBar({
           if (value) onApply({ kind: "status", status: value });
           e.target.value = "";
         }}
-        className="bg-surface text-ink border-control rounded-md border px-3 text-sm"
+        className="bg-surface text-ink border-control max-w-full rounded-md border px-3 text-sm"
       >
         <option value="">Статус…</option>
         {PUBLISH_STATUSES.map((s) => (
@@ -260,7 +260,7 @@ function BulkBar({
           if (value) onApply({ kind: "stock", stock: value });
           e.target.value = "";
         }}
-        className="bg-surface text-ink border-control rounded-md border px-3 text-sm"
+        className="bg-surface text-ink border-control max-w-full rounded-md border px-3 text-sm"
       >
         <option value="">Наличие…</option>
         {STOCK_STATES.map((s) => (
@@ -281,7 +281,7 @@ function BulkBar({
           if (e.target.value) onApply({ kind: "category", categoryId: e.target.value });
           e.target.value = "";
         }}
-        className="bg-surface text-ink border-control rounded-md border px-3 text-sm"
+        className="bg-surface text-ink border-control max-w-full rounded-md border px-3 text-sm"
       >
         <option value="">Категория…</option>
         {categories.map((c) => (

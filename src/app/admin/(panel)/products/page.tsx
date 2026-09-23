@@ -196,7 +196,10 @@ function Select({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    // min-w-0: a flex item will not shrink below its content otherwise, and a
+    // <select> sizes itself to its widest option — one long brand name and the
+    // filter bar runs off a 390px screen.
+    <div className="min-w-0 max-w-full">
       <label htmlFor={name} className="caps text-muted mb-1 block">
         {label}
       </label>
@@ -208,7 +211,7 @@ function Select({
         id={name}
         name={name}
         defaultValue={value}
-        className="bg-surface text-ink border-control rounded-md border px-3 py-2 text-base"
+        className="bg-surface text-ink border-control w-full max-w-full rounded-md border px-3 py-2 text-base"
       >
         {children}
       </select>
