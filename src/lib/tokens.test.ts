@@ -3,12 +3,13 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { CANVAS, INK, OLIVE, SURFACE } from "./tokens";
+import { CANVAS, INK, OLIVE, OLIVE_WASH, SURFACE } from "./tokens";
 
 /**
- * tokens.ts duplicates four values from globals.css, because Telegram's colour
- * setters and Next's themeColor take strings rather than CSS variables. This
- * test is what stops that duplication rotting: change one and the other fails.
+ * tokens.ts duplicates a handful of values from globals.css, because Telegram's
+ * colour setters, Next's themeColor and an .xlsx cell fill all take a string
+ * rather than a CSS variable. This test is what stops that duplication rotting:
+ * change one and the other fails.
  */
 const css = readFileSync(
   fileURLToPath(new URL("../app/globals.css", import.meta.url)),
@@ -27,6 +28,7 @@ describe("tokens.ts mirrors globals.css", () => {
     ["color-surface", SURFACE],
     ["color-olive", OLIVE],
     ["color-ink", INK],
+    ["color-olive-wash", OLIVE_WASH],
   ])("--%s matches", (name, js) => {
     expect(js.toLowerCase()).toBe(cssToken(name));
   });
