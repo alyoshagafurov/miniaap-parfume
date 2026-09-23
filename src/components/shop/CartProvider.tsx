@@ -98,7 +98,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (productId: string, qty: number) => commit(setQty(lines, productId, qty)),
     [],
   );
-  const remove = useCallback((productId: string) => commit(removeLine(lines, productId)), []);
+  const remove = useCallback(
+    (productId: string) => commit(removeLine(lines, productId)),
+    [],
+  );
   const replace = useCallback((next: CartLine[]) => commit(next), []);
   const clear = useCallback(() => commit([]), []);
 

@@ -117,7 +117,8 @@ function ordering(sort: SortKey, cursor: Cursor | null) {
             ? Prisma.sql`AND (p."publishedAt" < ${at}
                 OR (p."publishedAt" = ${at} AND p.id > ${cursor.id}))`
             : Prisma.empty,
-        valueOf: (r: ListedProduct) => (r.publishedAt ? r.publishedAt.toISOString() : ""),
+        valueOf: (r: ListedProduct) =>
+          r.publishedAt ? r.publishedAt.toISOString() : "",
       };
     }
     case "price_asc":
@@ -254,7 +255,8 @@ export async function listProducts(params: ListParams): Promise<ListResult> {
 
   return {
     items,
-    nextCursor: hasMore && last ? encodeCursor({ value: valueOf(last), id: last.id }) : null,
+    nextCursor:
+      hasMore && last ? encodeCursor({ value: valueOf(last), id: last.id }) : null,
     total: counted?.total ?? items.length,
   };
 }

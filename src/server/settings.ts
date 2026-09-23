@@ -1,5 +1,9 @@
 import type { Settings } from "@prisma/client";
 
+import {
+  ensureSettingsRow,
+  rememberBannerFileId as rememberBannerFileIdMutation,
+} from "@/server/catalog/mutations/settings";
 import { prisma } from "@/server/db";
 
 /**
@@ -47,13 +51,17 @@ export async function readSettings(): Promise<Settings> {
   return existing ?? ({ ...DEFAULTS, updatedAt: new Date(0) } as Settings);
 }
 
-/** Creates the singleton if it is missing. Called from write paths only. */
+/**
+ * Creates the singleton if it is missing. Called from write paths only.
+ *
+ * Both writers below go through src/server/catalog/mutations, like every other
+ * catalog write — not for ceremony, but because check:catalog-writes forbids a
+ * Prisma write to these tables anywhere else, and a rule with an exception for
+ * "just this one small update" is the rule that fails to catch the next one.
+ */
 export async function ensureSettings(): Promise<Settings> {
-  return prisma.settings.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { ...DEFAULTS },
-  });
+  await ensureSettingsRow();
+  return readSettings();
 }
 
 /**
@@ -61,5 +69,5 @@ export async function ensureSettings(): Promise<Settings> {
  * so every later /start re-sends it by id instead of re-uploading the file.
  */
 export async function rememberBannerFileId(fileId: string): Promise<void> {
-  await prisma.settings.update({ where: { id: 1 }, data: { bannerFileId: fileId } });
+  await rememberBannerFileIdMutation(fileId);
 }
