@@ -1,19 +1,10 @@
-import { Bot, GrammyError, HttpError } from "grammy";
-
-import { handleStart, miniAppUrlFor } from "@/bot/handlers/start";
-import { mainKeyboard } from "@/bot/keyboards/main";
-import {
-  BUTTON,
-  COMMAND_DESCRIPTION,
-  NOT_ADMIN,
-  contacts,
-  terms,
-} from "@/bot/texts/ru";
+import { createBot } from "@/bot/bot";
+import { miniAppUrlFor } from "@/bot/handlers/start";
+import { BUTTON, COMMAND_DESCRIPTION } from "@/bot/texts/ru";
 import { loadDotEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
 import { assertSearchHealth } from "@/server/db-health";
-import { readSettings } from "@/server/settings";
-import { clientOptions, installAutoRetry } from "@/server/telegram/client";
+import { clientOptions } from "@/server/telegram/client";
 
 /**
  * The bot process.
@@ -24,6 +15,10 @@ import { clientOptions, installAutoRetry } from "@/server/telegram/client";
  * only — webhooks are never registered, because the production host is in
  * Russia and reaches the Bot API through a relay; a webhook would require
  * Telegram to reach back in, which it cannot.
+ *
+ * This file is only the process: environment, boot, polling, shutdown. Every
+ * handler lives in bot.ts, which has no side effects, so the smoke test can
+ * stand the same bot up in plain Node with no network.
  */
 
 loadDotEnv();
@@ -41,122 +36,7 @@ function requireEnv(name: string, why: string): string {
 const token = requireEnv("BOT_TOKEN", "бот не запущен");
 const miniAppUrl = requireEnv("MINI_APP_URL", "кнопке каталога некуда вести");
 
-const bot = new Bot(token, { client: clientOptions() });
-installAutoRetry(bot.api);
-
-// ── Identity ────────────────────────────────────────────────────────────────
-
-const adminCache = new Map<string, boolean>();
-
-async function isAdmin(telegramId: bigint): Promise<boolean> {
-  const key = telegramId.toString();
-  const cached = adminCache.get(key);
-  if (cached !== undefined) return cached;
-  const row = await prisma.adminUser.findFirst({
-    where: { telegramId, isActive: true },
-    select: { id: true },
-  });
-  const result = row !== null;
-  adminCache.set(key, result);
-  return result;
-}
-
-/**
- * Every update refreshes the sender, so the catalog knows who is active and the
- * notifier knows who has blocked the bot. Personal data beyond what Telegram
- * already sends is never stored, and none of it is logged.
- */
-bot.use(async (ctx, next) => {
-  const from = ctx.from;
-  if (from && !from.is_bot) {
-    await prisma.telegramUser.upsert({
-      where: { telegramId: BigInt(from.id) },
-      update: {
-        firstName: from.first_name,
-        username: from.username ?? null,
-        lastSeenAt: new Date(),
-        botBlocked: false,
-      },
-      create: {
-        telegramId: BigInt(from.id),
-        firstName: from.first_name,
-        username: from.username ?? null,
-      },
-    });
-  }
-  await next();
-});
-
-/**
- * In a private chat my_chat_member fires only on block and unblock, which is
- * the cheapest possible signal that a user has stopped the bot — far better
- * than discovering it from a 403 the next time a request notification is sent.
- */
-bot.on("my_chat_member", async (ctx) => {
-  const status = ctx.myChatMember.new_chat_member.status;
-  const blocked = status === "kicked" || status === "left";
-  await prisma.telegramUser.updateMany({
-    where: { telegramId: BigInt(ctx.from.id) },
-    data: { botBlocked: blocked },
-  });
-});
-
-// ── Commands ────────────────────────────────────────────────────────────────
-
-bot.command("start", (ctx) => handleStart(ctx, { miniAppUrl, isAdmin }));
-
-bot.command("catalog", async (ctx) => {
-  const settings = await readSettings();
-  await ctx.reply(BUTTON.menu, {
-    reply_markup: mainKeyboard({
-      miniAppUrl,
-      whatsappPhone: settings.whatsappPhone,
-    }),
-  });
-});
-
-bot.command("contacts", async (ctx) => {
-  await ctx.reply(contacts(await readSettings()));
-});
-
-bot.command("admin", async (ctx) => {
-  const from = ctx.from;
-  if (!from || !(await isAdmin(BigInt(from.id)))) {
-    // Says nothing about the panel existing.
-    await ctx.reply(NOT_ADMIN);
-    return;
-  }
-  const settings = await readSettings();
-  await ctx.reply(BUTTON.admin, {
-    reply_markup: mainKeyboard({
-      miniAppUrl,
-      whatsappPhone: settings.whatsappPhone,
-      adminUrl: `${miniAppUrl.replace(/\/+$/, "")}/admin`,
-    }),
-  });
-});
-
-bot.callbackQuery("terms", async (ctx) => {
-  await ctx.answerCallbackQuery();
-  await ctx.reply(terms(await readSettings()));
-});
-
-// ── Errors ──────────────────────────────────────────────────────────────────
-
-bot.catch((err) => {
-  const e = err.error;
-  // Update ids only — an update object contains the user's name and message.
-  const where = `update ${err.ctx.update.update_id}`;
-  if (e instanceof GrammyError) {
-    console.error(`Bot API отклонил запрос (${where}): ${e.method} ${e.error_code} ${e.description}`);
-  } else if (e instanceof HttpError) {
-    console.error(`Сеть недоступна (${where}) — проверьте TELEGRAM_API_ROOT:`, e.message);
-  } else {
-    console.error(`Необработанная ошибка (${where}):`, e);
-  }
-});
-
-// ── Boot ────────────────────────────────────────────────────────────────────
+const bot = createBot({ token, miniAppUrl });
 
 async function boot(): Promise<void> {
   // Refuse to start against a database whose search is silently broken. The bot
@@ -168,11 +48,13 @@ async function boot(): Promise<void> {
   // If a webhook was ever registered, getUpdates returns 409 forever.
   await bot.api.deleteWebhook({ drop_pending_updates: false });
 
-  await bot.api.setMyCommands([
+  const PUBLIC_COMMANDS = [
     { command: "start", description: COMMAND_DESCRIPTION.start },
     { command: "catalog", description: COMMAND_DESCRIPTION.catalog },
     { command: "contacts", description: COMMAND_DESCRIPTION.contacts },
-  ]);
+  ];
+
+  await bot.api.setMyCommands(PUBLIC_COMMANDS);
 
   // Per-admin command lists. BotCommandScopeChat REPLACES the whole list for
   // that chat, so every command an administrator should still see is repeated
@@ -184,12 +66,7 @@ async function boot(): Promise<void> {
   for (const admin of admins) {
     try {
       await bot.api.setMyCommands(
-        [
-          { command: "start", description: COMMAND_DESCRIPTION.start },
-          { command: "catalog", description: COMMAND_DESCRIPTION.catalog },
-          { command: "contacts", description: COMMAND_DESCRIPTION.contacts },
-          { command: "admin", description: COMMAND_DESCRIPTION.admin },
-        ],
+        [...PUBLIC_COMMANDS, { command: "admin", description: COMMAND_DESCRIPTION.admin }],
         { scope: { type: "chat", chat_id: Number(admin.telegramId) } },
       );
     } catch {
@@ -203,7 +80,8 @@ async function boot(): Promise<void> {
   });
 
   const running = bot.start({
-    onStart: (me) => console.log(`Бот @${me.username} запущен, long polling через ${clientOptions().apiRoot}`),
+    onStart: (me) =>
+      console.log(`Бот @${me.username} запущен, long polling через ${clientOptions().apiRoot}`),
   });
 
   // bot.stop() does not wait for the middleware stack — the start promise does.

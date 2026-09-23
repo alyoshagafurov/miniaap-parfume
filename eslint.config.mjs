@@ -27,6 +27,50 @@ export default defineConfig([
     },
   },
   {
+    /**
+     * The bot process boundary.
+     *
+     * The bot has no Next request context: a `'use cache'` function throws the
+     * moment it runs, and `next/*` is unavailable. This rule gives the feedback
+     * in the editor; `pnpm check:bot-boundary` walks the real import graph and
+     * is what actually catches a violation three modules deep.
+     */
+    files: [
+      "src/bot/**",
+      "src/server/settings.ts",
+      "src/server/db.ts",
+      "src/server/db-health.ts",
+      "src/server/rate-limit.ts",
+      "src/server/telegram/**",
+      "src/server/orders/quote.ts",
+      "src/lib/**",
+    ],
+    ignores: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["next", "next/*"],
+              message:
+                "Процесс бота работает без Next. Вынесите это в отдельный модуль " +
+                "и импортируйте только из React-компонентов (как settings.cached.ts).",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExpressionStatement > Literal[value='use cache']",
+          message:
+            "Директива 'use cache' бросит в процессе бота — у него нет контекста запроса Next.",
+        },
+      ],
+    },
+  },
+  {
     // CLI scripts and seeds report progress on stdout; that is their interface.
     files: ["scripts/**", "prisma/seed.ts", "src/bot/index.ts", "*.config.*"],
     rules: { "no-console": "off" },
