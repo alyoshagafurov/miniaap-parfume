@@ -1,10 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { loadMoreProducts } from "@/app/(shop)/c/[slug]/actions";
-import { FilterSheet } from "@/components/shop/FilterSheet";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -20,6 +20,10 @@ import {
   type SortKey,
 } from "@/lib/list-url";
 import type { Facets, ListResult } from "@/server/catalog/list";
+
+const FilterSheet = dynamic(() =>
+  import("@/components/shop/FilterSheet").then((m) => m.FilterSheet),
+);
 
 /**
  * A category listing.
@@ -57,6 +61,14 @@ export function CategoryList({
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Latches on the first open and never resets: the sheet has to stay mounted
+  // while it animates closed, and unmounting it would also throw away the
+  // chunk the next tap needs.
+  const [everOpened, setEverOpened] = useState(false);
+  const openFilters = () => {
+    setEverOpened(true);
+    setFiltersOpen(true);
+  };
   const [pending, startTransition] = useTransition();
   const sentinel = useRef<HTMLDivElement>(null);
 
@@ -149,7 +161,7 @@ export function CategoryList({
               </option>
             ))}
           </select>
-          <Button variant="secondary" onClick={() => setFiltersOpen(true)}>
+          <Button variant="secondary" onClick={openFilters}>
             Фильтры{active > 0 ? ` · ${active}` : ""}
           </Button>
         </div>
@@ -257,15 +269,26 @@ export function CategoryList({
         </div>
       ) : null}
 
-      <FilterSheet
-        open={filtersOpen}
-        onOpenChange={setFiltersOpen}
-        facets={facets}
-        filters={filters}
-        sort={sort}
-        basePath={basePath}
-        resultCount={initial.total}
-      />
+      {/*
+        Mounted only once the buyer has asked for filters.
+
+        The sheet carries vaul and its Radix dependencies — 23 KB gzipped,
+        which the shared client chunk was handing to every storefront screen
+        including the home page, where there is no sheet of any kind. Splitting
+        it out costs one request on the first tap of «Фильтры» and saves that
+        weight on every screen that never opens one.
+      */}
+      {everOpened ? (
+        <FilterSheet
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          facets={facets}
+          filters={filters}
+          sort={sort}
+          basePath={basePath}
+          resultCount={initial.total}
+        />
+      ) : null}
     </>
   );
 }
