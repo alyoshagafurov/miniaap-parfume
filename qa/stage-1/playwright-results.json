@@ -3,7 +3,8 @@
     "argv": [
       "/usr/local/bin/node",
       "/Users/mobisop/TG mini app for parfums/node_modules/.pnpm/@playwright+test@1.63.0/node_modules/@playwright/test/cli.js",
-      "test"
+      "test",
+      "--list"
     ],
     "configFile": "/Users/mobisop/TG mini app for parfums/playwright.config.ts",
     "rootDir": "/Users/mobisop/TG mini app for parfums/qa/e2e",
@@ -16,18 +17,14 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 4
-    },
+    "metadata": {},
     "preserveOutput": "always",
     "projects": [
       {
         "outputDir": "/Users/mobisop/TG mini app for parfums/qa/stage-1/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 4
-        },
+        "metadata": {},
         "id": "desktop",
         "name": "desktop",
         "testDir": "/Users/mobisop/TG mini app for parfums/qa/e2e",
@@ -41,9 +38,7 @@
         "outputDir": "/Users/mobisop/TG mini app for parfums/qa/stage-1/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 4
-        },
+        "metadata": {},
         "id": "tablet",
         "name": "tablet",
         "testDir": "/Users/mobisop/TG mini app for parfums/qa/e2e",
@@ -57,9 +52,7 @@
         "outputDir": "/Users/mobisop/TG mini app for parfums/qa/stage-1/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 4
-        },
+        "metadata": {},
         "id": "mobile",
         "name": "mobile",
         "testDir": "/Users/mobisop/TG mini app for parfums/qa/e2e",
@@ -73,9 +66,7 @@
         "outputDir": "/Users/mobisop/TG mini app for parfums/qa/stage-1/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 4
-        },
+        "metadata": {},
         "id": "admin",
         "name": "admin",
         "testDir": "/Users/mobisop/TG mini app for parfums/qa/e2e",
@@ -89,9 +80,7 @@
         "outputDir": "/Users/mobisop/TG mini app for parfums/qa/stage-1/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 4
-        },
+        "metadata": {},
         "id": "admin-mobile",
         "name": "admin-mobile",
         "testDir": "/Users/mobisop/TG mini app for parfums/qa/e2e",
@@ -166,22 +155,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1047,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:15.626Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-7dc6664457ed7a5aa945",
@@ -200,22 +175,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 2264,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:15.610Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-298506db0e7bf64986af",
@@ -234,22 +195,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 655,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:15.624Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-885827d7ea073d34d48c",
@@ -268,22 +215,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 708,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:15.616Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-c4b3ab47b5dc53ba32c5",
@@ -302,22 +235,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 487,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:16.614Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-5d8deb83e2da3b8a45b9",
@@ -336,22 +255,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 750,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:25.629Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-5f5c9457da4f2c5c2982",
@@ -370,22 +275,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1779,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:25.657Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-245eff8ac05399ce8f62",
@@ -404,22 +295,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 283,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.036Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-7117b6c06f59ac1f0628",
@@ -438,22 +315,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 308,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.061Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-15186ee4a01afb30fd9c",
@@ -472,22 +335,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 419,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.439Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-e5d90ee1e145e87b9b17",
@@ -506,22 +355,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 1741,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:32.696Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-1211df9e4d51f9bbae65",
@@ -540,22 +375,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 3600,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:32.735Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-4b99a5874824b3950ed0",
@@ -574,22 +395,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 239,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:33.337Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-058d851d63c13fee0a80",
@@ -608,22 +415,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 485,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:33.681Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-b77dd167bca2b60a719a",
@@ -642,22 +435,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 389,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:33.684Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "34e1c249cde4e80edcf0-6fdeaa47cb37a3fe5788",
@@ -693,22 +472,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 623,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:16.686Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-e43fc3d9f4a7f89bb075",
@@ -727,22 +492,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 185,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:17.007Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-9d5d03a2a65d37856eaa",
@@ -761,22 +512,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 561,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:17.115Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-e10f6b8d3f87a409a684",
@@ -795,22 +532,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 552,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.479Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-416a0df2ff48cfe9d007",
@@ -829,22 +552,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 261,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.511Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-fef484aacc3d7ab2a64f",
@@ -863,22 +572,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 424,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.782Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-b5731db79a8b22807d8e",
@@ -897,22 +592,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1204,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:34.079Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-78d6c6f3ebbc0d6c5754",
@@ -931,22 +612,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 157,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:34.309Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-d69828caf3928bb9fbb8",
@@ -965,22 +632,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1195,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:34.473Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "5dad41ebc3e3ff1327ca-933c5f19f3bfe8557a4c",
@@ -1016,22 +669,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 305,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:17.209Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-dbefc70d8ef2491f1089",
@@ -1050,22 +689,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 1225,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:17.328Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-6e10dd04794ae7dea56a",
@@ -1084,22 +709,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1879,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:17.528Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-349eb865ff206f712ea6",
@@ -1118,22 +729,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1349,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:17.687Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-54e2c552233d9f631359",
@@ -1152,22 +749,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1987,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:18.217Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-7a4671b28b1947fa11a7",
@@ -1186,22 +769,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 6997,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:18.565Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-4f68e0a5e43ea86f6e95",
@@ -1220,22 +789,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 477,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:26.871Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-aa846ddb96163cd21ed8",
@@ -1254,22 +809,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 1083,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:27.046Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-2b69196c697dce338216",
@@ -1288,22 +829,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1643,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:27.218Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-ba835773b06f7aab051d",
@@ -1322,22 +849,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1275,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:27.354Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-71cbb6141bed56403156",
@@ -1356,22 +869,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1737,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:27.570Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-7ea73214ae58e1c7a566",
@@ -1390,22 +889,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 969,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:28.150Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-ba42b8cb7a38c5ee1791",
@@ -1424,22 +909,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 584,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:34.583Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-c788343b9ecfb55c0084",
@@ -1458,22 +929,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 1280,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:35.182Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-47b2e638528fb3fccf07",
@@ -1492,22 +949,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2059,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:35.292Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-a3e81fa45ea0c0eaf20a",
@@ -1526,22 +969,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1404,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:35.680Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-3bafe8ef3849b2c0d39a",
@@ -1560,22 +989,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 2202,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:36.470Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-e89c294cd3ea05eff6ab",
@@ -1594,22 +1009,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1006,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:36.520Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "afd66358368344eb8473-e03c8986546fcabef2ab",
@@ -1645,22 +1046,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1389,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:19.046Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-f3d2994d96f11b9afede",
@@ -1679,22 +1066,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 502,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:19.417Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-5684f6826d07cad8e9d8",
@@ -1713,22 +1086,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1296,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:19.928Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-276cb1c3da386226c24f",
@@ -1747,22 +1106,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 521,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:20.210Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-06bf5290cc7bb03071a1",
@@ -1781,22 +1126,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 159,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:20.449Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-e65a0b439a816abc9b66",
@@ -1815,22 +1146,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 956,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:28.638Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-544d452987c14fde2355",
@@ -1849,22 +1166,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 541,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:28.871Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-15f68f68caf627e85c2d",
@@ -1883,22 +1186,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 1009,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:29.129Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-737f264a55d507f0cf0d",
@@ -1917,22 +1206,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 530,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:29.320Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-55232aa60af5f95378a0",
@@ -1951,22 +1226,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 128,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:29.417Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-9e2ab7686c5df403a1d4",
@@ -1985,22 +1246,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1850,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:37.100Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-e814ea0ac0368d8c25ec",
@@ -2019,22 +1266,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 555,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:37.358Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-8aa3ad0e54229b526d1e",
@@ -2053,22 +1286,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1889,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:37.539Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-dd79f287b620dd15f150",
@@ -2087,22 +1306,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 663,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:37.919Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-1d8ccf30beb077aa6137",
@@ -2121,22 +1326,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 140,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:38.591Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "a4a5250fe03bbdd06c5e-af0874be0f7506d5bd7c",
@@ -2172,22 +1363,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 2258,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:20.623Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "63f4fe2d8f7cd7eb3986-53ec7bbfcfe243664ec1",
@@ -2206,22 +1383,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 912,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:20.743Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "63f4fe2d8f7cd7eb3986-38efdcaa1c3743273c61",
@@ -2240,22 +1403,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1823,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:29.556Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "63f4fe2d8f7cd7eb3986-83fd445a27fe1cbd6c87",
@@ -2274,22 +1423,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 935,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:29.610Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "63f4fe2d8f7cd7eb3986-afb9dd5a4d117dd8ecdd",
@@ -2308,22 +1443,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 6175,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:38.684Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "63f4fe2d8f7cd7eb3986-94c7e66320081e5c4b8a",
@@ -2342,22 +1463,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 859,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:38.738Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "63f4fe2d8f7cd7eb3986-75784cffe54130f224fa",
@@ -2393,22 +1500,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 941,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:21.232Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-1cca5135c3f9b409d884",
@@ -2427,22 +1520,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 279,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:21.676Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-3c1dcbb138bc6c0d0094",
@@ -2461,22 +1540,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 499,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:21.961Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-a65792b56f54fdc07d05",
@@ -2495,22 +1560,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1264,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:22.182Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-9832ac03e3738e196622",
@@ -2529,22 +1580,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 548,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:22.468Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-7937133627bee76da6a0",
@@ -2563,22 +1600,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 600,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:29.858Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-3d97d7015e98b975196a",
@@ -2597,22 +1620,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 195,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:30.145Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-ddcee122be44cf206acc",
@@ -2631,22 +1640,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 398,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:30.345Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-b0e4c0aaf43ffa4fa66d",
@@ -2665,22 +1660,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1160,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:30.464Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-574524af1e1d6b07cfe8",
@@ -2699,22 +1680,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 502,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:30.573Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-220775f006e51db50f66",
@@ -2733,22 +1700,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1563,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:38.959Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-6d5ba9e80e055596b968",
@@ -2767,22 +1720,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 155,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:39.437Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-8904728b2b6147403df0",
@@ -2801,22 +1740,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 405,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:39.597Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-c2920e3f25efecaf7328",
@@ -2835,22 +1760,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2108,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:39.613Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-0f1c9198f1532ffe4e8a",
@@ -2869,22 +1780,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 919,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:40.008Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "13b4d9632ffd184e9bda-bfa6f0378f7fb452be72",
@@ -2920,22 +1817,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 2007,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:22.908Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-cfc7895d7bdc9817b5e9",
@@ -2954,22 +1837,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 1888,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:23.025Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-e626469c698a68c3f75f",
@@ -2988,22 +1857,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1598,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:23.457Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-d16bd1c2de31cc6e968b",
@@ -3022,22 +1877,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 368,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:24.918Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-a2bb7964f0f4659e098e",
@@ -3056,22 +1897,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 197,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:24.927Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-acf01d5f0272914f4491",
@@ -3090,22 +1917,8 @@
                   "expectedStatus": "passed",
                   "projectId": "desktop",
                   "projectName": "desktop",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 426,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:25.067Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-c4c2fbcdbcb8992408b4",
@@ -3124,22 +1937,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 1523,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:30.754Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-6075b216109afdc5568e",
@@ -3158,22 +1957,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1635,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:31.082Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-b7a5c2cc0a9fac3a23d1",
@@ -3192,22 +1977,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1855,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:31.391Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-4560ee7f7653b1bb5e89",
@@ -3226,22 +1997,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 394,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:31.633Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-03f2a520412cf9e7d7da",
@@ -3260,22 +2017,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 145,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:32.034Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-21f762c6c6600978a60e",
@@ -3294,22 +2037,8 @@
                   "expectedStatus": "passed",
                   "projectId": "tablet",
                   "projectName": "tablet",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 168,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:32.185Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-fa73b5266397ff0fe8fa",
@@ -3328,22 +2057,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 3404,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:40.530Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-d37daf24a85f3357e880",
@@ -3362,22 +2077,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 2221,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:40.936Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-2faf3a802b2abf2115b3",
@@ -3396,22 +2097,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2453,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:41.734Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-6f9d493728dac5543d2d",
@@ -3430,22 +2117,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 425,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:43.164Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-6f33f11efbd133d83d0b",
@@ -3464,22 +2137,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 152,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:43.595Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-9b65f53dcd63456f4ada",
@@ -3498,22 +2157,8 @@
                   "expectedStatus": "passed",
                   "projectId": "mobile",
                   "projectName": "mobile",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 376,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:43.752Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "d88bbca950c92aeb125c-d03093871604e518ffc0",
@@ -3558,31 +2203,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1351,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:44.293Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/flows.spec.ts",
-                            "line": 20,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "f2f7a6e36b87c494fdfb-3851c8fd07b7deabdca2",
@@ -3610,31 +2232,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 2339,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:45.738Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/flows.spec.ts",
-                            "line": 20,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "f2f7a6e36b87c494fdfb-3cd5760e8fcf40e90de3",
@@ -3662,31 +2261,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1107,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:48.082Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/flows.spec.ts",
-                            "line": 20,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "f2f7a6e36b87c494fdfb-70246057bd1c9269e44c",
@@ -3714,31 +2290,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1108,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:49.194Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/flows.spec.ts",
-                            "line": 20,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "f2f7a6e36b87c494fdfb-89297a6d373738a80882",
@@ -3783,31 +2336,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 552,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:50.309Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-53eed9b18bedb91c38d3",
@@ -3835,31 +2365,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 6058,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:50.865Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-47c6e1fde4bc6785cf7b",
@@ -3887,31 +2394,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 1222,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:56.927Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-5720c833e718ba70af57",
@@ -3939,31 +2423,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin",
                   "projectName": "admin",
-                  "results": [
-                    {
-                      "workerIndex": 12,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 231,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:58.153Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-3032de85eeb4ee302c6d",
@@ -3991,31 +2452,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin-mobile",
                   "projectName": "admin-mobile",
-                  "results": [
-                    {
-                      "workerIndex": 13,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 760,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:58.672Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-20e5ae52909920b39bcc",
@@ -4043,31 +2481,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin-mobile",
                   "projectName": "admin-mobile",
-                  "results": [
-                    {
-                      "workerIndex": 13,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 9081,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:21:59.528Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-028617f0000f91aa55e2",
@@ -4095,31 +2510,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin-mobile",
                   "projectName": "admin-mobile",
-                  "results": [
-                    {
-                      "workerIndex": 13,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1590,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:22:08.613Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-54d5bf76fa44e1a27659",
@@ -4147,31 +2539,8 @@
                   "expectedStatus": "passed",
                   "projectId": "admin-mobile",
                   "projectName": "admin-mobile",
-                  "results": [
-                    {
-                      "workerIndex": 13,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 225,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-09-23T15:22:10.208Z",
-                      "annotations": [
-                        {
-                          "type": "serial",
-                          "location": {
-                            "file": "/Users/mobisop/TG mini app for parfums/qa/e2e/admin/view.spec.ts",
-                            "line": 26,
-                            "column": 6
-                          }
-                        }
-                      ],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "results": [],
+                  "status": "skipped"
                 }
               ],
               "id": "cf414d038e9fcee9fabe-fd23aed44f99a952581a",
@@ -4186,10 +2555,10 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-23T15:21:15.176Z",
-    "duration": 55299.9,
-    "expected": 108,
-    "skipped": 0,
+    "startTime": "2026-09-23T15:24:32.380Z",
+    "duration": 78.798,
+    "expected": 0,
+    "skipped": 108,
     "unexpected": 0,
     "flaky": 0
   }
