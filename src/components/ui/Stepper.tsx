@@ -30,7 +30,11 @@ export function Stepper({
   const increase = () => onChange(roundToPack(qty + step, step));
 
   return (
-    <div className="inline-flex items-center gap-1" role="group" aria-label={`Количество: ${label}`}>
+    <div
+      className="inline-flex items-center gap-1"
+      role="group"
+      aria-label={`Количество: ${label}`}
+    >
       <button
         type="button"
         onClick={decrease}

@@ -26,7 +26,9 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     prisma.product.count({ where: { status: "DRAFT" } }),
     // Archived rows are out of the catalog by definition; counting their
     // missing photographs would make the number look like work that is due.
-    prisma.product.count({ where: { status: { not: "ARCHIVED" }, images: { none: {} } } }),
+    prisma.product.count({
+      where: { status: { not: "ARCHIVED" }, images: { none: {} } },
+    }),
     prisma.order.count({ where: { status: "NEW" } }),
   ]);
 

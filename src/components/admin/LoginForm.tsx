@@ -94,14 +94,25 @@ export function LoginForm() {
   return (
     <div className="flex flex-col gap-6">
       {notice ? (
-        <p role="alert" className="border-rule bg-surface text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-rule bg-surface text-ink rounded-md border p-3 text-sm"
+        >
           {notice}
         </p>
       ) : null}
 
       {stage === "credentials" ? (
-        <form onSubmit={(e) => void submitCredentials(e)} noValidate className="flex flex-col gap-5">
-          <Field label="Логин" htmlFor="login" error={credentials.formState.errors.login?.message}>
+        <form
+          onSubmit={(e) => void submitCredentials(e)}
+          noValidate
+          className="flex flex-col gap-5"
+        >
+          <Field
+            label="Логин"
+            htmlFor="login"
+            error={credentials.formState.errors.login?.message}
+          >
             <TextInput
               id="login"
               autoComplete="username"
@@ -132,12 +143,17 @@ export function LoginForm() {
 
           {ready && !isTelegram ? (
             <p className="text-muted text-sm">
-              Код придёт в Telegram от бота. Если он ещё не писал вам — отправьте ему /start.
+              Код придёт в Telegram от бота. Если он ещё не писал вам — отправьте ему
+              /start.
             </p>
           ) : null}
         </form>
       ) : (
-        <form onSubmit={(e) => void submitCode(e)} noValidate className="flex flex-col gap-5">
+        <form
+          onSubmit={(e) => void submitCode(e)}
+          noValidate
+          className="flex flex-col gap-5"
+        >
           <Field
             label="Код из Telegram"
             htmlFor="code"

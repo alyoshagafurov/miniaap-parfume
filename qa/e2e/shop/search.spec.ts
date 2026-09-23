@@ -17,7 +17,10 @@ test.describe("Поиск", () => {
     expect(found).toBeGreaterThan(0);
 
     // Every hit really is a Chanel, not merely something.
-    const titles = await page.getByRole("listitem").getByRole("heading").allInnerTexts();
+    const titles = await page
+      .getByRole("listitem")
+      .getByRole("heading")
+      .allInnerTexts();
     expect(titles.length).toBeGreaterThan(0);
 
     await shot(page, info, "08-search-cyrillic");
@@ -31,7 +34,9 @@ test.describe("Поиск", () => {
     // trigram match on «ARM-1040» would return the whole catalog.
     expect(found).toBe(1);
     // And it is that product, not merely one product.
-    await expect(page.locator('main a[href="/p/lancome-idole-35ml-arm-1040"]')).toBeVisible();
+    await expect(
+      page.locator('main a[href="/p/lancome-idole-35ml-arm-1040"]'),
+    ).toBeVisible();
   });
 
   test("опечатка «шанел» всё равно находит", async ({ page }) => {
@@ -48,7 +53,10 @@ test.describe("Поиск", () => {
     await field.fill("диор");
     await expect(page).toHaveURL(/q=/, { timeout: 8000 });
     await expect(
-      page.getByText(/Найдено: \d+|ничего не нашлось/).filter({ visible: true }).first(),
+      page
+        .getByText(/Найдено: \d+|ничего не нашлось/)
+        .filter({ visible: true })
+        .first(),
     ).toBeVisible();
 
     await shot(page, info, "09-search-typed");

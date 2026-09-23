@@ -69,7 +69,8 @@ export const BRANDS: SeedBrand[] = [
         notesTop: ["апельсин", "бергамот"],
         notesHeart: ["жасмин", "роза", "личи"],
         notesBase: ["пачули", "ваниль", "белый мускус"],
-        description: "Тёплый восточно-цветочный аромат, один из самых востребованных в опте.",
+        description:
+          "Тёплый восточно-цветочный аромат, один из самых востребованных в опте.",
       },
       {
         name: "Bleu de Chanel",
@@ -99,7 +100,8 @@ export const BRANDS: SeedBrand[] = [
         notesTop: ["альдегиды", "иланг-иланг", "нероли"],
         notesHeart: ["роза", "жасмин", "ирис"],
         notesBase: ["сандал", "ваниль", "ветивер"],
-        description: "Классика, которую спрашивают по названию чаще любого другого аромата.",
+        description:
+          "Классика, которую спрашивают по названию чаще любого другого аромата.",
       },
     ],
   },
@@ -421,19 +423,57 @@ export const DEODORANT_BASES = [
 
 /** Pairings for the "twins" category — one bottle, two fragrances. */
 export const TWIN_PAIRS = [
-  [["Chanel", "Coco Mademoiselle"], ["Chanel", "Chance Eau Tendre"]],
-  [["Dior", "Sauvage"], ["Dior", "Homme Intense"]],
-  [["Versace", "Eros"], ["Versace", "Dylan Blue"]],
-  [["Paco Rabanne", "1 Million"], ["Paco Rabanne", "Lady Million"]],
-  [["Giorgio Armani", "Acqua di Gio"], ["Giorgio Armani", "Stronger With You"]],
-  [["Yves Saint Laurent", "Black Opium"], ["Yves Saint Laurent", "Libre"]],
-  [["Lancôme", "La Vie Est Belle"], ["Lancôme", "Idôle"]],
-  [["Chanel", "Bleu de Chanel"], ["Dior", "Sauvage"]],
-  [["Hermès", "Terre d'Hermès"], ["Hermès", "Twilly d'Hermès"]],
-  [["Dior", "J'adore"], ["Dior", "Miss Dior"]],
+  [
+    ["Chanel", "Coco Mademoiselle"],
+    ["Chanel", "Chance Eau Tendre"],
+  ],
+  [
+    ["Dior", "Sauvage"],
+    ["Dior", "Homme Intense"],
+  ],
+  [
+    ["Versace", "Eros"],
+    ["Versace", "Dylan Blue"],
+  ],
+  [
+    ["Paco Rabanne", "1 Million"],
+    ["Paco Rabanne", "Lady Million"],
+  ],
+  [
+    ["Giorgio Armani", "Acqua di Gio"],
+    ["Giorgio Armani", "Stronger With You"],
+  ],
+  [
+    ["Yves Saint Laurent", "Black Opium"],
+    ["Yves Saint Laurent", "Libre"],
+  ],
+  [
+    ["Lancôme", "La Vie Est Belle"],
+    ["Lancôme", "Idôle"],
+  ],
+  [
+    ["Chanel", "Bleu de Chanel"],
+    ["Dior", "Sauvage"],
+  ],
+  [
+    ["Hermès", "Terre d'Hermès"],
+    ["Hermès", "Twilly d'Hermès"],
+  ],
+  [
+    ["Dior", "J'adore"],
+    ["Dior", "Miss Dior"],
+  ],
 ] as const;
 
 export const STOCK_CYCLE: StockState[] = [
-  "IN_STOCK", "IN_STOCK", "IN_STOCK", "IN_STOCK",
-  "LOW", "IN_STOCK", "IN_STOCK", "PREORDER", "IN_STOCK", "OUT",
+  "IN_STOCK",
+  "IN_STOCK",
+  "IN_STOCK",
+  "IN_STOCK",
+  "LOW",
+  "IN_STOCK",
+  "IN_STOCK",
+  "PREORDER",
+  "IN_STOCK",
+  "OUT",
 ];

@@ -38,11 +38,17 @@ async function Card({ params }: PageProps) {
   // Recomputed from the rows rather than read from the column: the stored total
   // has no database-level tie to its items, so a screen that shows both is the
   // place a divergence would be noticed.
-  const itemsTotal = order.items.reduce((sum, i) => sum + lineTotal(i.priceKop, i.qty), 0);
+  const itemsTotal = order.items.reduce(
+    (sum, i) => sum + lineTotal(i.priceKop, i.qty),
+    0,
+  );
 
   return (
     <>
-      <Link href="/admin/orders" className="text-muted inline-flex min-h-11 items-center text-sm">
+      <Link
+        href="/admin/orders"
+        className="text-muted inline-flex min-h-11 items-center text-sm"
+      >
         ← Все заявки
       </Link>
 
@@ -71,12 +77,17 @@ async function Card({ params }: PageProps) {
         <dl className="mt-3 flex flex-col gap-2 text-sm">
           <Row label="Имя">{order.name}</Row>
           <Row label="Телефон">
-            <a href={`tel:${order.phone}`} className="text-olive underline underline-offset-4">
+            <a
+              href={`tel:${order.phone}`}
+              className="text-olive underline underline-offset-4"
+            >
               {order.phone}
             </a>
           </Row>
           <Row label="Город">{order.city}</Row>
-          <Row label="Доставка">{DELIVERY_LABELS[order.delivery] ?? order.delivery}</Row>
+          <Row label="Доставка">
+            {DELIVERY_LABELS[order.delivery] ?? order.delivery}
+          </Row>
           {order.comment ? <Row label="Комментарий">{order.comment}</Row> : null}
           {order.botBlocked ? (
             <Row label="Бот">
@@ -103,7 +114,9 @@ async function Card({ params }: PageProps) {
           {digits ? (
             <ContactLink href={`https://wa.me/${digits}`}>WhatsApp</ContactLink>
           ) : null}
-          {digits ? <ContactLink href={`tel:${order.phone}`}>Позвонить</ContactLink> : null}
+          {digits ? (
+            <ContactLink href={`tel:${order.phone}`}>Позвонить</ContactLink>
+          ) : null}
         </div>
       </section>
 
@@ -136,9 +149,13 @@ async function Card({ params }: PageProps) {
         </div>
 
         {itemsTotal !== order.totalKop ? (
-          <p role="alert" className="border-danger bg-danger-wash text-ink mt-4 rounded-md border p-3 text-sm">
-            Сумма позиций — {formatRub(itemsTotal)}, а записано {formatRub(order.totalKop)}.
-            Это расхождение в данных: покажите заявку разработчику, прежде чем работать по ней.
+          <p
+            role="alert"
+            className="border-danger bg-danger-wash text-ink mt-4 rounded-md border p-3 text-sm"
+          >
+            Сумма позиций — {formatRub(itemsTotal)}, а записано{" "}
+            {formatRub(order.totalKop)}. Это расхождение в данных: покажите заявку
+            разработчику, прежде чем работать по ней.
           </p>
         ) : null}
       </section>

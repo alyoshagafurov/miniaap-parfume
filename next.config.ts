@@ -62,7 +62,8 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
+            value:
+              "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
           },
         ],
       },

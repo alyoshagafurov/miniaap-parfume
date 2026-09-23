@@ -34,7 +34,9 @@ interface PreviewResponse {
   errors: RowError[];
   truncatedErrors: boolean;
   /** Enough to see that the columns landed where they were meant to. */
-  sample: Array<Pick<ParsedRow, "row" | "sku" | "brand" | "fragrance" | "priceKop" | "volumeMl">>;
+  sample: Array<
+    Pick<ParsedRow, "row" | "sku" | "brand" | "fragrance" | "priceKop" | "volumeMl">
+  >;
 }
 
 function label(field: ImportField): string {
@@ -75,7 +77,10 @@ export async function POST(request: Request) {
 
   const headerRow = table[0];
   if (!headerRow) {
-    return NextResponse.json({ error: "В файле нет строки заголовков" }, { status: 400 });
+    return NextResponse.json(
+      { error: "В файле нет строки заголовков" },
+      { status: 400 },
+    );
   }
 
   const headers = matchHeaders(headerRow);

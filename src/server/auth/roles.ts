@@ -111,7 +111,9 @@ export async function requireAdmin(): Promise<SessionPayload> {
  * A Server Action must keep throwing: an action that quietly redirects looks to
  * its caller like an action that succeeded.
  */
-export async function requireAdminPage(permission?: Permission): Promise<SessionPayload> {
+export async function requireAdminPage(
+  permission?: Permission,
+): Promise<SessionPayload> {
   const session = await currentSession();
   if (!session) redirect("/admin/login");
   // Without the permission argument this guard only ever asked "is anybody

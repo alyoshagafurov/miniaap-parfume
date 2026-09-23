@@ -46,7 +46,9 @@ export interface ImportOutcome {
  */
 const BATCH = 25;
 
-export async function importProducts(rows: readonly ParsedRow[]): Promise<Mutation<ImportOutcome>> {
+export async function importProducts(
+  rows: readonly ParsedRow[],
+): Promise<Mutation<ImportOutcome>> {
   const outcome: ImportOutcome = {
     created: 0,
     updated: 0,
@@ -63,10 +65,9 @@ export async function importProducts(rows: readonly ParsedRow[]): Promise<Mutati
   for (let start = 0; start < rows.length; start += BATCH) {
     const batch = rows.slice(start, start + BATCH);
     try {
-      const result = await inTransaction(
-        async (tx) => applyBatch(tx, batch),
-        { timeoutMs: 60_000 },
-      );
+      const result = await inTransaction(async (tx) => applyBatch(tx, batch), {
+        timeoutMs: 60_000,
+      });
       outcome.created += result.data.created;
       outcome.updated += result.data.updated;
       outcome.skipped.push(...result.data.skipped);
@@ -90,7 +91,10 @@ export async function importProducts(rows: readonly ParsedRow[]): Promise<Mutati
   return { data: outcome, tags: tags.list };
 }
 
-async function applyBatch(tx: Tx, rows: readonly ParsedRow[]): Promise<Mutation<ImportOutcome>> {
+async function applyBatch(
+  tx: Tx,
+  rows: readonly ParsedRow[],
+): Promise<Mutation<ImportOutcome>> {
   const outcome: ImportOutcome = {
     created: 0,
     updated: 0,
@@ -110,7 +114,13 @@ async function applyBatch(tx: Tx, rows: readonly ParsedRow[]): Promise<Mutation<
       await findOrCreateFragrance(tx, brand.id, row.fragrance, row.gender, outcome),
     ];
     if (row.fragrance2) {
-      const second = await resolveSecondFragrance(tx, brand.id, row.fragrance2, row.gender, outcome);
+      const second = await resolveSecondFragrance(
+        tx,
+        brand.id,
+        row.fragrance2,
+        row.gender,
+        outcome,
+      );
       // A twin whose two halves are the same scent is a typo in the file, not a
       // product; the unique (productId, fragranceId) key would refuse it anyway,
       // and refusing it here names the row.
@@ -123,7 +133,13 @@ async function applyBatch(tx: Tx, rows: readonly ParsedRow[]): Promise<Mutation<
 
     const existing = await tx.product.findUnique({
       where: { sku: row.sku },
-      select: { id: true, slug: true, status: true, publishedAt: true, categoryId: true },
+      select: {
+        id: true,
+        slug: true,
+        status: true,
+        publishedAt: true,
+        categoryId: true,
+      },
     });
 
     if (existing) {
@@ -160,7 +176,9 @@ async function applyBatch(tx: Tx, rows: readonly ParsedRow[]): Promise<Mutation<
           // Stamped once and never moved: «новинки» is ordered by it, and a
           // weekly price list would otherwise reshuffle the lane every Monday.
           publishedAt:
-            status === "PUBLISHED" ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
+            status === "PUBLISHED"
+              ? (existing.publishedAt ?? new Date())
+              : existing.publishedAt,
         },
       });
 
@@ -168,7 +186,11 @@ async function applyBatch(tx: Tx, rows: readonly ParsedRow[]): Promise<Mutation<
       touched.push(existing.id);
       tags.add(productTag(existing.slug));
     } else {
-      const slug = await allocateSlug(tx, "product", `${title} ${row.volumeMl}ml ${row.sku}`);
+      const slug = await allocateSlug(
+        tx,
+        "product",
+        `${title} ${row.volumeMl}ml ${row.sku}`,
+      );
       // A file that does not say publishes nothing. An import that silently put
       // three hundred unchecked rows in front of buyers would be the wrong
       // default exactly once.
@@ -190,7 +212,10 @@ async function applyBatch(tx: Tx, rows: readonly ParsedRow[]): Promise<Mutation<
           isHit: row.isHit,
           publishedAt: status === "PUBLISHED" ? new Date() : null,
           fragrances: {
-            create: fragranceIds.map((fragranceId, position) => ({ fragranceId, position })),
+            create: fragranceIds.map((fragranceId, position) => ({
+              fragranceId,
+              position,
+            })),
           },
         },
         select: { id: true, slug: true },

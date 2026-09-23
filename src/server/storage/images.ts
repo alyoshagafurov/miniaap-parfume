@@ -21,7 +21,6 @@ import { MAX_UPLOAD_BYTES } from "@/lib/images";
  * input needs them too and must not import sharp to get them.
  */
 
-
 /** The widths a card, a grid and a product page actually ask for. */
 const WIDTHS = [400, 800, 1600] as const;
 
@@ -79,7 +78,17 @@ export interface ProcessedImage {
  * ISO base media format: a box length, the tag `ftyp`, then the brand. Reading
  * the bytes rather than the extension, like everything else here.
  */
-const HEIF_BRANDS = ["heic", "heix", "hevc", "hevx", "heim", "heis", "mif1", "msf1", "avif"];
+const HEIF_BRANDS = [
+  "heic",
+  "heix",
+  "hevc",
+  "hevx",
+  "heim",
+  "heis",
+  "mif1",
+  "msf1",
+  "avif",
+];
 
 function looksLikeHeif(input: Buffer): boolean {
   if (input.length < 16) return false;
@@ -172,7 +181,9 @@ export async function processImage(
     // Never upscaled: a 500px original blown up to 1600 is a blurry file that
     // costs bandwidth to deliver.
     if (target > width && target !== WIDTHS[0]) continue;
-    const resized = upright.clone().resize({ width: Math.min(target, width), withoutEnlargement: true });
+    const resized = upright
+      .clone()
+      .resize({ width: Math.min(target, width), withoutEnlargement: true });
 
     renditions.push({
       key: `${keyPrefix}-${target}.avif`,

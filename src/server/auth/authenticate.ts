@@ -14,8 +14,18 @@ import {
   LOGIN_CODE_TTL_SECONDS,
   type LoginDecision,
 } from "./login";
-import { generateLoginCode, hashLoginCode, verifyLoginCode, verifyPassword } from "./password";
-import { COOKIE_NAME, sessionCookieOptions, signSession, type SessionPayload } from "./session";
+import {
+  generateLoginCode,
+  hashLoginCode,
+  verifyLoginCode,
+  verifyPassword,
+} from "./password";
+import {
+  COOKIE_NAME,
+  sessionCookieOptions,
+  signSession,
+  type SessionPayload,
+} from "./session";
 
 /**
  * Signing in.
@@ -59,7 +69,10 @@ async function findAdmin(login: string) {
   });
 }
 
-async function throttled(keys: readonly string[], config: typeof LOGIN_LIMIT): Promise<boolean> {
+async function throttled(
+  keys: readonly string[],
+  config: typeof LOGIN_LIMIT,
+): Promise<boolean> {
   for (const key of keys) {
     const result = await rateLimit(key, config);
     if (!result.allowed) return true;
@@ -89,7 +102,11 @@ async function issueSession(payload: SessionPayload): Promise<void> {
   if (!secret) throw new Error("AUTH_SECRET не задан");
   const token = signSession(payload, secret);
   const store = await cookies();
-  store.set(COOKIE_NAME, token, sessionCookieOptions(process.env.NODE_ENV === "production"));
+  store.set(
+    COOKIE_NAME,
+    token,
+    sessionCookieOptions(process.env.NODE_ENV === "production"),
+  );
 }
 
 /**
@@ -200,7 +217,8 @@ async function finish(
     } catch {
       return {
         outcome: "REJECT",
-        message: "Вход из браузера недоступен: бот не настроен. Войдите через Telegram.",
+        message:
+          "Вход из браузера недоступен: бот не настроен. Войдите через Telegram.",
       };
     }
 
@@ -225,7 +243,8 @@ async function finish(
       // whoever is typing has already proved they know the password.
       return {
         outcome: "REJECT",
-        message: "Не удалось отправить код в Telegram. Напишите боту /start и повторите.",
+        message:
+          "Не удалось отправить код в Telegram. Напишите боту /start и повторите.",
       };
     }
     return { outcome: "SEND_CODE", message: decision.message };
@@ -265,15 +284,27 @@ export async function confirmLoginCode(input: {
     ? await prisma.loginCode.findFirst({
         where: { adminId: admin.id, usedAt: null },
         orderBy: { createdAt: "desc" },
-        select: { id: true, codeHash: true, expiresAt: true, attempts: true, usedAt: true },
+        select: {
+          id: true,
+          codeHash: true,
+          expiresAt: true,
+          attempts: true,
+          usedAt: true,
+        },
       })
     : null;
 
-  const codeMatches = stored ? await verifyLoginCode(stored.codeHash, input.code) : false;
+  const codeMatches = stored
+    ? await verifyLoginCode(stored.codeHash, input.code)
+    : false;
 
   const decision = decideCodeCheck({
     code: stored
-      ? { attempts: stored.attempts, expiresAt: stored.expiresAt, usedAt: stored.usedAt }
+      ? {
+          attempts: stored.attempts,
+          expiresAt: stored.expiresAt,
+          usedAt: stored.usedAt,
+        }
       : null,
     codeMatches,
     rateLimited,

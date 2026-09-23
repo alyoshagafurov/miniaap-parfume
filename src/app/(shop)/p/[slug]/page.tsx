@@ -104,7 +104,10 @@ async function Product({ params }: PageProps) {
   return (
     <>
       <nav aria-label="Хлебные крошки" className="text-muted mb-4 text-sm">
-        <Link href={`/c/${product.category.slug}`} className="inline-flex min-h-11 items-center">
+        <Link
+          href={`/c/${product.category.slug}`}
+          className="inline-flex min-h-11 items-center"
+        >
           ← {product.category.name}
         </Link>
       </nav>
@@ -125,7 +128,10 @@ async function Product({ params }: PageProps) {
       <div className="mt-6">
         <p className="caps text-muted">
           {brand ? (
-            <Link href={`/b/${brand.slug}`} className="inline-flex min-h-11 items-center">
+            <Link
+              href={`/b/${brand.slug}`}
+              className="inline-flex min-h-11 items-center"
+            >
               {brandName}
             </Link>
           ) : (
@@ -190,7 +196,10 @@ async function Product({ params }: PageProps) {
                   ) : null}
                   <ul className="flex flex-col">
                     {group.products.map((other) => (
-                      <li key={other.id} className="border-rule border-b last:border-b-0">
+                      <li
+                        key={other.id}
+                        className="border-rule border-b last:border-b-0"
+                      >
                         <Link
                           href={`/p/${other.slug}`}
                           className="hover:bg-surface flex items-center justify-between gap-4 rounded-md px-2 py-4 transition-colors"
@@ -211,7 +220,9 @@ async function Product({ params }: PageProps) {
                               className="text-sm"
                             />
                             {other.stock === "OUT" ? (
-                              <span className="text-danger mt-0.5 block text-xs">Нет</span>
+                              <span className="text-danger mt-0.5 block text-xs">
+                                Нет
+                              </span>
                             ) : null}
                           </span>
                         </Link>
@@ -249,13 +260,12 @@ async function Product({ params }: PageProps) {
   );
 }
 
-type FragranceDetailData = Awaited<
-  ReturnType<typeof getProductBySlug>
-> extends infer T
-  ? T extends { fragrances: Array<{ fragrance: infer F }> }
-    ? F
-    : never
-  : never;
+type FragranceDetailData =
+  Awaited<ReturnType<typeof getProductBySlug>> extends infer T
+    ? T extends { fragrances: Array<{ fragrance: infer F }> }
+      ? F
+      : never
+    : never;
 
 /**
  * Everything about the scent rather than about the bottle.
@@ -276,7 +286,8 @@ function FragranceDetail({
     fragrance.notesHeart.length > 0 ||
     fragrance.notesBase.length > 0;
 
-  if (!hasNotes && !fragrance.description && fragrance.families.length === 0) return null;
+  if (!hasNotes && !fragrance.description && fragrance.families.length === 0)
+    return null;
 
   return (
     <section className="mt-12">
@@ -290,7 +301,9 @@ function FragranceDetail({
       </div>
 
       {fragrance.description ? (
-        <p className="text-ink mt-4 text-base leading-relaxed">{fragrance.description}</p>
+        <p className="text-ink mt-4 text-base leading-relaxed">
+          {fragrance.description}
+        </p>
       ) : null}
 
       {hasNotes ? (

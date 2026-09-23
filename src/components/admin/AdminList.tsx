@@ -26,7 +26,13 @@ const ROLE_LABELS: Record<string, string> = {
  * database on every request — so switching somebody off takes effect on their
  * next click, not when their cookie expires twelve hours later.
  */
-export function AdminList({ admins, currentId }: { admins: readonly AdminRow[]; currentId: string }) {
+export function AdminList({
+  admins,
+  currentId,
+}: {
+  admins: readonly AdminRow[];
+  currentId: string;
+}) {
   const [editing, setEditing] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -65,8 +71,9 @@ export function AdminList({ admins, currentId }: { admins: readonly AdminRow[]; 
                   )}
                 </p>
                 <p className="text-muted mt-0.5 text-xs tabular-nums">
-                  Telegram ID {admin.telegramId} · {ROLE_LABELS[admin.role] ?? admin.role} ·
-                  с {formatDateRu(admin.createdAt)}
+                  Telegram ID {admin.telegramId} ·{" "}
+                  {ROLE_LABELS[admin.role] ?? admin.role} · с{" "}
+                  {formatDateRu(admin.createdAt)}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -101,7 +108,10 @@ function ActiveToggle({ admin, disabled }: { admin: AdminRow; disabled: boolean 
         disabled={disabled}
         onClick={() =>
           startTransition(async () => {
-            const result = await toggleAdmin({ id: admin.id, isActive: !admin.isActive });
+            const result = await toggleAdmin({
+              id: admin.id,
+              isActive: !admin.isActive,
+            });
             if (!result.ok) {
               setError(result.message);
               return;
@@ -160,7 +170,11 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
             onChange={(e) => setName(e.target.value)}
           />
         </Field>
-        <Field label="Логин" htmlFor={`admin-login-${key}`} hint="Им входят из браузера">
+        <Field
+          label="Логин"
+          htmlFor={`admin-login-${key}`}
+          hint="Им входят из браузера"
+        >
           <TextInput
             id={`admin-login-${key}`}
             value={login}
@@ -208,7 +222,11 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button onClick={save} loading={pending} disabled={!name.trim() || !login.trim()}>
+        <Button
+          onClick={save}
+          loading={pending}
+          disabled={!name.trim() || !login.trim()}
+        >
           Сохранить
         </Button>
         <Button variant="secondary" onClick={onDone}>

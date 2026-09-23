@@ -22,7 +22,14 @@ describe("normalizeHeader", () => {
 
 describe("matchHeaders — recognising a client's spreadsheet", () => {
   it("matches the canonical Russian headers", () => {
-    const m = matchHeaders(["Артикул", "Бренд", "Аромат", "Категория", "Объём", "Цена"]);
+    const m = matchHeaders([
+      "Артикул",
+      "Бренд",
+      "Аромат",
+      "Категория",
+      "Объём",
+      "Цена",
+    ]);
     expect(m.mapping.sku).toBe(0);
     expect(m.mapping.brand).toBe(1);
     expect(m.mapping.fragrance).toBe(2);
@@ -50,7 +57,16 @@ describe("matchHeaders — recognising a client's spreadsheet", () => {
   it("reports unknown columns as a warning, not an error", () => {
     // Point 9: an unfamiliar column must not stop the import. The client's real
     // spreadsheet will have columns we have never seen.
-    const m = matchHeaders(["Артикул", "Бренд", "Аромат", "Категория", "Объём", "Цена", "Поставщик", "Мой комментарий"]);
+    const m = matchHeaders([
+      "Артикул",
+      "Бренд",
+      "Аромат",
+      "Категория",
+      "Объём",
+      "Цена",
+      "Поставщик",
+      "Мой комментарий",
+    ]);
     expect(m.unknown).toEqual([
       { index: 6, header: "Поставщик" },
       { index: 7, header: "Мой комментарий" },
@@ -88,7 +104,10 @@ describe("matchHeaders — recognising a client's spreadsheet", () => {
     for (const [field, def] of Object.entries(COLUMNS)) {
       for (const s of def.synonyms) {
         const key = normalizeHeader(s);
-        expect(seen.get(key), `«${s}» claimed by ${seen.get(key)} and ${field}`).toBeUndefined();
+        expect(
+          seen.get(key),
+          `«${s}» claimed by ${seen.get(key)} and ${field}`,
+        ).toBeUndefined();
         seen.set(key, field);
       }
     }

@@ -135,7 +135,9 @@ function walk(file) {
 }
 
 if (!existsSync(ENTRY)) {
-  console.error(`check:bot-boundary — точка входа не найдена: ${relative(ROOT, ENTRY)}`);
+  console.error(
+    `check:bot-boundary — точка входа не найдена: ${relative(ROOT, ENTRY)}`,
+  );
   process.exit(1);
 }
 
@@ -148,7 +150,9 @@ if (violations.length === 0) {
   process.exit(0);
 }
 
-console.error(`check:bot-boundary — ${violations.length} нарушени(й) границы процесса бота\n`);
+console.error(
+  `check:bot-boundary — ${violations.length} нарушени(й) границы процесса бота\n`,
+);
 for (const v of violations) {
   console.error(`  ${v.file}`);
   console.error(`    ${v.what} — ${v.why}`);

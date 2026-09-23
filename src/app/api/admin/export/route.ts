@@ -38,7 +38,11 @@ export async function GET() {
       category: { select: { name: true } },
       fragrances: {
         orderBy: { position: "asc" },
-        select: { fragrance: { select: { name: true, gender: true, brand: { select: { name: true } } } } },
+        select: {
+          fragrance: {
+            select: { name: true, gender: true, brand: { select: { name: true } } },
+          },
+        },
       },
     },
   });
@@ -70,7 +74,8 @@ export async function GET() {
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "content-type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "content-disposition": `attachment; filename="arumi-catalog-${today}.xlsx"`,
       "cache-control": "no-store",
     },

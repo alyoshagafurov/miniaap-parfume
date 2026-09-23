@@ -22,6 +22,8 @@ coverage/
 playwright-report/
 test-results/
 /qa/**/*.png
+# Машинные артефакты прогона: отчёт, трассы, сводка. Пересоздаются pnpm test:e2e.
+/qa/stage-1/playwright-results.json
 /qa/**/*.webm
 /qa/**/*.zip
 

@@ -24,7 +24,10 @@ const Params = z.object({
     .string()
     .regex(/^[a-z0-9-]{1,64}$/)
     .optional(),
-  brandSlugs: z.array(z.string().regex(/^[a-z0-9-]{1,64}$/)).max(32).optional(),
+  brandSlugs: z
+    .array(z.string().regex(/^[a-z0-9-]{1,64}$/))
+    .max(32)
+    .optional(),
   gender: z.enum(GENDERS).optional(),
   families: z.array(z.enum(FAMILIES)).max(FAMILIES.length).optional(),
   inStockOnly: z.boolean().optional(),

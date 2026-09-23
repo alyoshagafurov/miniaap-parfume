@@ -69,7 +69,10 @@ export function Gallery({
         fetchPriority="high"
         decoding="async"
         className="bg-surface aspect-[4/5] w-full rounded-md object-cover"
-        style={{ backgroundImage: `url(${first.blurDataUrl})`, backgroundSize: "cover" }}
+        style={{
+          backgroundImage: `url(${first.blurDataUrl})`,
+          backgroundSize: "cover",
+        }}
       />
     );
   }
@@ -99,7 +102,10 @@ export function Gallery({
             fetchPriority={i === 0 ? "high" : "auto"}
             decoding="async"
             className="bg-surface aspect-[4/5] w-full shrink-0 snap-center object-cover"
-            style={{ backgroundImage: `url(${image.blurDataUrl})`, backgroundSize: "cover" }}
+            style={{
+              backgroundImage: `url(${image.blurDataUrl})`,
+              backgroundSize: "cover",
+            }}
           />
         ))}
       </div>

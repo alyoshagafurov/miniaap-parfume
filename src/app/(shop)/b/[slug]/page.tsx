@@ -40,7 +40,10 @@ async function Brand({ params }: PageProps) {
   const brand = await getBrandBySlug(slug);
   if (!brand) notFound();
 
-  const [settings, groups] = await Promise.all([getSettings(), getBrandProducts(brand.id)]);
+  const [settings, groups] = await Promise.all([
+    getSettings(),
+    getBrandProducts(brand.id),
+  ]);
 
   return (
     <>

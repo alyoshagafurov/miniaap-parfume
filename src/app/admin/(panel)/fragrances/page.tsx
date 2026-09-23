@@ -16,7 +16,9 @@ export default function FragrancesPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Ароматы</h1>
+        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+          Ароматы
+        </h1>
         <Link
           href="/admin/fragrances/new"
           className="bg-olive text-surface hover:bg-olive-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
@@ -25,8 +27,8 @@ export default function FragrancesPage({
         </Link>
       </div>
       <p className="text-muted mt-2 text-sm">
-        Аромат — это запах, а не флакон. Один продаётся в нескольких форматах, и правка здесь
-        меняет их все сразу.
+        Аромат — это запах, а не флакон. Один продаётся в нескольких форматах, и правка
+        здесь меняет их все сразу.
       </p>
 
       <Suspense fallback={<ListSkeleton />}>
@@ -43,7 +45,9 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
     return Array.isArray(value) ? value[0] : value;
   };
   const q = (one("q") ?? "").slice(0, 100);
-  const brandSlug = /^[a-z0-9-]{1,64}$/.test(one("brand") ?? "") ? (one("brand") as string) : null;
+  const brandSlug = /^[a-z0-9-]{1,64}$/.test(one("brand") ?? "")
+    ? (one("brand") as string)
+    : null;
   const page = Math.max(1, Number.parseInt(one("page") ?? "1", 10) || 1);
 
   const [result, brands] = await Promise.all([
@@ -119,7 +123,8 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
                 href={`/admin/fragrances/${fragrance.id}`}
                 className="text-ink text-base font-medium underline-offset-4 hover:underline"
               >
-                <span className="text-muted">{fragrance.brandName}</span> {fragrance.name}
+                <span className="text-muted">{fragrance.brandName}</span>{" "}
+                {fragrance.name}
               </Link>
               <span className="text-muted text-sm">
                 {fragrance.formats.length > 0
@@ -144,7 +149,10 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
       </ul>
 
       {result.pageCount > 1 ? (
-        <nav aria-label="Страницы" className="mt-8 flex items-center justify-between gap-4">
+        <nav
+          aria-label="Страницы"
+          className="mt-8 flex items-center justify-between gap-4"
+        >
           {result.page > 1 ? (
             <Link
               href={href({ page: result.page - 1 })}

@@ -54,13 +54,18 @@ export default async function HomePage() {
           ) : null}
           <div>
             <dt className="caps text-muted">Минимальный заказ</dt>
-            <dd className="text-ink mt-1 tabular-nums">{formatRub(settings.minOrderKop)}</dd>
+            <dd className="text-ink mt-1 tabular-nums">
+              {formatRub(settings.minOrderKop)}
+            </dd>
           </div>
           {settings.phone ? (
             <div>
               <dt className="caps text-muted">Телефон</dt>
               <dd className="mt-1">
-                <a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`} className="text-olive inline-flex min-h-11 items-center underline underline-offset-4">
+                <a
+                  href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`}
+                  className="text-olive inline-flex min-h-11 items-center underline underline-offset-4"
+                >
                   {settings.phone}
                 </a>
               </dd>
@@ -97,9 +102,13 @@ export default async function HomePage() {
                 className="hover:bg-surface flex items-center justify-between gap-4 rounded-md px-2 py-4 transition-colors"
               >
                 <span className="min-w-0">
-                  <span className="text-ink block text-lg leading-snug font-medium">{c.name}</span>
+                  <span className="text-ink block text-lg leading-snug font-medium">
+                    {c.name}
+                  </span>
                   {c.subtitle ? (
-                    <span className="text-muted mt-0.5 block text-sm">{c.subtitle}</span>
+                    <span className="text-muted mt-0.5 block text-sm">
+                      {c.subtitle}
+                    </span>
                   ) : null}
                 </span>
                 <span className="text-muted shrink-0 text-sm tabular-nums">
@@ -111,7 +120,11 @@ export default async function HomePage() {
         </ul>
       </section>
 
-      <ProductLane title="Новинки" products={newArrivals} showPrices={settings.showPrices} />
+      <ProductLane
+        title="Новинки"
+        products={newArrivals}
+        showPrices={settings.showPrices}
+      />
       <ProductLane title="Хиты" products={hits} showPrices={settings.showPrices} />
     </main>
   );

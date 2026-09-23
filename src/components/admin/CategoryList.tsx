@@ -51,7 +51,10 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
   return (
     <div className="flex flex-col gap-4">
       {error ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+        >
           {error}
         </p>
       ) : null}
@@ -173,7 +176,12 @@ function CategoryForm({
     startTransition(async () => {
       const result = await saveCategory({
         id: category?.id ?? null,
-        fields: { name, subtitle: subtitle || null, isPublished, slug: category?.slug ?? null },
+        fields: {
+          name,
+          subtitle: subtitle || null,
+          isPublished,
+          slug: category?.slug ?? null,
+        },
       });
       if (!result.ok) {
         setError(result.message);
@@ -194,9 +202,17 @@ function CategoryForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Название" htmlFor={`cat-name-${key}`}>
-          <TextInput id={`cat-name-${key}`} value={name} onChange={(e) => setName(e.target.value)} />
+          <TextInput
+            id={`cat-name-${key}`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </Field>
-        <Field label="Подзаголовок" htmlFor={`cat-sub-${key}`} hint="Строка под названием на главной">
+        <Field
+          label="Подзаголовок"
+          htmlFor={`cat-sub-${key}`}
+          hint="Строка под названием на главной"
+        >
           <TextInput
             id={`cat-sub-${key}`}
             value={subtitle}

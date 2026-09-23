@@ -50,7 +50,8 @@ export async function createFragrance(
     });
     // The unique constraint would catch this, but «У Chanel уже есть аромат
     // "Chance"» is an answer and P2002 is not.
-    if (taken) throw new CatalogConflict(`У бренда ${brand.name} уже есть аромат «${name}»`);
+    if (taken)
+      throw new CatalogConflict(`У бренда ${brand.name} уже есть аромат «${name}»`);
 
     // The brand is in the slug because two houses may both sell an "Aqua", and
     // /f/aqua-2 is a worse URL than /f/chanel-aqua.
@@ -113,7 +114,8 @@ export async function updateFragrance(
         where: { brandId: input.brandId, name, id: { not: id } },
         select: { id: true },
       });
-      if (clash) throw new CatalogConflict(`У бренда ${brand.name} уже есть аромат «${name}»`);
+      if (clash)
+        throw new CatalogConflict(`У бренда ${brand.name} уже есть аромат «${name}»`);
 
       const slug = await allocateSlug(tx, "fragrance", `${brand.name} ${name}`, {
         exceptId: id,
@@ -143,7 +145,11 @@ export async function updateFragrance(
         select: { id: true, slug: true, name: true },
       });
 
-      const tags = new Tags().add(CATALOG_TAG, brandTag(brand.slug), brandTag(before.brand.slug));
+      const tags = new Tags().add(
+        CATALOG_TAG,
+        brandTag(brand.slug),
+        brandTag(before.brand.slug),
+      );
 
       // Gender and families are filters, not text: they change what a product
       // matches without changing what it is indexed under.

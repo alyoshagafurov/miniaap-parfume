@@ -34,7 +34,11 @@ const CARD_SELECT = {
     select: {
       position: true,
       fragrance: {
-        select: { name: true, slug: true, brand: { select: { name: true, slug: true } } },
+        select: {
+          name: true,
+          slug: true,
+          brand: { select: { name: true, slug: true } },
+        },
       },
     },
     orderBy: { position: "asc" },
@@ -187,8 +191,15 @@ export async function getProductBySlug(slug: string) {
           position: true,
           fragrance: {
             select: {
-              id: true, name: true, slug: true, gender: true, families: true,
-              notesTop: true, notesHeart: true, notesBase: true, description: true,
+              id: true,
+              name: true,
+              slug: true,
+              gender: true,
+              families: true,
+              notesTop: true,
+              notesHeart: true,
+              notesBase: true,
+              description: true,
               brand: { select: { id: true, name: true, slug: true } },
             },
           },
@@ -212,14 +223,23 @@ export async function getOtherFormats(fragranceId: string, exceptProductId: stri
     },
     orderBy: [{ volumeMl: "asc" }, { id: "asc" }],
     select: {
-      id: true, slug: true, title: true, volumeMl: true,
-      priceKop: true, packSize: true, stock: true,
+      id: true,
+      slug: true,
+      title: true,
+      volumeMl: true,
+      priceKop: true,
+      packSize: true,
+      stock: true,
       category: { select: { name: true, slug: true } },
     },
   });
 }
 
-export async function getMoreFromBrand(brandId: string, exceptProductId: string, limit = 8) {
+export async function getMoreFromBrand(
+  brandId: string,
+  exceptProductId: string,
+  limit = 8,
+) {
   return prisma.product.findMany({
     where: {
       status: "PUBLISHED",
@@ -257,12 +277,18 @@ export async function getBrandProducts(brandId: string) {
   const products = await prisma.product.findMany({
     where: { status: "PUBLISHED", fragrances: { some: { fragrance: { brandId } } } },
     orderBy: [{ categoryId: "asc" }, { popularity: "desc" }, { id: "asc" }],
-    select: { ...CARD_SELECT, category: { select: { name: true, slug: true, sortOrder: true } } },
+    select: {
+      ...CARD_SELECT,
+      category: { select: { name: true, slug: true, sortOrder: true } },
+    },
   });
 
   // Grouped in code rather than in N queries: the whole of one brand is tens of
   // rows, not thousands, and one round trip beats one per category.
-  const groups = new Map<string, { name: string; slug: string; sortOrder: number; products: typeof products }>();
+  const groups = new Map<
+    string,
+    { name: string; slug: string; sortOrder: number; products: typeof products }
+  >();
   for (const p of products) {
     const key = p.category.slug;
     const group = groups.get(key);

@@ -14,8 +14,12 @@ test.describe("Карточка товара", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Об аромате" })).toBeVisible();
     // The brief's requirement: the same fragrance in its other volumes.
-    await expect(page.getByRole("heading", { name: "Этот аромат в других форматах" })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Хлебные крошки" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Этот аромат в других форматах" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("navigation", { name: "Хлебные крошки" }),
+    ).toBeVisible();
 
     await shot(page, info, "06-product");
   });
@@ -33,7 +37,9 @@ test.describe("Карточка товара", () => {
     expect(href).not.toBe(PRODUCT);
 
     await formats.click();
-    await expect(page).toHaveURL(new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    await expect(page).toHaveURL(
+      new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    );
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
@@ -57,7 +63,10 @@ test.describe("Карточка товара", () => {
     await expect(cart).toBeVisible();
 
     const stored = await page.evaluate(() => localStorage.getItem("arumi.cart.v1"));
-    const parsed = JSON.parse(stored ?? "{}") as { v: number; lines: { qty: number }[] };
+    const parsed = JSON.parse(stored ?? "{}") as {
+      v: number;
+      lines: { qty: number }[];
+    };
     expect(parsed.v).toBe(1);
     expect(parsed.lines).toHaveLength(1);
     expect(parsed.lines[0]!.qty).toBe(afterOne);
@@ -65,7 +74,9 @@ test.describe("Карточка товара", () => {
     await shot(page, info, "07-product-added");
   });
 
-  test("несуществующий товар — объяснённое состояние, а не пустота", async ({ page }, info) => {
+  test("несуществующий товар — объяснённое состояние, а не пустота", async ({
+    page,
+  }, info) => {
     const response = await page.goto("/p/takogo-tovara-net");
 
     // The status is 200, and that is a consequence of partial prerendering
@@ -79,20 +90,27 @@ test.describe("Карточка товара", () => {
 
     // What the buyer gets has to be right regardless. Before this pass it was
     // a header, a footer and nothing between them.
-    await expect(page.getByRole("heading", { level: 1, name: "Такой страницы нет" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Такой страницы нет" }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "В каталог" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Поиск по каталогу" })).toBeVisible();
 
     await shot(page, info, "21-product-not-found");
   });
 
-  test("несуществующий адрес вне витрины отвечает 404 и по-русски", async ({ page, audit }) => {
+  test("несуществующий адрес вне витрины отвечает 404 и по-русски", async ({
+    page,
+    audit,
+  }) => {
     audit.allow("/takogo-adresa-net", "проверяем именно 404");
     // Chromium also logs the navigation's own status to the console, without
     // the URL in the message.
     audit.allow("status of 404", "тот же самый ожидаемый 404");
     const response = await page.goto("/takogo-adresa-net");
     expect(response?.status()).toBe(404);
-    await expect(page.getByRole("heading", { level: 1, name: "Страница не найдена" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Страница не найдена" }),
+    ).toBeVisible();
   });
 });

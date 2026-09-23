@@ -75,16 +75,18 @@ async function Guard({ children }: { children: ReactNode }) {
         */}
         <nav aria-label="Разделы админки" className="border-rule border-b">
           <ul className="mx-auto flex w-full max-w-6xl gap-1 overflow-x-auto px-2 pb-2">
-            {NAV.filter((item) => !("owner" in item) || session.role === "OWNER").map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="text-muted hover:bg-olive-wash hover:text-ink inline-flex min-h-11 items-center rounded-md px-3 text-sm whitespace-nowrap transition-colors"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {NAV.filter((item) => !("owner" in item) || session.role === "OWNER").map(
+              (item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-muted hover:bg-olive-wash hover:text-ink inline-flex min-h-11 items-center rounded-md px-3 text-sm whitespace-nowrap transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ),
+            )}
           </ul>
         </nav>
       </header>
@@ -95,7 +97,9 @@ async function Guard({ children }: { children: ReactNode }) {
 
       <footer className="mx-auto w-full max-w-6xl px-4 pb-8">
         <GoldRule />
-        <p className="text-muted mt-3 text-xs">ÁRUMI Parfum &amp; Care — админ-панель</p>
+        <p className="text-muted mt-3 text-xs">
+          ÁRUMI Parfum &amp; Care — админ-панель
+        </p>
       </footer>
     </div>
   );

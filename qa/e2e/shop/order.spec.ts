@@ -35,16 +35,22 @@ async function fillForm(page: Page): Promise<void> {
 test.describe("Заявка", () => {
   test("пустая заявка — это состояние с выходом", async ({ page }, info) => {
     await page.goto("/cart");
-    await expect(page.getByRole("heading", { name: "В заявке пока пусто" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "В заявке пока пусто" }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "В каталог" })).toBeVisible();
     await shot(page, info, "11-cart-empty");
   });
 
-  test("показывает, сколько не хватает до минимума, и не даёт отправить", async ({ page }, info) => {
+  test("показывает, сколько не хватает до минимума, и не даёт отправить", async ({
+    page,
+  }, info) => {
     await fillBasket(page, 1);
     await page.goto("/cart");
 
-    await expect(page.getByRole("progressbar", { name: "Прогресс до минимального заказа" })).toBeVisible();
+    await expect(
+      page.getByRole("progressbar", { name: "Прогресс до минимального заказа" }),
+    ).toBeVisible();
     await expect(page.getByText(/До минимального заказа .* не хватает/)).toBeVisible();
 
     await fillForm(page);
@@ -53,7 +59,9 @@ test.describe("Заявка", () => {
     await shot(page, info, "12-cart-below-minimum");
   });
 
-  test("набранная сумма открывает оформление и заявка уходит", async ({ page }, info) => {
+  test("набранная сумма открывает оформление и заявка уходит", async ({
+    page,
+  }, info) => {
     // 445 ₽ apiece: twelve clears 5 000 ₽ with room to spare.
     await fillBasket(page, 12);
     await page.goto("/cart");
@@ -106,7 +114,8 @@ test.describe("Заявка", () => {
       const raw = localStorage.getItem("arumi.cart.v1");
       if (!raw) throw new Error("корзина пуста — нечего устаревать");
       const cart = JSON.parse(raw) as { v: number; lines: { seenPriceKop: number }[] };
-      for (const line of cart.lines) line.seenPriceKop = Math.max(1, line.seenPriceKop - 5000);
+      for (const line of cart.lines)
+        line.seenPriceKop = Math.max(1, line.seenPriceKop - 5000);
       localStorage.setItem("arumi.cart.v1", JSON.stringify(cart));
     });
 
@@ -116,11 +125,13 @@ test.describe("Заявка", () => {
     await page.getByRole("button", { name: /^Оформить/ }).click();
 
     // The diff, not a silent correction.
-    await expect(page.getByRole("button", { name: "Принять и отправить" })).toBeVisible({
-      // The server reprices every line against the catalog before it can
-      // answer, and four workers share one Postgres.
-      timeout: 25_000,
-    });
+    await expect(page.getByRole("button", { name: "Принять и отправить" })).toBeVisible(
+      {
+        // The server reprices every line against the catalog before it can
+        // answer, and four workers share one Postgres.
+        timeout: 25_000,
+      },
+    );
     await shot(page, info, "15-cart-changed");
 
     // React schedules a form reset before the action runs, unconditionally.

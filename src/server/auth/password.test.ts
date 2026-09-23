@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { generateLoginCode, hashPassword, hashLoginCode, verifyLoginCode, verifyPassword } from "./password";
+import {
+  generateLoginCode,
+  hashPassword,
+  hashLoginCode,
+  verifyLoginCode,
+  verifyPassword,
+} from "./password";
 
 describe("hashPassword / verifyPassword", () => {
   it("accepts the right password", async () => {

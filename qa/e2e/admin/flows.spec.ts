@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
 import { expect, shot, test } from "../fixtures";
-import { OWNER, signIn } from "./session";
+import { OWNER, useAdmin } from "./session";
 
 /**
  * The three admin actions that reach outside the panel.
@@ -21,7 +21,7 @@ test.describe("Админка — действия", () => {
   test.describe.configure({ mode: "serial" });
 
   test("правка цены в админке доходит до витрины", async ({ page, browser }, info) => {
-    await signIn(page, OWNER);
+    await useAdmin(page, OWNER);
     await page.goto("/admin/products?q=ARM-1040");
 
     // The exact row, not the first match. Searching «ARM-1040» also finds the
@@ -53,10 +53,10 @@ test.describe("Админка — действия", () => {
     // Compared as a number: 4 321 ₽ is printed with a thin space between the
     // thousands, so the digits never appear consecutively in the text.
     await expect
-      .poll(
-        async () => Number((await cell.innerText()).replace(/\D+/g, "")),
-        { message: "цена в таблице не обновилась", timeout: 15_000 },
-      )
+      .poll(async () => Number((await cell.innerText()).replace(/\D+/g, "")), {
+        message: "цена в таблице не обновилась",
+        timeout: 15_000,
+      })
       .toBe(rubles);
     await shot(page, info, "34-admin-price-edited");
 
@@ -76,7 +76,10 @@ test.describe("Админка — действия", () => {
         async () =>
           buyer.locator("main").evaluate((main) => {
             for (const span of main.querySelectorAll("span")) {
-              if (span.children.length === 0 && (span.textContent ?? "").includes("₽")) {
+              if (
+                span.children.length === 0 &&
+                (span.textContent ?? "").includes("₽")
+              ) {
                 return Number((span.textContent ?? "").replace(/\D+/g, ""));
               }
             }
@@ -88,11 +91,18 @@ test.describe("Админка — действия", () => {
     await shop.close();
   });
 
-  test("фотография с телефона встаёт вертикально, а не боком", async ({ page }, info) => {
-    await signIn(page, OWNER);
+  test("фотография с телефона встаёт вертикально, а не боком", async ({
+    page,
+  }, info) => {
+    await useAdmin(page, OWNER);
     await page.goto("/admin/products?q=ARM-1040");
-    await page.getByRole("link", { name: /ARM-1040|Idôle/ }).first().click();
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await page
+      .getByRole("link", { name: /ARM-1040|Idôle/ })
+      .first()
+      .click();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      timeout: 15_000,
+    });
 
     const photos = page.getByRole("listitem").filter({ has: page.locator("img") });
 
@@ -129,7 +139,10 @@ test.describe("Админка — действия", () => {
         }),
       );
     const portrait = shapes.filter((s) => s.h > s.w);
-    expect(portrait.length, `ни одна фотография не вертикальная: ${JSON.stringify(shapes)}`).toBeGreaterThan(0);
+    expect(
+      portrait.length,
+      `ни одна фотография не вертикальная: ${JSON.stringify(shapes)}`,
+    ).toBeGreaterThan(0);
 
     await shot(page, info, "35-admin-photos");
 
@@ -138,7 +151,9 @@ test.describe("Админка — действия", () => {
     // Friday has thirty pictures of a flat olive rectangle.
     for (let i = 0; i < 2; i += 1) {
       await photos.last().getByRole("button", { name: "Удалить" }).click();
-      await expect.poll(async () => photos.count(), { timeout: 15_000 }).toBe(before + 1 - i);
+      await expect
+        .poll(async () => photos.count(), { timeout: 15_000 })
+        .toBe(before + 1 - i);
     }
   });
 
@@ -152,10 +167,15 @@ test.describe("Админка — действия", () => {
     audit.allow("/api/admin/images", "загрузка должна ответить отказом, а не успехом");
     audit.allow("status of 400", "тот же самый ожидаемый отказ, глазами консоли");
 
-    await signIn(page, OWNER);
+    await useAdmin(page, OWNER);
     await page.goto("/admin/products?q=ARM-1040");
-    await page.getByRole("link", { name: /ARM-1040|Idôle/ }).first().click();
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await page
+      .getByRole("link", { name: /ARM-1040|Idôle/ })
+      .first()
+      .click();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      timeout: 15_000,
+    });
 
     const file = page.locator('input[type="file"]').first();
 
@@ -164,7 +184,9 @@ test.describe("Админка — действия", () => {
     // удалось прочитать файл», and not a 500. sharp here has no libheif and
     // throws on open, before any format check, so the container has to be
     // recognised first or an iPhone photo becomes a server error.
-    await expect(page.getByText(/HEIC.*Сохраните его как JPEG/s)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/HEIC.*Сохраните его как JPEG/s)).toBeVisible({
+      timeout: 30_000,
+    });
     await shot(page, info, "36-admin-heic-refused");
 
     // No reload between the two. The file input is `sr-only` and its change
@@ -173,13 +195,15 @@ test.describe("Админка — действия", () => {
     // the only way to that input is a button whose onClick is React's too. The
     // two refusals read differently, so they can sit on screen together.
     await file.setInputFiles(join(MEDIA, "not-an-image.jpg"));
-    await expect(page.getByText(/Нужен JPEG, PNG или WebP/)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Нужен JPEG, PNG или WebP/)).toBeVisible({
+      timeout: 30_000,
+    });
   });
 
   test("выгрузка и повторная загрузка того же файла — обновление, а не дубли", async ({
     page,
   }, info) => {
-    await signIn(page, OWNER);
+    await useAdmin(page, OWNER);
     await page.goto("/admin/import");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
@@ -187,7 +211,10 @@ test.describe("Админка — действия", () => {
     // round trip the screen promises in so many words.
     const download = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("link", { name: /Выгрузить|Экспорт/ }).first().click(),
+      page
+        .getByRole("link", { name: /Выгрузить|Экспорт/ })
+        .first()
+        .click(),
     ]).then(([d]) => d);
 
     // Saved under its real name. The import picks its parser from the file
@@ -201,9 +228,13 @@ test.describe("Админка — действия", () => {
 
     await page.locator('input[type="file"]').first().setInputFiles(path);
 
-    await expect(page.getByText(/Готово к загрузке: \d+ строк/)).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/Готово к загрузке: \d+ строк/)).toBeVisible({
+      timeout: 60_000,
+    });
     const summary = await page.getByText(/Готово к загрузке: \d+ строк/).innerText();
-    expect(summary, "повторная загрузка собственной выгрузки дала ошибки").not.toMatch(/с ошибками: [1-9]/);
+    expect(summary, "повторная загрузка собственной выгрузки дала ошибки").not.toMatch(
+      /с ошибками: [1-9]/,
+    );
 
     await shot(page, info, "37-admin-import-preview");
   });

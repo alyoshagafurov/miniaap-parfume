@@ -72,7 +72,9 @@ async function CategoryHeader({ params }: { params: PageProps["params"] }) {
       <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
         {category.name}
       </h1>
-      {category.subtitle ? <p className="text-muted mt-2 text-sm">{category.subtitle}</p> : null}
+      {category.subtitle ? (
+        <p className="text-muted mt-2 text-sm">{category.subtitle}</p>
+      ) : null}
       <GoldRule className="mt-4 w-24" />
     </header>
   );

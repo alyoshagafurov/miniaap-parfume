@@ -28,6 +28,8 @@ describe("parsePhotoFilename", () => {
   });
 
   it("survives a name with several dots", () => {
-    expect(parsePhotoFilename("ARM-1005-1.final.jpg").candidates).toContain("ARM-1005-1.final");
+    expect(parsePhotoFilename("ARM-1005-1.final.jpg").candidates).toContain(
+      "ARM-1005-1.final",
+    );
   });
 });

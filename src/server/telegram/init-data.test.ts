@@ -15,8 +15,15 @@ const user = {
   is_premium: true,
 };
 
-function signed(at: Date = new Date(), overrides: Record<string, unknown> = {}): string {
-  return sign({ user, chat_instance: "-1234567890", chat_type: "private", ...overrides }, TOKEN, at);
+function signed(
+  at: Date = new Date(),
+  overrides: Record<string, unknown> = {},
+): string {
+  return sign(
+    { user, chat_instance: "-1234567890", chat_type: "private", ...overrides },
+    TOKEN,
+    at,
+  );
 }
 
 describe("verifyInitData — the gate on everything a user can do", () => {
@@ -30,7 +37,10 @@ describe("verifyInitData — the gate on everything a user can do", () => {
   });
 
   it("carries the deep-link start parameter through", () => {
-    const result = verifyInitData(signed(new Date(), { start_param: "p_chanel-sauvage-100" }), TOKEN);
+    const result = verifyInitData(
+      signed(new Date(), { start_param: "p_chanel-sauvage-100" }),
+      TOKEN,
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected ok");
     expect(result.startParam).toBe("p_chanel-sauvage-100");
@@ -38,8 +48,10 @@ describe("verifyInitData — the gate on everything a user can do", () => {
 
   it("rejects a tampered hash", () => {
     const raw = signed();
-    const tampered = raw.replace(/hash=([0-9a-f]+)/, (_m, h: string) =>
-      `hash=${h.slice(0, -1)}${h.at(-1) === "a" ? "b" : "a"}`);
+    const tampered = raw.replace(
+      /hash=([0-9a-f]+)/,
+      (_m, h: string) => `hash=${h.slice(0, -1)}${h.at(-1) === "a" ? "b" : "a"}`,
+    );
     expect(verifyInitData(tampered, TOKEN).ok).toBe(false);
   });
 
@@ -51,7 +63,11 @@ describe("verifyInitData — the gate on everything a user can do", () => {
   });
 
   it("rejects data signed with a different bot token", () => {
-    const other = sign({ user }, "7999999999:AAHsome-other-bot-token-entirely", new Date());
+    const other = sign(
+      { user },
+      "7999999999:AAHsome-other-bot-token-entirely",
+      new Date(),
+    );
     expect(verifyInitData(other, TOKEN).ok).toBe(false);
   });
 

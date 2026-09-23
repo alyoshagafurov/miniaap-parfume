@@ -26,7 +26,9 @@ async function tagsForProduct(tx: Tx, productId: string): Promise<string[]> {
     select: {
       slug: true,
       category: { select: { slug: true } },
-      fragrances: { select: { fragrance: { select: { brand: { select: { slug: true } } } } } },
+      fragrances: {
+        select: { fragrance: { select: { brand: { select: { slug: true } } } } },
+      },
     },
   });
   if (!product) return [CATALOG_TAG];
@@ -120,7 +122,10 @@ export async function removeProductImage(
       select: { id: true },
     });
     for (const [index, row] of rest.entries()) {
-      await tx.productImage.update({ where: { id: row.id }, data: { sortOrder: index } });
+      await tx.productImage.update({
+        where: { id: row.id },
+        data: { sortOrder: index },
+      });
     }
 
     return { data: { productId: image.productId, key: image.key }, tags };

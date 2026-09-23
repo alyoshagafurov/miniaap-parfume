@@ -28,7 +28,10 @@ export default async function ShopLayout({ children }: { children: ReactNode }) 
       <CartProvider>
         <div
           className="flex min-h-dvh flex-col"
-          style={{ paddingTop: "var(--tg-safe-top)", paddingBottom: "var(--tg-safe-bottom)" }}
+          style={{
+            paddingTop: "var(--tg-safe-top)",
+            paddingBottom: "var(--tg-safe-bottom)",
+          }}
         >
           <header className="bg-canvas sticky top-0 z-20">
             <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
@@ -39,7 +42,11 @@ export default async function ShopLayout({ children }: { children: ReactNode }) 
                 ÁRUMI
               </Link>
               <div className="min-w-0 flex-1">
-                <Suspense fallback={<div className="bg-surface border-control h-12 rounded-md border" />}>
+                <Suspense
+                  fallback={
+                    <div className="bg-surface border-control h-12 rounded-md border" />
+                  }
+                >
                   <SearchField />
                 </Suspense>
               </div>
@@ -56,7 +63,9 @@ export default async function ShopLayout({ children }: { children: ReactNode }) 
             <div className="text-muted mx-auto w-full max-w-3xl px-4 py-8 text-sm">
               <p className="text-ink">{settings.companyName}</p>
               {settings.address ? <p className="mt-1">{settings.address}</p> : null}
-              <p className="mt-1">Минимальный заказ {formatRub(settings.minOrderKop)}</p>
+              <p className="mt-1">
+                Минимальный заказ {formatRub(settings.minOrderKop)}
+              </p>
               {settings.phone ? (
                 <p className="mt-3">
                   <a

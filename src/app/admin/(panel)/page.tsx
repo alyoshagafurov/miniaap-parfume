@@ -16,7 +16,9 @@ export const metadata = { title: "Админка" };
 export default function AdminHomePage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Главная</h1>
+      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+        Главная
+      </h1>
       <Suspense fallback={<CountersSkeleton />}>
         <Counters />
       </Suspense>
@@ -28,10 +30,22 @@ async function Counters() {
   const counts = await getDashboardCounts();
 
   const cards = [
-    { label: "Опубликовано", value: counts.published, href: "/admin/products?status=PUBLISHED" },
+    {
+      label: "Опубликовано",
+      value: counts.published,
+      href: "/admin/products?status=PUBLISHED",
+    },
     { label: "Черновики", value: counts.drafts, href: "/admin/products?status=DRAFT" },
-    { label: "Без фото", value: counts.withoutPhoto, href: "/admin/products?photo=none" },
-    { label: "Новые заявки", value: counts.newOrders, href: "/admin/orders?status=NEW" },
+    {
+      label: "Без фото",
+      value: counts.withoutPhoto,
+      href: "/admin/products?photo=none",
+    },
+    {
+      label: "Новые заявки",
+      value: counts.newOrders,
+      href: "/admin/orders?status=NEW",
+    },
   ];
 
   return (

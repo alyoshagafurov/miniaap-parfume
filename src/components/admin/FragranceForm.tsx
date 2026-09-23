@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { removeFragrance, saveFragrance } from "@/app/admin/(panel)/dictionaries-actions";
+import {
+  removeFragrance,
+  saveFragrance,
+} from "@/app/admin/(panel)/dictionaries-actions";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
@@ -78,12 +81,18 @@ export function FragranceForm({
   return (
     <div className="flex flex-col gap-6">
       {error ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+        >
           {error}
         </p>
       ) : null}
       {saved ? (
-        <p role="status" className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="status"
+          className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm"
+        >
           Сохранено. Товары этого аромата переиндексированы, витрина обновлена.
         </p>
       ) : null}
@@ -113,7 +122,11 @@ export function FragranceForm({
           htmlFor="aliases"
           hint="Через запятую. Так, как его ищут: «шанс», «chance eau»"
         >
-          <TextInput id="aliases" value={aliases} onChange={(e) => setAliases(e.target.value)} />
+          <TextInput
+            id="aliases"
+            value={aliases}
+            onChange={(e) => setAliases(e.target.value)}
+          />
         </Field>
 
         <Field label="Пол" htmlFor="gender">
@@ -155,7 +168,11 @@ export function FragranceForm({
 
       <div className="grid gap-5 sm:grid-cols-3">
         <Field label="Верхние ноты" htmlFor="notesTop" hint="Через запятую">
-          <TextInput id="notesTop" value={notesTop} onChange={(e) => setNotesTop(e.target.value)} />
+          <TextInput
+            id="notesTop"
+            value={notesTop}
+            onChange={(e) => setNotesTop(e.target.value)}
+          />
         </Field>
         <Field label="Сердце" htmlFor="notesHeart" hint="Через запятую">
           <TextInput
@@ -232,14 +249,19 @@ export function FragranceForm({
           ) : (
             <ul className="mt-3 flex flex-col">
               {fragrance.products.map((product) => (
-                <li key={product.id} className="border-rule border-b py-2 last:border-b-0">
+                <li
+                  key={product.id}
+                  className="border-rule border-b py-2 last:border-b-0"
+                >
                   <Link
                     href={`/admin/products/${product.id}`}
                     className="text-ink text-sm underline-offset-4 hover:underline"
                   >
                     {product.volumeMl} мл · {product.categoryName}
                   </Link>
-                  <span className="text-muted ml-2 font-mono text-xs">{product.sku}</span>
+                  <span className="text-muted ml-2 font-mono text-xs">
+                    {product.sku}
+                  </span>
                 </li>
               ))}
             </ul>

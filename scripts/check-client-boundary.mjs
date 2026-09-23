@@ -37,7 +37,12 @@ const EXTENSIONS = [".ts", ".tsx", ".mts", ".js", ".mjs"];
 
 /** Server-only by construction; nothing in a browser bundle may reach them. */
 const FORBIDDEN_DIRS = [join(SRC, "server"), join(SRC, "bot")];
-const FORBIDDEN_MODULES = [/^next\/headers$/, /^@prisma\/client$/, /^prisma$/, /^argon2$/];
+const FORBIDDEN_MODULES = [
+  /^next\/headers$/,
+  /^@prisma\/client$/,
+  /^prisma$/,
+  /^argon2$/,
+];
 
 function resolveImport(specifier, fromFile) {
   let base;
@@ -89,7 +94,10 @@ function valueImportsOf(source) {
   }
 
   // Side-effect and dynamic imports are always value imports.
-  for (const p of [/\bimport\s*["']([^"']+)["']/g, /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g]) {
+  for (const p of [
+    /\bimport\s*["']([^"']+)["']/g,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
+  ]) {
     let m;
     while ((m = p.exec(source)) !== null) specifiers.push(m[1]);
   }

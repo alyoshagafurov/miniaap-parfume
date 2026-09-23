@@ -73,7 +73,9 @@ describe.skipIf(!reachable)("rateLimit", () => {
 
   it("resetLimit clears a key, for use after a successful login", async () => {
     await rateLimit(key, { limit: 1, windowSeconds: 600 });
-    expect((await rateLimit(key, { limit: 1, windowSeconds: 600 })).allowed).toBe(false);
+    expect((await rateLimit(key, { limit: 1, windowSeconds: 600 })).allowed).toBe(
+      false,
+    );
     await resetLimit(key);
     expect((await rateLimit(key, { limit: 1, windowSeconds: 600 })).allowed).toBe(true);
   });

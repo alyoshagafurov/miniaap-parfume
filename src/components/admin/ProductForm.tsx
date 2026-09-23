@@ -9,7 +9,10 @@ import {
   removeProduct,
   saveProduct,
 } from "@/app/admin/(panel)/products/actions";
-import { FragrancePicker, type PickedFragrance } from "@/components/admin/FragrancePicker";
+import {
+  FragrancePicker,
+  type PickedFragrance,
+} from "@/components/admin/FragrancePicker";
 import { ImageManager, type ManagedImage } from "@/components/admin/ImageManager";
 import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
@@ -139,12 +142,18 @@ export function ProductForm({
   return (
     <div className="flex flex-col gap-8">
       {notice ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+        >
           {notice}
         </p>
       ) : null}
       {saved ? (
-        <p role="status" className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="status"
+          className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm"
+        >
           Сохранено. Витрина уже показывает новые данные.
         </p>
       ) : null}
@@ -180,7 +189,11 @@ export function ProductForm({
             />
           </Field>
 
-          <Field label="Объём, мл" htmlFor="volume" error={form.formState.errors.volume?.message}>
+          <Field
+            label="Объём, мл"
+            htmlFor="volume"
+            error={form.formState.errors.volume?.message}
+          >
             <TextInput
               id="volume"
               inputMode="numeric"
@@ -209,7 +222,11 @@ export function ProductForm({
             />
           </Field>
 
-          <Field label="Цена, ₽" htmlFor="price" error={form.formState.errors.price?.message}>
+          <Field
+            label="Цена, ₽"
+            htmlFor="price"
+            error={form.formState.errors.price?.message}
+          >
             <TextInput
               id="price"
               inputMode="decimal"
@@ -223,7 +240,11 @@ export function ProductForm({
             htmlFor="oldPrice"
             hint="Необязательно. Показывается зачёркнутой и должна быть больше текущей"
           >
-            <TextInput id="oldPrice" inputMode="decimal" {...form.register("oldPrice")} />
+            <TextInput
+              id="oldPrice"
+              inputMode="decimal"
+              {...form.register("oldPrice")}
+            />
           </Field>
 
           <Field label="Наличие" htmlFor="stock">
@@ -257,15 +278,31 @@ export function ProductForm({
 
         <div className="flex flex-wrap gap-6">
           <label className="flex min-h-11 items-center gap-2">
-            <input type="checkbox" className="accent-olive h-5 w-5" {...form.register("isNew")} />
+            <input
+              type="checkbox"
+              className="accent-olive h-5 w-5"
+              {...form.register("isNew")}
+            />
             <span className="text-ink text-sm">Новинка</span>
           </label>
           <label className="flex min-h-11 items-center gap-2">
-            <input type="checkbox" className="accent-olive h-5 w-5" {...form.register("isHit")} />
+            <input
+              type="checkbox"
+              className="accent-olive h-5 w-5"
+              {...form.register("isHit")}
+            />
             <span className="text-ink text-sm">Хит</span>
           </label>
-          <Field label="Популярность" htmlFor="popularity" hint="Чем больше, тем выше в списках">
-            <TextInput id="popularity" inputMode="numeric" {...form.register("popularity")} />
+          <Field
+            label="Популярность"
+            htmlFor="popularity"
+            hint="Чем больше, тем выше в списках"
+          >
+            <TextInput
+              id="popularity"
+              inputMode="numeric"
+              {...form.register("popularity")}
+            />
           </Field>
         </div>
 
@@ -274,11 +311,27 @@ export function ProductForm({
             Название и адрес — задаются сами
           </summary>
           <div className="mt-4 grid gap-5 sm:grid-cols-2">
-            <Field label="Название" htmlFor="title" hint="Пусто — соберётся из бренда и ароматов">
-              <TextInput id="title" placeholder={generatedTitle} {...form.register("title")} />
+            <Field
+              label="Название"
+              htmlFor="title"
+              hint="Пусто — соберётся из бренда и ароматов"
+            >
+              <TextInput
+                id="title"
+                placeholder={generatedTitle}
+                {...form.register("title")}
+              />
             </Field>
-            <Field label="Адрес (slug)" htmlFor="slug" hint="Пусто — соберётся из названия и артикула">
-              <TextInput id="slug" placeholder="соберётся сам" {...form.register("slug")} />
+            <Field
+              label="Адрес (slug)"
+              htmlFor="slug"
+              hint="Пусто — соберётся из названия и артикула"
+            >
+              <TextInput
+                id="slug"
+                placeholder="соберётся сам"
+                {...form.register("slug")}
+              />
             </Field>
           </div>
         </details>
@@ -422,13 +475,25 @@ function CopyToFormat({
           <TextInput id="copy-sku" {...form.register("sku", { required: true })} />
         </Field>
         <Field label="Объём, мл" htmlFor="copy-volume">
-          <TextInput id="copy-volume" inputMode="numeric" {...form.register("volume", { required: true })} />
+          <TextInput
+            id="copy-volume"
+            inputMode="numeric"
+            {...form.register("volume", { required: true })}
+          />
         </Field>
         <Field label="Цена, ₽" htmlFor="copy-price">
-          <TextInput id="copy-price" inputMode="decimal" {...form.register("price", { required: true })} />
+          <TextInput
+            id="copy-price"
+            inputMode="decimal"
+            {...form.register("price", { required: true })}
+          />
         </Field>
         <Field label="Кратность" htmlFor="copy-pack">
-          <TextInput id="copy-pack" inputMode="numeric" {...form.register("packSize", { required: true })} />
+          <TextInput
+            id="copy-pack"
+            inputMode="numeric"
+            {...form.register("packSize", { required: true })}
+          />
         </Field>
       </div>
 

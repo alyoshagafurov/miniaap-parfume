@@ -42,10 +42,7 @@ export interface QuotedLine extends CatalogEntry {
 }
 
 export type RemovalReason =
-  | "NOT_FOUND"
-  | "UNAVAILABLE"
-  | "OUT_OF_STOCK"
-  | "BAD_QUANTITY";
+  "NOT_FOUND" | "UNAVAILABLE" | "OUT_OF_STOCK" | "BAD_QUANTITY";
 
 export type AdjustmentReason = "PACK_SIZE" | "MAX_QUANTITY";
 
@@ -58,7 +55,12 @@ export interface Quote {
   meetsMinimum: boolean;
   showPrices: boolean;
   removed: Array<{ productId: string; reason: RemovalReason }>;
-  adjusted: Array<{ productId: string; from: number; to: number; reason: AdjustmentReason }>;
+  adjusted: Array<{
+    productId: string;
+    from: number;
+    to: number;
+    reason: AdjustmentReason;
+  }>;
 }
 
 export interface QuoteSettings {

@@ -100,7 +100,8 @@ export function SearchResults({
 
       {exhausted ? (
         <p className="text-muted mt-8 text-center text-sm">
-          Показаны первые {items.length} из {total}. Уточните запрос, чтобы найти нужное.
+          Показаны первые {items.length} из {total}. Уточните запрос, чтобы найти
+          нужное.
         </p>
       ) : null}
     </>

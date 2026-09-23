@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { COOKIE_NAME, SESSION_TTL_SECONDS, sessionCookieOptions, signSession, verifySession } from "./session";
+import {
+  COOKIE_NAME,
+  SESSION_TTL_SECONDS,
+  sessionCookieOptions,
+  signSession,
+  verifySession,
+} from "./session";
 
 const SECRET = "test-secret-at-least-32-characters-long!!";
 const OTHER = "another-secret-at-least-32-characters!!!!";
@@ -25,7 +31,12 @@ describe("signSession / verifySession", () => {
     const token = signSession({ adminId: "adm_1", role: "EDITOR" }, SECRET);
     const [body, sig] = token.split(".");
     const forged = Buffer.from(
-      JSON.stringify({ adminId: "adm_1", role: "OWNER", exp: Date.now() / 1000 + 100, iat: 1 }),
+      JSON.stringify({
+        adminId: "adm_1",
+        role: "OWNER",
+        exp: Date.now() / 1000 + 100,
+        iat: 1,
+      }),
     ).toString("base64url");
     expect(verifySession(`${forged}.${sig}`, SECRET)).toBeNull();
     expect(body).toBeTruthy();
@@ -45,7 +56,9 @@ describe("signSession / verifySession", () => {
   it("rejects an expired session", () => {
     const token = signSession(payload, SECRET, { nowSeconds: 1_000_000 });
     // 12h later plus a second.
-    expect(verifySession(token, SECRET, { nowSeconds: 1_000_000 + SESSION_TTL_SECONDS + 1 })).toBeNull();
+    expect(
+      verifySession(token, SECRET, { nowSeconds: 1_000_000 + SESSION_TTL_SECONDS + 1 }),
+    ).toBeNull();
   });
 
   it("accepts a session inside its window", () => {

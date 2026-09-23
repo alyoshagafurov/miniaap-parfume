@@ -25,20 +25,28 @@ const PAGE_SIZE = 24;
  * which is precisely the twins case this catalog is full of.
  */
 async function slugs(page: import("@playwright/test").Page): Promise<string[]> {
-  const hrefs = await page.locator('main a[href^="/p/"]').evaluateAll((nodes) =>
-    nodes.map((n) => n.getAttribute("href") ?? ""),
-  );
+  const hrefs = await page
+    .locator('main a[href^="/p/"]')
+    .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href") ?? ""));
   return hrefs.filter(Boolean);
 }
 
 test.describe("Автоподгрузка", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "Только Chromium установлен");
+  test.skip(
+    ({ browserName }) => browserName !== "chromium",
+    "Только Chromium установлен",
+  );
 
-  test("догружает страницы по мере прокрутки и не повторяет товары", async ({ page }, info) => {
+  test("догружает страницы по мере прокрутки и не повторяет товары", async ({
+    page,
+  }, info) => {
     await page.goto(CATEGORY);
 
     const total = await foundCount(page);
-    test.skip(total <= PAGE_SIZE, `в категории ${total} товаров — подгружать нечего, нужен pnpm seed:bulk`);
+    test.skip(
+      total <= PAGE_SIZE,
+      `в категории ${total} товаров — подгружать нечего, нужен pnpm seed:bulk`,
+    );
 
     const first = await slugs(page);
     expect(first.length).toBe(Math.min(PAGE_SIZE, total));
@@ -71,18 +79,24 @@ test.describe("Автоподгрузка", () => {
     await shot(page, info, "20-infinite-scroll");
   });
 
-  test("подгрузка переживает фильтр, применённый на середине списка", async ({ page }) => {
+  test("подгрузка переживает фильтр, применённый на середине списка", async ({
+    page,
+  }) => {
     await page.goto(CATEGORY);
     const total = await foundCount(page);
     test.skip(total <= PAGE_SIZE, "нужен pnpm seed:bulk");
 
     await page.mouse.wheel(0, 20_000);
-    await expect.poll(async () => (await slugs(page)).length, { timeout: 15_000 }).toBeGreaterThan(PAGE_SIZE);
+    await expect
+      .poll(async () => (await slugs(page)).length, { timeout: 15_000 })
+      .toBeGreaterThan(PAGE_SIZE);
 
     // Narrowing must reset the list to the new first page, not append the
     // filtered results underneath the unfiltered ones.
     await page.goto(`${CATEGORY}?brand=chanel`);
-    await expect.poll(async () => (await slugs(page)).length, { timeout: 15_000 }).toBeLessThanOrEqual(PAGE_SIZE);
+    await expect
+      .poll(async () => (await slugs(page)).length, { timeout: 15_000 })
+      .toBeLessThanOrEqual(PAGE_SIZE);
 
     const after = await slugs(page);
     expect(new Set(after).size).toBe(after.length);

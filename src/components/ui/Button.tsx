@@ -17,7 +17,8 @@ const VARIANT: Record<Variant, string> = {
     "bg-olive text-surface hover:bg-olive-hover active:bg-olive-hover disabled:bg-control",
   secondary:
     "bg-surface text-ink border border-control hover:bg-olive-wash active:bg-olive-wash disabled:text-muted",
-  quiet: "text-olive underline underline-offset-4 hover:text-olive-hover disabled:text-muted",
+  quiet:
+    "text-olive underline underline-offset-4 hover:text-olive-hover disabled:text-muted",
 };
 
 export function Button({

@@ -44,7 +44,8 @@ export async function loadMoreResults(
   if (!parsed.success) return { rows: [], total: 0 };
 
   return searchProducts({
-    query: parsed.data.query, offset: parsed.data.offset,
+    query: parsed.data.query,
+    offset: parsed.data.offset,
     limit: SEARCH_PAGE_SIZE,
   });
 }

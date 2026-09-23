@@ -14,7 +14,8 @@ export async function GET() {
   const buffer = await buildTemplate();
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "content-type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "content-disposition": 'attachment; filename="arumi-import-template.xlsx"',
       // Generated per request and never cached by anything between here and the
       // owner: a stale template is a file whose columns no longer match.

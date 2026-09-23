@@ -1,13 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { LOGIN_CODE_MAX_ATTEMPTS, LOGIN_CODE_TTL_SECONDS, decideLogin, decideCodeCheck } from "./login";
+import {
+  LOGIN_CODE_MAX_ATTEMPTS,
+  LOGIN_CODE_TTL_SECONDS,
+  decideLogin,
+  decideCodeCheck,
+} from "./login";
 
 /**
  * The decision logic is pure and lives apart from the database and the bot, so
  * every refusal path is directly testable. The orchestration around it is thin.
  */
 
-const admin = { id: "a1", role: "OWNER" as const, isActive: true, passwordHash: "$argon2id$x" };
+const admin = {
+  id: "a1",
+  role: "OWNER" as const,
+  isActive: true,
+  passwordHash: "$argon2id$x",
+};
 
 describe("decideLogin — Telegram path", () => {
   const base = {
@@ -39,7 +49,9 @@ describe("decideLogin — Telegram path", () => {
   });
 
   it("refuses a deactivated admin", () => {
-    expect(decideLogin({ ...base, admin: { ...admin, isActive: false } }).outcome).toBe("REJECT");
+    expect(decideLogin({ ...base, admin: { ...admin, isActive: false } }).outcome).toBe(
+      "REJECT",
+    );
   });
 
   it("refuses an unknown admin", () => {
@@ -83,7 +95,9 @@ describe("decideLogin — browser path", () => {
 
   it("refuses an unknown or deactivated admin without sending a code", () => {
     expect(decideLogin({ ...base, admin: null }).outcome).toBe("REJECT");
-    expect(decideLogin({ ...base, admin: { ...admin, isActive: false } }).outcome).toBe("REJECT");
+    expect(decideLogin({ ...base, admin: { ...admin, isActive: false } }).outcome).toBe(
+      "REJECT",
+    );
   });
 });
 
@@ -115,7 +129,10 @@ describe("decideCodeCheck", () => {
   it("refuses a code that was already used", () => {
     // One-time means one time: a code read over someone's shoulder must not
     // work twice.
-    const d = decideCodeCheck({ ...fresh, code: { ...fresh.code, usedAt: new Date() } });
+    const d = decideCodeCheck({
+      ...fresh,
+      code: { ...fresh.code, usedAt: new Date() },
+    });
     expect(d.outcome).toBe("REJECT");
   });
 

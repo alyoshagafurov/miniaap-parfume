@@ -11,14 +11,28 @@ import { quoteCart, type CatalogEntry } from "./quote";
 
 const CATALOG: Record<string, CatalogEntry> = {
   p1: {
-    id: "p1", sku: "ARM-1001", title: "Chanel Coco Mademoiselle",
-    brandName: "Chanel", format: "100 мл", priceKop: 150_000,
-    packSize: 1, stock: "IN_STOCK", status: "PUBLISHED", imageKey: null,
+    id: "p1",
+    sku: "ARM-1001",
+    title: "Chanel Coco Mademoiselle",
+    brandName: "Chanel",
+    format: "100 мл",
+    priceKop: 150_000,
+    packSize: 1,
+    stock: "IN_STOCK",
+    status: "PUBLISHED",
+    imageKey: null,
   },
   p6: {
-    id: "p6", sku: "ARM-1006", title: "Dior Sauvage",
-    brandName: "Dior", format: "35 мл", priceKop: 50_000,
-    packSize: 6, stock: "IN_STOCK", status: "PUBLISHED", imageKey: null,
+    id: "p6",
+    sku: "ARM-1006",
+    title: "Dior Sauvage",
+    brandName: "Dior",
+    format: "35 мл",
+    priceKop: 50_000,
+    packSize: 6,
+    stock: "IN_STOCK",
+    status: "PUBLISHED",
+    imageKey: null,
   },
 };
 
@@ -73,7 +87,11 @@ describe("price moved", () => {
     // A buyer who sees a higher figure at confirmation than in the basket has
     // the same right to be told, in either direction.
     const r = reconcile([seen({ seenPriceKop: 200_000 })]);
-    expect(r.changes[0]).toMatchObject({ kind: "PRICE", fromKop: 200_000, toKop: 150_000 });
+    expect(r.changes[0]).toMatchObject({
+      kind: "PRICE",
+      fromKop: 200_000,
+      toKop: 150_000,
+    });
   });
 
   it("gives the new total alongside the changes", () => {
@@ -129,23 +147,40 @@ describe("pack size moved", () => {
 
   it("does not report a pack size that only rounded within what was already shown", () => {
     // packSize 6 both before and after: the rounding is not news.
-    const r = reconcile([seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 })]);
+    const r = reconcile([
+      seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 }),
+    ]);
     expect(r.changed).toBe(false);
   });
 });
 
 describe("the corrected basket", () => {
   it("hands back lines the client can store as the new snapshot", () => {
-    const catalog = { ...CATALOG, p1: { ...CATALOG.p1!, priceKop: 170_000, packSize: 6 } };
+    const catalog = {
+      ...CATALOG,
+      p1: { ...CATALOG.p1!, priceKop: 170_000, packSize: 6 },
+    };
     const r = reconcile([seen({ qty: 4 })], catalog);
     expect(r.correctedLines).toEqual([
-      { productId: "p1", qty: 6, seenPriceKop: 170_000, seenPackSize: 6, seenStock: "IN_STOCK" },
+      {
+        productId: "p1",
+        qty: 6,
+        seenPriceKop: 170_000,
+        seenPackSize: 6,
+        seenStock: "IN_STOCK",
+      },
     ]);
   });
 
   it("drops vanished products from the corrected basket", () => {
     const catalog = { ...CATALOG, p1: { ...CATALOG.p1!, stock: "OUT" } };
-    const r = reconcile([seen(), seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 })], catalog);
+    const r = reconcile(
+      [
+        seen(),
+        seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 }),
+      ],
+      catalog,
+    );
     expect(r.correctedLines.map((l) => l.productId)).toEqual(["p6"]);
   });
 
@@ -168,7 +203,10 @@ describe("several lines at once", () => {
       p6: { ...CATALOG.p6!, stock: "OUT" },
     };
     const r = reconcile(
-      [seen({ qty: 4 }), seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 })],
+      [
+        seen({ qty: 4 }),
+        seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 }),
+      ],
       catalog,
     );
     expect(r.changes.map((c) => c.kind).sort()).toEqual(["GONE", "PRICE"]);
@@ -177,7 +215,10 @@ describe("several lines at once", () => {
   it("leaves untouched lines out of the report", () => {
     const catalog = { ...CATALOG, p6: { ...CATALOG.p6!, priceKop: 60_000 } };
     const r = reconcile(
-      [seen({ qty: 4 }), seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 })],
+      [
+        seen({ qty: 4 }),
+        seen({ productId: "p6", qty: 6, seenPriceKop: 50_000, seenPackSize: 6 }),
+      ],
       catalog,
     );
     expect(r.changes).toHaveLength(1);

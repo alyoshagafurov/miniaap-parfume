@@ -19,7 +19,10 @@ import {
  */
 
 /** Basket, form, submit — returns the request number the buyer is shown. */
-async function placeOrder(page: import("@playwright/test").Page, name: string): Promise<string> {
+async function placeOrder(
+  page: import("@playwright/test").Page,
+  name: string,
+): Promise<string> {
   await page.goto("/p/dior-homme-intense-35ml-arm-1038");
   const stepper = page.getByRole("group", { name: /^Количество:/ });
   for (let i = 0; i < 12; i += 1) {
@@ -54,11 +57,16 @@ test.describe("Внутри Telegram", () => {
 
   test("проходит путь каталог → карточка → заявка", async ({ page }, info) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /Парфюм 35 мл/ }).first().click();
+    await page
+      .getByRole("link", { name: /Парфюм 35 мл/ })
+      .first()
+      .click();
     // Wait for the address, not for a heading: the home screen has an h1 too,
     // so asserting on one passes without ever leaving the page.
     await expect(page).toHaveURL(/\/c\//);
-    await expect(page.getByRole("heading", { level: 1, name: /Парфюм 35 мл/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: /Парфюм 35 мл/ }),
+    ).toBeVisible();
 
     // Wait for the listing's own count before reaching into the list. The App
     // Router keeps the previous screen mounted while the next one streams, so
@@ -80,7 +88,9 @@ test.describe("Внутри Telegram", () => {
 
     // History is scoped by the signature, not by anything the client sends.
     await page.goto("/orders");
-    await expect(page.getByRole("heading", { level: 1, name: "Мои заявки" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Мои заявки" }),
+    ).toBeVisible();
     await expect(page.getByRole("heading", { name: `№ ${number}` })).toBeVisible({
       timeout: 15_000,
     });
@@ -104,12 +114,16 @@ test.describe("Внутри Telegram", () => {
     await expect(page.getByRole("button", { name: /^Оформить/ })).toBeVisible();
   });
 
-  test("в обычном браузере история не притворяется пустой — она объясняет", async ({ page }, info) => {
+  test("в обычном браузере история не притворяется пустой — она объясняет", async ({
+    page,
+  }, info) => {
     // Deliberately not in Telegram: the beforeEach mock is per-page, and this
     // one opens a page without it.
     const plain = await page.context().browser()!.newContext();
     const fresh = await plain.newPage();
-    await fresh.goto(`${test.info().project.use.baseURL ?? "http://localhost:3100"}/orders`);
+    await fresh.goto(
+      `${test.info().project.use.baseURL ?? "http://localhost:3100"}/orders`,
+    );
     await expect(fresh.getByText("Заявки хранятся в Telegram")).toBeVisible();
     await shot(fresh, info, "19-orders-browser");
     await plain.close();
@@ -128,7 +142,9 @@ test.describe("Внутри Telegram", () => {
       );
     });
     await page.goto("/orders");
-    await expect(page.getByText(/Заявок пока нет|Заявки хранятся в Telegram/)).toBeVisible({
+    await expect(
+      page.getByText(/Заявок пока нет|Заявки хранятся в Telegram/),
+    ).toBeVisible({
       timeout: 15_000,
     });
   });
@@ -136,6 +152,8 @@ test.describe("Внутри Telegram", () => {
   test("заявка без корзины не отправляется, даже с подписью", async ({ page }) => {
     await seedCart(page, []);
     await page.goto("/cart");
-    await expect(page.getByRole("heading", { name: "В заявке пока пусто" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "В заявке пока пусто" }),
+    ).toBeVisible();
   });
 });

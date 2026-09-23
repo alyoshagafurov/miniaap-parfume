@@ -155,7 +155,8 @@ export function OrderScreen({
 
   /** Accept what the server corrected, then send the same form again. */
   const acceptChanges = () => {
-    if (!result || result.ok || result.reason !== "CHANGED" || !result.correctedLines) return;
+    if (!result || result.ok || result.reason !== "CHANGED" || !result.correctedLines)
+      return;
     const corrected = applyCorrections(lines, result.correctedLines);
     replace(corrected);
     setResult(null);
@@ -223,7 +224,9 @@ export function OrderScreen({
 
   return (
     <>
-      <h1 className="font-display text-ink text-h1 leading-tight font-semibold">Заявка</h1>
+      <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
+        Заявка
+      </h1>
       <GoldRule className="mt-4 w-24" />
 
       <div className="mt-6">
@@ -262,13 +265,20 @@ export function OrderScreen({
         ) : null}
 
         {result && !result.ok && !changed ? (
-          <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-4 text-sm">
+          <p
+            role="alert"
+            className="border-danger bg-danger-wash text-ink rounded-md border p-4 text-sm"
+          >
             {result.message}
           </p>
         ) : null}
       </div>
 
-      <form onSubmit={(e) => void onSubmit(e)} noValidate className="mt-8 flex flex-col gap-5">
+      <form
+        onSubmit={(e) => void onSubmit(e)}
+        noValidate
+        className="mt-8 flex flex-col gap-5"
+      >
         <Field label="Имя" htmlFor="name" error={form.formState.errors.name?.message}>
           <TextInput
             id="name"
@@ -297,7 +307,9 @@ export function OrderScreen({
             {...form.register("phone", {
               required: "Укажите телефон",
               validate: (value) =>
-                /^\+7\d{10}$/.test(value.replace(/\D/g, "").replace(/^8/, "7").replace(/^7/, "+7"))
+                /^\+7\d{10}$/.test(
+                  value.replace(/\D/g, "").replace(/^8/, "7").replace(/^7/, "+7"),
+                )
                   ? true
                   : "Неверный номер телефона",
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -353,7 +365,11 @@ export function OrderScreen({
           ) : null}
         </fieldset>
 
-        <Field label="Комментарий" htmlFor="comment" error={form.formState.errors.comment?.message}>
+        <Field
+          label="Комментарий"
+          htmlFor="comment"
+          error={form.formState.errors.comment?.message}
+        >
           <TextArea id="comment" {...form.register("comment", { maxLength: 1000 })} />
         </Field>
 
@@ -364,7 +380,12 @@ export function OrderScreen({
         */}
         <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
           <label htmlFor="website">Сайт</label>
-          <input id="website" tabIndex={-1} autoComplete="off" {...form.register("website")} />
+          <input
+            id="website"
+            tabIndex={-1}
+            autoComplete="off"
+            {...form.register("website")}
+          />
         </div>
 
         <div>
@@ -374,7 +395,9 @@ export function OrderScreen({
             <input
               type="checkbox"
               className="accent-olive mt-0.5 h-5 w-5 shrink-0"
-              {...form.register("consent", { required: "Нужно согласие на обработку данных" })}
+              {...form.register("consent", {
+                required: "Нужно согласие на обработку данных",
+              })}
             />
             <span className="text-muted text-sm">
               Согласен на обработку персональных данных для оформления заявки
@@ -413,7 +436,13 @@ export function OrderScreen({
  * A bar rather than only a number, because "не хватает 1 200 ₽" says nothing
  * about whether that is nearly there or barely started.
  */
-function MinimumProgress({ totalKop, minOrderKop }: { totalKop: number; minOrderKop: number }) {
+function MinimumProgress({
+  totalKop,
+  minOrderKop,
+}: {
+  totalKop: number;
+  minOrderKop: number;
+}) {
   if (minOrderKop <= 0) return null;
   const pct = Math.min(100, Math.round((totalKop / minOrderKop) * 100));
   const short = Math.max(0, minOrderKop - totalKop);
@@ -460,6 +489,7 @@ function formatPhone(input: string): string {
   if (rest.length === 0) return "+7";
   if (rest.length <= 3) return `+7 (${rest}`;
   if (rest.length <= 6) return `+7 (${rest.slice(0, 3)}) ${rest.slice(3)}`;
-  if (rest.length <= 8) return `+7 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6)}`;
+  if (rest.length <= 8)
+    return `+7 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6)}`;
   return `+7 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6, 8)}-${rest.slice(8)}`;
 }

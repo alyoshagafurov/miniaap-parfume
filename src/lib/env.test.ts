@@ -35,7 +35,11 @@ describe("env", () => {
     // a copied file has BOT_USERNAME= in it. Zod's .optional() admits undefined
     // and refuses "", which made the whole environment fail to parse over a
     // variable nobody needed.
-    const { env } = await freshEnv({ BOT_USERNAME: "", MINI_APP_URL: "", ADMIN_CHAT_ID: "  " });
+    const { env } = await freshEnv({
+      BOT_USERNAME: "",
+      MINI_APP_URL: "",
+      ADMIN_CHAT_ID: "  ",
+    });
     expect(() => env()).not.toThrow();
     expect(env().BOT_USERNAME).toBeUndefined();
     expect(env().MINI_APP_URL).toBeUndefined();

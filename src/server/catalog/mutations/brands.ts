@@ -21,7 +21,9 @@ export interface BrandInput {
   isPublished: boolean;
 }
 
-export async function createBrand(input: BrandInput): Promise<Mutation<{ id: string; slug: string }>> {
+export async function createBrand(
+  input: BrandInput,
+): Promise<Mutation<{ id: string; slug: string }>> {
   return inTransaction(async (tx) => {
     const slug = await allocateSlug(tx, "brand", input.name, { override: input.slug });
     const brand = await tx.brand.create({
@@ -74,7 +76,11 @@ export async function updateBrand(
         select: { id: true, slug: true },
       });
 
-      const tags = new Tags().add(CATALOG_TAG, brandTag(before.slug), brandTag(brand.slug));
+      const tags = new Tags().add(
+        CATALOG_TAG,
+        brandTag(before.slug),
+        brandTag(brand.slug),
+      );
 
       // Only when the haystack actually moved. Publishing or reordering a brand
       // changes nothing a buyer can search for, and reindexing a thousand
@@ -117,7 +123,10 @@ export async function deleteBrand(id: string): Promise<Mutation<{ slug: string }
     }
 
     await tx.brand.delete({ where: { id } });
-    return { data: { slug: brand.slug }, tags: new Tags().add(CATALOG_TAG, brandTag(brand.slug)).list };
+    return {
+      data: { slug: brand.slug },
+      tags: new Tags().add(CATALOG_TAG, brandTag(brand.slug)).list,
+    };
   });
 }
 

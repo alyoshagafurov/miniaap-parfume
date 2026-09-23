@@ -11,16 +11,16 @@
 
 ## Стек
 
-| | |
-|---|---|
-| Next.js | 16.3.6, App Router, Cache Components |
-| React | 19.3.0 |
-| TypeScript | 5.9.3, strict + `noUncheckedIndexedAccess` |
-| Tailwind | 4.3.3, CSS-first `@theme` |
-| PostgreSQL | 16, Prisma 7.10.0 + `@prisma/adapter-pg` |
-| Бот | grammY 1.46.0, отдельный процесс, long polling |
-| Mini App | `@tma.js/sdk-react` |
-| Прочее | Redis 7, S3 (MinIO в dev), sharp, zod 4, argon2 |
+|            |                                                 |
+| ---------- | ----------------------------------------------- |
+| Next.js    | 16.3.6, App Router, Cache Components            |
+| React      | 19.3.0                                          |
+| TypeScript | 5.9.3, strict + `noUncheckedIndexedAccess`      |
+| Tailwind   | 4.3.3, CSS-first `@theme`                       |
+| PostgreSQL | 16, Prisma 7.10.0 + `@prisma/adapter-pg`        |
+| Бот        | grammY 1.46.0, отдельный процесс, long polling  |
+| Mini App   | `@tma.js/sdk-react`                             |
+| Прочее     | Redis 7, S3 (MinIO в dev), sharp, zod 4, argon2 |
 
 **RC и новые мажоры не ставить.** `npm view prisma version` вернёт `8.0.0-rc` —
 это RC, нужен 7.10.0. `npm view typescript version` вернёт 7.0.2 — нужен 5.9.3.
@@ -77,12 +77,12 @@ pnpm db:migrate       prisma migrate dev
 **Порты — только для dev на этой машине**, потому что 3000, 5432, 6379 и 9000 здесь
 заняты другими проектами. В прод-конфиги этапа 3 не переносятся.
 
-| | dev | стандарт |
-|---|---|---|
-| Next | 3100 | 3000 |
-| PostgreSQL | 5434 | 5432 |
-| Redis | 6381 | 6379 |
-| MinIO | 9100 / 9101 | 9000 / 9001 |
+|            | dev         | стандарт    |
+| ---------- | ----------- | ----------- |
+| Next       | 3100        | 3000        |
+| PostgreSQL | 5434        | 5432        |
+| Redis      | 6381        | 6379        |
+| MinIO      | 9100 / 9101 | 9000 / 9001 |
 
 ---
 
@@ -149,6 +149,7 @@ Relay этапа 3 обязан проксировать **обе** формы: 
 перепроверено вторым проходом. Поправки второго прохода учтены.
 
 **`@tma.js/sdk-react` — это НЕ тот же API, что `@telegram-apps/sdk`.**
+
 - Ставить только `@tma.js/sdk-react`; он тянет `@tma.js/sdk` и реэкспортирует
   его целиком. Старый `@telegram-apps/sdk-react` надо удалить — оба вешают
   глобальные слушатели на один `window.TelegramWebviewProxy`.
@@ -176,6 +177,7 @@ Relay этапа 3 обязан проксировать **обе** формы: 
 - Весь boot-эффект, включая `isTMA()`, обернуть в try/catch.
 
 **Next 16 + cacheComponents.**
+
 - `searchParams` не разворачивать в теле страницы — передавать промис в дочерний
   компонент внутри `<Suspense>`, иначе ошибка сборки.
 - В `'use cache'` нельзя трогать `searchParams`, `cookies()`, `headers()`.
@@ -198,6 +200,7 @@ Relay этапа 3 обязан проксировать **обе** формы: 
   назначения (именно на ней, не на ссылке).
 
 **Server Actions и формы.**
+
 - React планирует сброс формы **безусловно и до вызова** экшена — для любого
   `<form action>`, значение которого функция. Введённое пользователем **исчезнет**,
   если не вернуть его в состоянии и не положить в `defaultValue`. Это не зависит от
@@ -210,6 +213,7 @@ Relay этапа 3 обязан проксировать **обе** формы: 
   `$remote_addr`, иначе лимит по IP обходится подделкой заголовка.
 
 **vaul 1.1.2.**
+
 - Всегда рендерить `Drawer.Overlay` (в нём живёт блокировка скролла) и
   `Drawer.Title` с `sr-only` — без заголовка нет `aria-labelledby` и **нет
   предупреждения в консоли**.

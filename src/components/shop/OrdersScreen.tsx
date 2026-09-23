@@ -65,7 +65,9 @@ export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
 
   return (
     <>
-      <h1 className="font-display text-ink text-h1 leading-tight font-semibold">Мои заявки</h1>
+      <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
+        Мои заявки
+      </h1>
       <GoldRule className="mt-4 w-24" />
 
       {!ready ? (
@@ -94,7 +96,11 @@ export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
         <ul className="mt-8 flex flex-col gap-6">
           {(orders ?? []).map((order) => (
             <li key={order.id}>
-              <OrderCard order={order} showPrices={showPrices} initDataRaw={rawInitData} />
+              <OrderCard
+                order={order}
+                showPrices={showPrices}
+                initDataRaw={rawInitData}
+              />
             </li>
           ))}
         </ul>
@@ -140,12 +146,17 @@ function OrderCard({
   return (
     <article className="border-rule rounded-md border p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-ink text-base font-semibold tabular-nums">№ {order.number}</h2>
-        <span className="text-muted text-sm">{STATUS_LABEL[order.status] ?? order.status}</span>
+        <h2 className="text-ink text-base font-semibold tabular-nums">
+          № {order.number}
+        </h2>
+        <span className="text-muted text-sm">
+          {STATUS_LABEL[order.status] ?? order.status}
+        </span>
       </div>
 
       <p className="text-muted mt-1 text-sm">
-        {formatDateTimeRu(order.createdAt)} · {DELIVERY_LABEL[order.delivery] ?? order.delivery}
+        {formatDateTimeRu(order.createdAt)} ·{" "}
+        {DELIVERY_LABEL[order.delivery] ?? order.delivery}
         {order.city ? ` · ${order.city}` : ""}
       </p>
 
@@ -176,7 +187,12 @@ function OrderCard({
       ) : null}
 
       <div className="mt-4">
-        <Button variant="secondary" onClick={repeat} loading={pending} disabled={!initDataRaw}>
+        <Button
+          variant="secondary"
+          onClick={repeat}
+          loading={pending}
+          disabled={!initDataRaw}
+        >
           Повторить
         </Button>
       </div>

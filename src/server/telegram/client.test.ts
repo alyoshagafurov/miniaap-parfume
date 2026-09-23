@@ -1,7 +1,12 @@
 import { Api } from "grammy";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { apiRoot, clientOptions, telegramApi, __setTelegramApiForTests } from "./client";
+import {
+  apiRoot,
+  clientOptions,
+  telegramApi,
+  __setTelegramApiForTests,
+} from "./client";
 
 const ORIGINAL = { ...process.env };
 

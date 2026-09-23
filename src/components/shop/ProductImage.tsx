@@ -33,7 +33,8 @@ export function ProductImage({
   priority = false,
   onError,
 }: {
-  image: { key: string; width: number; height: number; blurDataUrl: string } | undefined;
+  image:
+    { key: string; width: number; height: number; blurDataUrl: string } | undefined;
   title: string;
   brandName: string;
   label?: boolean;

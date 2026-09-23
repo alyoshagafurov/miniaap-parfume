@@ -17,16 +17,29 @@ describe("formatDateRu", () => {
   });
 
   it("pads the clock", () => {
-    expect(formatDateTimeRu(new Date("2026-01-05T02:04:00Z"))).toBe("5 января 2026, 05:04");
+    expect(formatDateTimeRu(new Date("2026-01-05T02:04:00Z"))).toBe(
+      "5 января 2026, 05:04",
+    );
   });
 
   it("covers every month", () => {
-    const names = Array.from({ length: 12 }, (_, m) =>
-      formatDateRu(new Date(Date.UTC(2026, m, 15, 12))).split(" ")[1],
+    const names = Array.from(
+      { length: 12 },
+      (_, m) => formatDateRu(new Date(Date.UTC(2026, m, 15, 12))).split(" ")[1],
     );
     expect(names).toEqual([
-      "января", "февраля", "марта", "апреля", "мая", "июня",
-      "июля", "августа", "сентября", "октября", "ноября", "декабря",
+      "января",
+      "февраля",
+      "марта",
+      "апреля",
+      "мая",
+      "июня",
+      "июля",
+      "августа",
+      "сентября",
+      "октября",
+      "ноября",
+      "декабря",
     ]);
   });
 });
@@ -34,7 +47,9 @@ describe("formatDateRu", () => {
 describe("productName", () => {
   it("does not repeat a brand the title already carries", () => {
     // How every seeded and imported row actually looks.
-    expect(productName("Chanel", "Chanel Coco Mademoiselle")).toBe("Chanel Coco Mademoiselle");
+    expect(productName("Chanel", "Chanel Coco Mademoiselle")).toBe(
+      "Chanel Coco Mademoiselle",
+    );
     expect(productName("Yves Saint Laurent", "Yves Saint Laurent Black Opium")).toBe(
       "Yves Saint Laurent Black Opium",
     );
@@ -45,7 +60,9 @@ describe("productName", () => {
   });
 
   it("ignores case, because an imported row may shout", () => {
-    expect(productName("Chanel", "CHANEL Coco Mademoiselle")).toBe("CHANEL Coco Mademoiselle");
+    expect(productName("Chanel", "CHANEL Coco Mademoiselle")).toBe(
+      "CHANEL Coco Mademoiselle",
+    );
   });
 
   it("does not let a brand swallow a longer word", () => {
@@ -62,6 +79,8 @@ describe("productName", () => {
   });
 
   it("accepts punctuation right after the brand", () => {
-    expect(productName("Hermès", "Hermès — Terre d'Hermès")).toBe("Hermès — Terre d'Hermès");
+    expect(productName("Hermès", "Hermès — Terre d'Hermès")).toBe(
+      "Hermès — Terre d'Hermès",
+    );
   });
 });

@@ -80,27 +80,46 @@ function plan(): PlannedProduct[] {
   // 100 ml — every fragrance.
   for (const { brand, fragrance } of flat) {
     const sku = `ARM-${++n}`;
-    out.push(build(sku, "parfyum-100-ml", `${brand} ${fragrance}`, 100, 90_000, 180_000, [[brand, fragrance]]));
+    out.push(
+      build(sku, "parfyum-100-ml", `${brand} ${fragrance}`, 100, 90_000, 180_000, [
+        [brand, fragrance],
+      ]),
+    );
   }
 
   // 35 ml "pencils" — the first two thirds of the range.
   for (const { brand, fragrance } of flat.slice(0, 20)) {
     const sku = `ARM-${++n}`;
-    out.push(build(sku, "parfyum-35-ml", `${brand} ${fragrance}`, 35, 35_000, 60_000, [[brand, fragrance]]));
+    out.push(
+      build(sku, "parfyum-35-ml", `${brand} ${fragrance}`, 35, 35_000, 60_000, [
+        [brand, fragrance],
+      ]),
+    );
   }
 
   // Twins — one bottle, two fragrances.
   for (const pair of TWIN_PAIRS) {
     const sku = `ARM-${++n}`;
     const [a, b] = pair;
-    const title = a[0] === b[0] ? `${a[0]} ${a[1]} + ${b[1]}` : `${a[0]} ${a[1]} + ${b[0]} ${b[1]}`;
+    const title =
+      a[0] === b[0] ? `${a[0]} ${a[1]} + ${b[1]}` : `${a[0]} ${a[1]} + ${b[0]} ${b[1]}`;
     out.push(build(sku, "dvoynyashki-100-ml", title, 100, 120_000, 200_000, [a, b]));
   }
 
   // Deodorants.
   for (const { brand, fragrance } of DEODORANT_BASES) {
     const sku = `ARM-${++n}`;
-    out.push(build(sku, "dezodoranty-200-ml", `${brand} ${fragrance} дезодорант`, 200, 25_000, 45_000, [[brand, fragrance]]));
+    out.push(
+      build(
+        sku,
+        "dezodoranty-200-ml",
+        `${brand} ${fragrance} дезодорант`,
+        200,
+        25_000,
+        45_000,
+        [[brand, fragrance]],
+      ),
+    );
   }
 
   return out;
@@ -193,7 +212,10 @@ async function main() {
     const brandAliases = new Map<string, string[]>();
     // keyed "Brand::Fragrance"
     const fragranceIds = new Map<string, string>();
-    const fragranceMeta = new Map<string, (typeof BRANDS)[number]["fragrances"][number]>();
+    const fragranceMeta = new Map<
+      string,
+      (typeof BRANDS)[number]["fragrances"][number]
+    >();
 
     for (const [i, b] of BRANDS.entries()) {
       const brand = await prisma.brand.upsert({
@@ -325,7 +347,8 @@ async function main() {
           await tx.productFragrance.createMany({
             data: p.fragrances.map(([brandName, fragranceName], position) => {
               const fragranceId = fragranceIds.get(`${brandName}::${fragranceName}`);
-              if (!fragranceId) throw new Error(`Аромат не найден: ${brandName} ${fragranceName}`);
+              if (!fragranceId)
+                throw new Error(`Аромат не найден: ${brandName} ${fragranceName}`);
               return { productId: product.id, fragranceId, position };
             }),
           });

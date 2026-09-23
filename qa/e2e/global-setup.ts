@@ -19,7 +19,9 @@ import Redis from "ioredis";
 export default async function globalSetup(): Promise<void> {
   const url = process.env.REDIS_URL;
   if (!url) {
-    console.warn("REDIS_URL не задан — лимиты не очищены, повторные прогоны могут упираться в них");
+    console.warn(
+      "REDIS_URL не задан — лимиты не очищены, повторные прогоны могут упираться в них",
+    );
     return;
   }
 
@@ -37,7 +39,9 @@ export default async function globalSetup(): Promise<void> {
   } catch (error) {
     // Not fatal. Without Redis the limiter fails open in development, and the
     // suite is about the catalog, not about the limiter's storage.
-    console.warn(`Не удалось очистить лимиты: ${error instanceof Error ? error.message : error}`);
+    console.warn(
+      `Не удалось очистить лимиты: ${error instanceof Error ? error.message : error}`,
+    );
   } finally {
     redis.disconnect();
   }

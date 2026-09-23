@@ -61,7 +61,9 @@ export async function getProductForm(id: string | null): Promise<ProductFormData
       fragrances: {
         orderBy: { position: "asc" },
         select: {
-          fragrance: { select: { id: true, name: true, brand: { select: { name: true } } } },
+          fragrance: {
+            select: { id: true, name: true, brand: { select: { name: true } } },
+          },
         },
       },
       images: {
@@ -128,5 +130,8 @@ export async function searchFragrances(query: string): Promise<FragranceOption[]
 /** Brands, for creating a fragrance without leaving the product form. */
 export async function listBrandOptions(): Promise<Array<{ id: string; name: string }>> {
   await requireAdminPage();
-  return prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return prisma.brand.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
 }

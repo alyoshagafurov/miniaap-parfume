@@ -92,12 +92,14 @@ Figma нет. Выполни `/impeccable init`: lane brand (витрина); в
 заявке) + разреженный капс в подписях (tracking 0.18–0.22em).
 
 **Типографика:**
+
 - дисплей — Cormorant Garamond 600, только ≥ 24px (проверь качество кириллицы;
   запасной — Playfair Display);
 - текст и UI — Manrope 400/500/600;
 - шкала 12/14/16/20/28/40; H1 clamp(28px, 7vw, 40px).
 
 **Палитра:**
+
 - фон `#F8F5EE`, поверхность `#FFFDF8`, граница `#E7E0CF`;
 - текст `#23241E`, приглушённый `#6B6A5E`;
 - олива `#4D5527` (бренд, CTA, активные), hover `#3F4620`;
@@ -170,6 +172,7 @@ prisma/          — schema, миграции (включая CREATE EXTENSION p
 ### ВИТРИНА (Mini App)
 
 **Интеграция с Telegram:**
+
 - initData; BackButton на вложенных экранах; safe area;
 - отключить вертикальный свайп закрытия на экранах с шитами;
 - haptic light на «в заявку», success на отправке;
@@ -180,6 +183,7 @@ prisma/          — schema, миграции (включая CREATE EXTENSION p
 доставка); sticky-поиск; категории списком строк с обложкой; ленты «Новинки» и «Хиты».
 
 **Категория:**
+
 - счётчик результатов;
 - фильтры в нижнем шите: бренд (с поиском внутри), пол, семейство аромата, наличие;
 - сортировка: популярные / новинки / цена ↑↓ / А–Я;
@@ -190,12 +194,14 @@ prisma/          — schema, миграции (включая CREATE EXTENSION p
 наличие, степпер с учётом кратности прямо в карточке.
 
 **Поиск:**
+
 - debounce 250 мс;
 - по бренду, аромату, алиасам, нотам, артикулу;
 - опечатки (pg_trgm), ё = е, подсветка совпадения;
 - пустой результат → похожие позиции + сброс фильтров.
 
 **Товар:**
+
 - галерея со свайпом; бренд, название, формат, объём, артикул, цена, кратность, наличие;
 - пирамида нот (верх / сердце / база), пол, семейства, описание;
 - «Этот аромат в других форматах» — переключатель между SKU аромата;
@@ -206,6 +212,7 @@ prisma/          — schema, миграции (включая CREATE EXTENSION p
 **Бренд:** ароматы бренда, сгруппированы по формату.
 
 **Заявка:**
+
 - позиции со степперами, сумма, прогресс до минимума из Settings;
 - MainButton «Оформить · 12 400 ₽»;
 - форма: имя, телефон +7 с маской (в Telegram — «Поделиться номером» через
@@ -245,23 +252,26 @@ prisma/          — schema, миграции (включая CREATE EXTENSION p
 ## 8. DATA & API
 
 **Каталог:**
+
 - `Brand {name, slug, aliases[], sortOrder, isPublished}`
 - `Fragrance {brandId, name, slug, aliases[], gender FEMALE|MALE|UNISEX, families enum[],
-  notesTop[], notesHeart[], notesBase[], description}`
+notesTop[], notesHeart[], notesBase[], description}`
 - `Category {name, subtitle, slug, coverKey, sortOrder, isPublished}`
 - `Product {categoryId, sku unique, title?, slug, volumeMl, priceKop Int, oldPriceKop?,
-  packSize, stock IN_STOCK|LOW|OUT|PREORDER, status DRAFT|PUBLISHED|ARCHIVED, isNew,
-  isHit, popularity, sortOrder, publishedAt}`
+packSize, stock IN_STOCK|LOW|OUT|PREORDER, status DRAFT|PUBLISHED|ARCHIVED, isNew,
+isHit, popularity, sortOrder, publishedAt}`
 - `ProductFragrance {productId, fragranceId, position}`
 - `ProductImage {productId, key, width, height, blurDataUrl, sortOrder}`
 
 **Пользователи и заявки:**
+
 - `TelegramUser {telegramId BigInt unique, firstName, username, lastSeenAt, botBlocked}`
 - `Order {number ARM-000123, telegramUserId?, source TELEGRAM|WEB, name, phone, city,
-  delivery, comment, status, totalKop}`
+delivery, comment, status, totalKop}`
 - `OrderItem {productId?, снимок: sku, title, format, priceKop, qty}`
 
 **Админы и настройки:**
+
 - `AdminUser {telegramId, name, passwordHash argon2id, role, isActive}`
 - `LoginCode {adminId, codeHash, expiresAt, attempts}`
 - `Settings` — одна строка.
@@ -274,17 +284,20 @@ GIN pg_trgm по нормализованной поисковой строке 
 правке в админке.
 
 **Заявка (Server Action):**
+
 - initData проверяется подписью (`@telegram-apps/init-data-node`) либо WEB-режим;
 - zod; сервер пересчитывает цены, проверяет минимум и кратность;
 - rate limit 5 / 10 мин на пользователя и IP (Redis); honeypot.
 
 **Вход админа:**
+
 - в Telegram: подпись initData + telegramId в AdminUser + пароль;
 - в браузере: пароль + одноразовый 6-значный код, который бот шлёт админу
   (TTL 5 мин, 5 попыток);
 - лимит входа 5 / 15 мин; сессия httpOnly + Secure + SameSite=Lax, 12 ч.
 
 **Файлы:**
+
 - тип по содержимому, ≤ 10 МБ;
 - sharp → WebP + AVIF (400/800/1600), EXIF удалён, случайные имена;
 - S3-совместимое хранилище (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY,
@@ -319,6 +332,7 @@ Turnstile); Google Fonts CDN.
 ## 10. QUALITY
 
 **Красиво:**
+
 - только токены направления (grep: нет посторонних hex, шрифтов, радиусов);
 - Impeccable audit 0 critical / 0 high; review-animations 0 нарушений;
 - состояния hover, focus-visible, active, disabled, loading (скелетоны), empty,
@@ -326,6 +340,7 @@ Turnstile); Google Fonts CDN.
 - ни одного клише из блока 5; тач-цели ≥ 44px.
 
 **Безопасно:**
+
 - секреты только в env; zod на сервере для каждого ввода;
 - initData проверяется подписью для всего пользовательского;
 - права админа проверяются в КАЖДОМ Server Action и обработчике, не только в middleware;
@@ -334,6 +349,7 @@ Turnstile); Google Fonts CDN.
 - ПДн не в логах; `.env*` в `.gitignore`.
 
 **Быстро:**
+
 - витрина: LCP ≤ 2.5 с (mobile throttled), INP ≤ 200 мс, CLS ≤ 0.1;
 - JS первого экрана витрины ≤ 150 KB gzip, админка — отдельный бандл, клиентам не
   грузится;
@@ -343,6 +359,7 @@ Turnstile); Google Fonts CDN.
 - анимации только transform/opacity ≤ 250 мс ease-out; prefers-reduced-motion.
 
 **Без багов:**
+
 - tsc 0, eslint 0, консоль 0, сеть 0 ошибок;
 - тесты (tdd-workflow): расчёт заявки, минимум, кратность, нормализация поиска,
   проверка initData, импорт (битые строки, повторный импорт не дублирует), права ролей.
@@ -366,6 +383,7 @@ Turnstile); Google Fonts CDN.
 
    Для всего UI — скилл emil-design-eng как фоновые правила; UI-зависимости — через
    pick-ui-library. Findings хуков ECC и Design Hook исправляй сразу.
+
 5. review-animations по всему этапу.
 6. `/impeccable audit` (витрина и админка) → исправить critical и high.
    `/impeccable harden`: формы админки, заявка, импорт, пустые и ошибочные состояния,

@@ -60,12 +60,18 @@ export function SettingsForm({
   return (
     <div className="flex flex-col gap-8">
       {notice ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+        >
           {notice}
         </p>
       ) : null}
       {saved ? (
-        <p role="status" className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="status"
+          className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm"
+        >
           Сохранено. Витрина и бот уже отвечают по-новому.
         </p>
       ) : null}
@@ -75,16 +81,31 @@ export function SettingsForm({
           <h2 className="caps text-muted">Контакты</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Название" htmlFor="companyName">
-              <TextInput id="companyName" {...form.register("companyName", { required: true })} />
+              <TextInput
+                id="companyName"
+                {...form.register("companyName", { required: true })}
+              />
             </Field>
-            <Field label="Адрес" htmlFor="address" hint="Показывается на главной и в боте">
+            <Field
+              label="Адрес"
+              htmlFor="address"
+              hint="Показывается на главной и в боте"
+            >
               <TextInput id="address" {...form.register("address")} />
             </Field>
             <Field label="Телефон" htmlFor="phone">
               <TextInput id="phone" type="tel" {...form.register("phone")} />
             </Field>
-            <Field label="WhatsApp" htmlFor="whatsappPhone" hint="Номер, на который ведёт кнопка">
-              <TextInput id="whatsappPhone" type="tel" {...form.register("whatsappPhone")} />
+            <Field
+              label="WhatsApp"
+              htmlFor="whatsappPhone"
+              hint="Номер, на который ведёт кнопка"
+            >
+              <TextInput
+                id="whatsappPhone"
+                type="tel"
+                {...form.register("whatsappPhone")}
+              />
             </Field>
           </div>
         </section>
@@ -97,7 +118,11 @@ export function SettingsForm({
               htmlFor="minOrder"
               hint="По этой цифре заявка проходит или отклоняется — берётся свежая, не из кэша"
             >
-              <TextInput id="minOrder" inputMode="decimal" {...form.register("minOrder")} />
+              <TextInput
+                id="minOrder"
+                inputMode="decimal"
+                {...form.register("minOrder")}
+              />
             </Field>
             <div className="self-end">
               <label className="flex min-h-11 items-center gap-2">
@@ -239,11 +264,21 @@ function Banner({ bannerKey }: { bannerKey: string | null }) {
         }}
       />
       <div className="flex flex-wrap gap-3">
-        <Button variant="secondary" type="button" loading={busy} onClick={() => input.current?.click()}>
+        <Button
+          variant="secondary"
+          type="button"
+          loading={busy}
+          onClick={() => input.current?.click()}
+        >
           {bannerKey ? "Заменить" : "Загрузить"}
         </Button>
         {bannerKey ? (
-          <Button variant="quiet" type="button" disabled={busy} onClick={() => void remove()}>
+          <Button
+            variant="quiet"
+            type="button"
+            disabled={busy}
+            onClick={() => void remove()}
+          >
             Убрать
           </Button>
         ) : null}

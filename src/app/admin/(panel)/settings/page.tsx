@@ -10,13 +10,17 @@ export const metadata = { title: "Настройки" };
 export default function SettingsPage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Настройки</h1>
+      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+        Настройки
+      </h1>
       <p className="text-muted mt-2 text-sm">
         Всё, что меняется без перевыпуска: контакты, минимальный заказ, тексты и баннер
         бота. Ничего из этого не зашито в код.
       </p>
       <div className="mt-6">
-        <Suspense fallback={<div aria-hidden className="bg-surface h-96 w-full rounded-md" />}>
+        <Suspense
+          fallback={<div aria-hidden className="bg-surface h-96 w-full rounded-md" />}
+        >
           <Form />
         </Suspense>
       </div>

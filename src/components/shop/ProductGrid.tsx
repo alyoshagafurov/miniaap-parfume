@@ -46,7 +46,11 @@ export function ProductGrid({
                 : [],
               fragrances: p.fragranceNames.map((name, position) => ({
                 position,
-                fragrance: { name, slug: "", brand: { name: p.brandName, slug: p.brandSlug } },
+                fragrance: {
+                  name,
+                  slug: "",
+                  brand: { name: p.brandName, slug: p.brandSlug },
+                },
               })),
             }}
             showPrices={showPrices}

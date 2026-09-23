@@ -54,7 +54,10 @@ const PRODUCT_SELECT = {
  * Returns how many rows it touched, so a caller that expected work and did none
  * can say so.
  */
-export async function reindexProducts(tx: Tx, productIds: readonly string[]): Promise<number> {
+export async function reindexProducts(
+  tx: Tx,
+  productIds: readonly string[],
+): Promise<number> {
   if (productIds.length === 0) return 0;
 
   const products = await tx.product.findMany({
@@ -96,7 +99,10 @@ export async function reindexProducts(tx: Tx, productIds: readonly string[]): Pr
 }
 
 /** Every product carrying this fragrance, in either position. */
-export async function productIdsOfFragrance(tx: Tx, fragranceId: string): Promise<string[]> {
+export async function productIdsOfFragrance(
+  tx: Tx,
+  fragranceId: string,
+): Promise<string[]> {
   const links = await tx.productFragrance.findMany({
     where: { fragranceId },
     select: { productId: true },
@@ -115,7 +121,10 @@ export async function productIdsOfBrand(tx: Tx, brandId: string): Promise<string
 }
 
 /** The slugs the storefront caches those products under, for invalidation. */
-export async function productSlugs(tx: Tx, productIds: readonly string[]): Promise<string[]> {
+export async function productSlugs(
+  tx: Tx,
+  productIds: readonly string[],
+): Promise<string[]> {
   if (productIds.length === 0) return [];
   const rows = await tx.product.findMany({
     where: { id: { in: [...productIds] } },

@@ -41,9 +41,13 @@ export async function updateSettings(input: unknown): Promise<SettingsResult> {
   try {
     minOrderKop = parsePriceToKop(parsed.data.minOrder);
   } catch {
-    return { ok: false, message: "Минимальный заказ должен быть числом, например 5000" };
+    return {
+      ok: false,
+      message: "Минимальный заказ должен быть числом, например 5000",
+    };
   }
-  if (minOrderKop < 0) return { ok: false, message: "Минимальный заказ не может быть отрицательным" };
+  if (minOrderKop < 0)
+    return { ok: false, message: "Минимальный заказ не может быть отрицательным" };
 
   try {
     await fromAction(

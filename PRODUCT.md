@@ -14,6 +14,7 @@ object storage. The Telegram bot is grammY running as a **separate process from 
 repository**, sharing the database. The Mini App uses `@telegram-apps/sdk-react`.
 
 Two hard runtime constraints follow from operating inside Russia (stage 3 hosting):
+
 - `api.telegram.org` is blocked from Russian servers, so every Bot API call goes through a
   configurable `TELEGRAM_API_ROOT` relay hosted outside Russia. **Long polling only — webhooks
   are not used.**

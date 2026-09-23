@@ -18,7 +18,9 @@ export default function OrdersPage({
 }) {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Заявки</h1>
+      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+        Заявки
+      </h1>
       <Suspense fallback={<ListSkeleton />}>
         <List searchParams={searchParams} />
       </Suspense>
@@ -111,7 +113,11 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
               </p>
 
               <div className="mt-3">
-                <OrderStatusControl id={order.id} status={order.status} variant="select" />
+                <OrderStatusControl
+                  id={order.id}
+                  status={order.status}
+                  variant="select"
+                />
               </div>
             </li>
           ))}

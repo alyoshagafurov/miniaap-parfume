@@ -1,5 +1,5 @@
 import { expect, shot, test } from "../fixtures";
-import { EDITOR, OWNER, signIn } from "./session";
+import { EDITOR, OWNER, signIn, useAdmin } from "./session";
 
 /**
  * Every admin screen, looked at and not touched.
@@ -30,13 +30,15 @@ test.describe("Админка — обзор", () => {
     await page.goto("/admin/login");
     await shot(page, info, "30-admin-login");
 
+    // The real thing, password and code and all. Every other test borrows the
+    // resulting cookie; this is the one that earns it.
     await signIn(page, OWNER);
     await expect(page.getByRole("navigation").first()).toBeVisible();
     await shot(page, info, "31-admin-home");
   });
 
   test("каждый экран открывается и озаглавлен", async ({ page }, info) => {
-    await signIn(page, OWNER);
+    await useAdmin(page, OWNER);
 
     for (const screen of SCREENS) {
       await page.goto(screen.path);
@@ -45,14 +47,18 @@ test.describe("Админка — обзор", () => {
         `${screen.path}: нет заголовка первого уровня`,
       ).toBeVisible({ timeout: 15_000 });
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(screen.heading);
-      await shot(page, info, `32-admin-${screen.path.replace(/\W+/g, "-").replace(/^-|-$/g, "")}`);
+      await shot(
+        page,
+        info,
+        `32-admin-${screen.path.replace(/\W+/g, "-").replace(/^-|-$/g, "")}`,
+      );
     }
   });
 
   test("редактор не видит владельческих разделов и не входит в них по адресу", async ({
     page,
   }, info) => {
-    await signIn(page, EDITOR);
+    await useAdmin(page, EDITOR);
 
     const nav = page.getByRole("navigation").first();
     await expect(nav.getByRole("link", { name: "Товары" })).toBeVisible();

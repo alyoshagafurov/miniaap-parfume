@@ -88,7 +88,11 @@ export function FilterSheet({
       title="Фильтры"
       footer={
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => apply(NO_FILTERS)} disabled={selected === 0}>
+          <Button
+            variant="secondary"
+            onClick={() => apply(NO_FILTERS)}
+            disabled={selected === 0}
+          >
             Сбросить
           </Button>
           <Button fullWidth onClick={() => apply(draft)}>
@@ -123,13 +127,17 @@ export function FilterSheet({
               <Chip
                 key={b.slug}
                 selected={draft.brands.includes(b.slug)}
-                onClick={() => setDraft({ ...draft, brands: toggle(draft.brands, b.slug) })}
+                onClick={() =>
+                  setDraft({ ...draft, brands: toggle(draft.brands, b.slug) })
+                }
               >
                 {b.name}
                 <span className="text-xs tabular-nums opacity-70">{b.count}</span>
               </Chip>
             ))}
-            {brands.length === 0 ? <p className="text-muted text-sm">Ничего не нашлось</p> : null}
+            {brands.length === 0 ? (
+              <p className="text-muted text-sm">Ничего не нашлось</p>
+            ) : null}
           </div>
         </section>
 
@@ -165,7 +173,10 @@ export function FilterSheet({
                   key={f.value}
                   selected={draft.families.includes(f.value as Family)}
                   onClick={() =>
-                    setDraft({ ...draft, families: toggle(draft.families, f.value as Family) })
+                    setDraft({
+                      ...draft,
+                      families: toggle(draft.families, f.value as Family),
+                    })
                   }
                 >
                   {FAMILY_LABELS[f.value] ?? f.value}

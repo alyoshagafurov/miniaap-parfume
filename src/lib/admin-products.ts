@@ -92,7 +92,9 @@ function oneOf<T extends string>(
   value: string | undefined,
   allowed: readonly T[],
 ): T | null {
-  return value !== undefined && (allowed as readonly string[]).includes(value) ? (value as T) : null;
+  return value !== undefined && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : null;
 }
 
 /**

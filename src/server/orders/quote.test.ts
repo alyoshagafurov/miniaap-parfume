@@ -4,24 +4,52 @@ import { quoteCart, type CatalogEntry, type CartLine } from "./quote";
 
 const CATALOG: Record<string, CatalogEntry> = {
   p1: {
-    id: "p1", sku: "ARM-1001", title: "Chanel Coco Mademoiselle",
-    brandName: "Chanel", format: "100 мл", priceKop: 150_000,
-    packSize: 1, stock: "IN_STOCK", status: "PUBLISHED", imageKey: null,
+    id: "p1",
+    sku: "ARM-1001",
+    title: "Chanel Coco Mademoiselle",
+    brandName: "Chanel",
+    format: "100 мл",
+    priceKop: 150_000,
+    packSize: 1,
+    stock: "IN_STOCK",
+    status: "PUBLISHED",
+    imageKey: null,
   },
   p6: {
-    id: "p6", sku: "ARM-1006", title: "Dior Sauvage",
-    brandName: "Dior", format: "35 мл", priceKop: 50_000,
-    packSize: 6, stock: "IN_STOCK", status: "PUBLISHED", imageKey: null,
+    id: "p6",
+    sku: "ARM-1006",
+    title: "Dior Sauvage",
+    brandName: "Dior",
+    format: "35 мл",
+    priceKop: 50_000,
+    packSize: 6,
+    stock: "IN_STOCK",
+    status: "PUBLISHED",
+    imageKey: null,
   },
   pOut: {
-    id: "pOut", sku: "ARM-1099", title: "Versace Eros",
-    brandName: "Versace", format: "100 мл", priceKop: 120_000,
-    packSize: 1, stock: "OUT", status: "PUBLISHED", imageKey: null,
+    id: "pOut",
+    sku: "ARM-1099",
+    title: "Versace Eros",
+    brandName: "Versace",
+    format: "100 мл",
+    priceKop: 120_000,
+    packSize: 1,
+    stock: "OUT",
+    status: "PUBLISHED",
+    imageKey: null,
   },
   pDraft: {
-    id: "pDraft", sku: "ARM-1100", title: "Черновик",
-    brandName: "Dior", format: "100 мл", priceKop: 99_000,
-    packSize: 1, stock: "IN_STOCK", status: "DRAFT", imageKey: null,
+    id: "pDraft",
+    sku: "ARM-1100",
+    title: "Черновик",
+    brandName: "Dior",
+    format: "100 мл",
+    priceKop: 99_000,
+    packSize: 1,
+    stock: "IN_STOCK",
+    status: "DRAFT",
+    imageKey: null,
   },
 };
 
@@ -52,7 +80,12 @@ describe("pack multiples", () => {
   it("rounds up to the next whole pack and says so", () => {
     const q = quoteCart([line("p6", 7)], CATALOG, SETTINGS);
     expect(q.lines[0]?.qty).toBe(12);
-    expect(q.adjusted).toContainEqual({ productId: "p6", from: 7, to: 12, reason: "PACK_SIZE" });
+    expect(q.adjusted).toContainEqual({
+      productId: "p6",
+      from: 7,
+      to: 12,
+      reason: "PACK_SIZE",
+    });
     expect(q.subtotalKop).toBe(600_000);
   });
 
@@ -137,7 +170,10 @@ describe("minimum order", () => {
 
 describe("prices hidden", () => {
   it("still prices the lines server-side but suppresses the totals", () => {
-    const q = quoteCart([line("p1", 2)], CATALOG, { minOrderKop: 500_000, showPrices: false });
+    const q = quoteCart([line("p1", 2)], CATALOG, {
+      minOrderKop: 500_000,
+      showPrices: false,
+    });
     expect(q.showPrices).toBe(false);
     expect(q.subtotalKop).toBe(0);
     // With no prices shown there is no minimum to fail, or the buyer could

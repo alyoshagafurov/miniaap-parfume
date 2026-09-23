@@ -27,9 +27,9 @@ loadDotEnv();
 const BATCH = 200;
 
 async function main(): Promise<void> {
-  const ids = (await prisma.product.findMany({ select: { id: true }, orderBy: { sku: "asc" } })).map(
-    (p) => p.id,
-  );
+  const ids = (
+    await prisma.product.findMany({ select: { id: true }, orderBy: { sku: "asc" } })
+  ).map((p) => p.id);
 
   if (ids.length === 0) {
     console.log("\n  В каталоге нет товаров — переиндексировать нечего.\n");

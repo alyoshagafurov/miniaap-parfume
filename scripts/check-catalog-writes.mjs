@@ -83,7 +83,8 @@ const WRITE = new RegExp(
 );
 
 /** Raw SQL that writes to a catalog table sidesteps Prisma's accessors entirely. */
-const RAW_WRITE = /\$(?:execute|query)Raw(?:Unsafe)?[\s\S]{0,400}?\b(insert\s+into|update|delete\s+from)\s+"?(products|product_fragrances|product_images|fragrances|brands|categories|settings)"?\b/gi;
+const RAW_WRITE =
+  /\$(?:execute|query)Raw(?:Unsafe)?[\s\S]{0,400}?\b(insert\s+into|update|delete\s+from)\s+"?(products|product_fragrances|product_images|fragrances|brands|categories|settings)"?\b/gi;
 
 const violations = [];
 
@@ -102,7 +103,11 @@ for (const file of listSources(SRC)) {
   }
   for (const match of code.matchAll(RAW_WRITE)) {
     const line = code.slice(0, match.index).split("\n").length;
-    violations.push({ file: rel, line, what: `сырой ${match[1].toUpperCase()} по ${match[2]}` });
+    violations.push({
+      file: rel,
+      line,
+      what: `сырой ${match[1].toUpperCase()} по ${match[2]}`,
+    });
   }
 }
 

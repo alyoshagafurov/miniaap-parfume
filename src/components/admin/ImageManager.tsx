@@ -61,7 +61,10 @@ export function ImageManager({
     // of bars that do not move.
     for (const file of Array.from(files)) {
       const token = ++nextToken.current;
-      setUploads((current) => [...current, { token, name: file.name, state: "uploading" }]);
+      setUploads((current) => [
+        ...current,
+        { token, name: file.name, state: "uploading" },
+      ]);
 
       const body = new FormData();
       body.set("productId", productId);
@@ -70,11 +73,17 @@ export function ImageManager({
       try {
         const response = await fetch("/api/admin/images", { method: "POST", body });
         if (!response.ok) {
-          const payload = (await response.json().catch(() => ({}))) as { error?: string };
+          const payload = (await response.json().catch(() => ({}))) as {
+            error?: string;
+          };
           setUploads((current) =>
             current.map((u) =>
               u.token === token
-                ? { ...u, state: "failed", error: payload.error ?? "Не удалось загрузить" }
+                ? {
+                    ...u,
+                    state: "failed",
+                    error: payload.error ?? "Не удалось загрузить",
+                  }
                 : u,
             ),
           );
@@ -104,7 +113,10 @@ export function ImageManager({
     next[target] = moved;
 
     startTransition(async () => {
-      const result = await reorderImages({ productId, imageIds: next.map((i) => i.id) });
+      const result = await reorderImages({
+        productId,
+        imageIds: next.map((i) => i.id),
+      });
       setNotice(result.ok ? null : result.message);
       router.refresh();
     });
@@ -129,7 +141,10 @@ export function ImageManager({
       </div>
 
       {notice ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+        >
           {notice}
         </p>
       ) : null}
@@ -166,7 +181,12 @@ export function ImageManager({
                 >
                   →
                 </IconButton>
-                <Button variant="quiet" type="button" disabled={pending} onClick={() => remove(image.id)}>
+                <Button
+                  variant="quiet"
+                  type="button"
+                  disabled={pending}
+                  onClick={() => remove(image.id)}
+                >
                   Удалить
                 </Button>
               </div>
@@ -215,7 +235,11 @@ export function ImageManager({
             e.target.value = "";
           }}
         />
-        <Button variant="secondary" type="button" onClick={() => input.current?.click()}>
+        <Button
+          variant="secondary"
+          type="button"
+          onClick={() => input.current?.click()}
+        >
           Добавить фото
         </Button>
       </div>

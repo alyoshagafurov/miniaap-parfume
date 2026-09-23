@@ -69,12 +69,9 @@ describe("parsePriceToKop — import files are typed by humans", () => {
     expect(parsePriceToKop(input)).toBe(expected);
   });
 
-  it.each(["", "   ", "abc", "-100", "1,2,3", "1.2.3"])(
-    "rejects %j",
-    (input) => {
-      expect(() => parsePriceToKop(input)).toThrow();
-    },
-  );
+  it.each(["", "   ", "abc", "-100", "1,2,3", "1.2.3"])("rejects %j", (input) => {
+    expect(() => parsePriceToKop(input)).toThrow();
+  });
 
   it("rejects more than two decimal places rather than silently rounding", () => {
     expect(() => parsePriceToKop("1200,555")).toThrow();

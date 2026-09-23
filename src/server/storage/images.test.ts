@@ -15,7 +15,12 @@ import { ImageRejected, processImage } from "./images";
 /** Landscape pixels plus "rotate me 90°" — exactly what a phone saves. */
 async function sidewaysJpeg() {
   return sharp({
-    create: { width: 1200, height: 600, channels: 3, background: { r: 77, g: 82, b: 44 } },
+    create: {
+      width: 1200,
+      height: 600,
+      channels: 3,
+      background: { r: 77, g: 82, b: 44 },
+    },
   })
     .withMetadata({ orientation: 6 })
     .jpeg()
@@ -100,7 +105,9 @@ describe("processImage — фото с телефона", () => {
   });
 
   it("отказывает слишком маленькому фото, называя его размер", async () => {
-    await expect(processImage(await plainPng(120, 120), "test/tiny")).rejects.toThrow(/120×120/);
+    await expect(processImage(await plainPng(120, 120), "test/tiny")).rejects.toThrow(
+      /120×120/,
+    );
   });
 });
 
@@ -111,7 +118,12 @@ describe("processImage — бюджет ресурсов", () => {
     // decoded to 326 MB of RSS in 5.1 s. The upload cap measured the only
     // quantity that did not matter.
     const bomb = await sharp({
-      create: { width: 16000, height: 16000, channels: 3, background: { r: 0, g: 0, b: 0 } },
+      create: {
+        width: 16000,
+        height: 16000,
+        channels: 3,
+        background: { r: 0, g: 0, b: 0 },
+      },
     })
       .png({ compressionLevel: 9 })
       .toBuffer();
@@ -124,7 +136,12 @@ describe("processImage — бюджет ресурсов", () => {
     // A 12 MP phone photograph: the cap must refuse the bomb without refusing
     // the thing the owner actually uploads.
     const real = await sharp({
-      create: { width: 4000, height: 3000, channels: 3, background: { r: 77, g: 82, b: 44 } },
+      create: {
+        width: 4000,
+        height: 3000,
+        channels: 3,
+        background: { r: 77, g: 82, b: 44 },
+      },
     })
       .jpeg()
       .toBuffer();

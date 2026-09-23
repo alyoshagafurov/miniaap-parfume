@@ -95,7 +95,9 @@ export function env(): ServerEnv {
   if (cached) return cached;
   const parsed = serverSchema.safeParse(withoutBlanks(process.env));
   if (!parsed.success) {
-    const variables = [...new Set(parsed.error.issues.map((i) => String(i.path[0] ?? "?")))];
+    const variables = [
+      ...new Set(parsed.error.issues.map((i) => String(i.path[0] ?? "?"))),
+    ];
     const issues = parsed.error.issues
       .map((i) => `  ${i.path.join(".")}: ${i.message}`)
       .join("\n");
@@ -111,7 +113,8 @@ export function env(): ServerEnv {
  * For the two startup paths, which want to print every fault at once rather
  * than the first one and then exit.
  */
-export function checkEnv(): { ok: true } | { ok: false; variables: string[]; message: string } {
+export function checkEnv():
+  { ok: true } | { ok: false; variables: string[]; message: string } {
   try {
     env();
     return { ok: true };

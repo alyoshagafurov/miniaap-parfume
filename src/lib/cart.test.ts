@@ -156,7 +156,10 @@ describe("storage", () => {
     // A half-understood basket would quietly send wrong quantities.
     globalThis.localStorage?.setItem(
       CART_STORAGE_KEY,
-      JSON.stringify({ v: 1, lines: [line(), { productId: "x" }, { ...line(), qty: -5 }] }),
+      JSON.stringify({
+        v: 1,
+        lines: [line(), { productId: "x" }, { ...line(), qty: -5 }],
+      }),
     );
     expect(readCart()).toHaveLength(1);
   });
@@ -194,7 +197,15 @@ describe("applyCorrections", () => {
   it("takes the server's numbers and keeps what is on the card", () => {
     const [line] = applyCorrections(
       [base],
-      [{ productId: "p1", qty: 12, seenPriceKop: 110_000, seenPackSize: 12, seenStock: "LOW" }],
+      [
+        {
+          productId: "p1",
+          qty: 12,
+          seenPriceKop: 110_000,
+          seenPackSize: 12,
+          seenStock: "LOW",
+        },
+      ],
     );
     expect(line).toEqual({
       ...base,
@@ -214,8 +225,20 @@ describe("applyCorrections", () => {
     const out = applyCorrections(
       [base, second],
       [
-        { productId: "p2", qty: 6, seenPriceKop: 1, seenPackSize: 6, seenStock: "IN_STOCK" },
-        { productId: "p1", qty: 6, seenPriceKop: 1, seenPackSize: 6, seenStock: "IN_STOCK" },
+        {
+          productId: "p2",
+          qty: 6,
+          seenPriceKop: 1,
+          seenPackSize: 6,
+          seenStock: "IN_STOCK",
+        },
+        {
+          productId: "p1",
+          qty: 6,
+          seenPriceKop: 1,
+          seenPackSize: 6,
+          seenStock: "IN_STOCK",
+        },
       ],
     );
     expect(out.map((l) => l.productId)).toEqual(["p1", "p2"]);
@@ -227,7 +250,15 @@ describe("applyCorrections", () => {
     expect(
       applyCorrections(
         [base],
-        [{ productId: "p1", qty: 6, seenPriceKop: 1, seenPackSize: 6, seenStock: "SOLD" }],
+        [
+          {
+            productId: "p1",
+            qty: 6,
+            seenPriceKop: 1,
+            seenPackSize: 6,
+            seenStock: "SOLD",
+          },
+        ],
       ),
     ).toEqual([]);
   });

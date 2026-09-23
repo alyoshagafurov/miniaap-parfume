@@ -8,9 +8,12 @@ export const metadata = { title: "Бренды" };
 export default function BrandsPage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Бренды</h1>
+      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+        Бренды
+      </h1>
       <p className="text-muted mt-2 text-sm">
-        Алиасы — то, как бренд набирают по-русски. Без них поиск «шанель» не найдёт Chanel.
+        Алиасы — то, как бренд набирают по-русски. Без них поиск «шанель» не найдёт
+        Chanel.
       </p>
       <div className="mt-6">
         <Suspense fallback={<ListSkeleton />}>

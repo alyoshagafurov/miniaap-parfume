@@ -29,13 +29,14 @@ const Credentials = z.object({
 
 const Code = z.object({
   login: z.string().trim().min(1).max(64),
-  code: z.string().trim().regex(/^\d{6}$/),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
 });
 
 /** Never logged and never echoed: it is what an attacker is probing for. */
 const GENERIC = "Неверный логин или пароль";
-
-
 
 export async function login(input: unknown): Promise<LoginResult> {
   const parsed = Credentials.safeParse(input);

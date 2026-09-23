@@ -61,7 +61,12 @@ export function AddToCart({
 
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <Stepper qty={draft} packSize={line.seenPackSize} label={line.title} onChange={setDraft} />
+      <Stepper
+        qty={draft}
+        packSize={line.seenPackSize}
+        label={line.title}
+        onChange={setDraft}
+      />
       <Button
         onClick={() => {
           if (draft <= 0) return;

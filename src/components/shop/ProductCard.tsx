@@ -62,10 +62,16 @@ export function ProductCard({
         {product.packSize > 1 ? ` · кратно ${product.packSize}` : ""}
       </p>
 
-      <Price kop={product.priceKop} oldKop={product.oldPriceKop} showPrices={showPrices} />
+      <Price
+        kop={product.priceKop}
+        oldKop={product.oldPriceKop}
+        showPrices={showPrices}
+      />
 
       {stock ? (
-        <p className={`text-xs ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}>
+        <p
+          className={`text-xs ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}
+        >
           {stock}
         </p>
       ) : null}

@@ -29,7 +29,11 @@ const MAX_QUERY = 100;
  * they will correct it; repeating it below costs a line of a 390px screen and
  * tells them nothing new.
  */
-export default function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-16">
       {/*
@@ -58,7 +62,8 @@ async function Results({ searchParams }: { searchParams: Promise<SearchParams> }
     searchProducts({ query, limit: SEARCH_PAGE_SIZE }),
   ]);
 
-  if (found.total === 0) return <Empty query={query} showPrices={settings.showPrices} />;
+  if (found.total === 0)
+    return <Empty query={query} showPrices={settings.showPrices} />;
 
   return (
     <>
@@ -98,7 +103,9 @@ async function Prompt() {
               className="hover:bg-surface flex items-center justify-between gap-4 rounded-md px-2 py-4 transition-colors"
             >
               <span className="text-ink text-base leading-snug">{c.name}</span>
-              <span className="text-muted shrink-0 text-sm tabular-nums">{c.productCount}</span>
+              <span className="text-muted shrink-0 text-sm tabular-nums">
+                {c.productCount}
+              </span>
             </Link>
           </li>
         ))}
@@ -123,7 +130,9 @@ async function Empty({ query, showPrices }: { query: string; showPrices: boolean
     <section>
       {/* break-words: the query is echoed verbatim, and an unbroken
           hundred-character token would otherwise push the page sideways. */}
-      <p className="text-ink text-lg break-words">По запросу «{query}» ничего не нашлось</p>
+      <p className="text-ink text-lg break-words">
+        По запросу «{query}» ничего не нашлось
+      </p>
       <p className="text-muted mt-2 text-sm">
         Попробуйте короче — только бренд или только аромат. Или наберите артикул.
       </p>

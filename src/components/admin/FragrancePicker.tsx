@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import { createFragranceInline, findFragrances } from "@/app/admin/(panel)/products/actions";
+import {
+  createFragranceInline,
+  findFragrances,
+} from "@/app/admin/(panel)/products/actions";
 import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
 
@@ -71,7 +74,10 @@ export function FragrancePicker({
   const create = () => {
     setError(null);
     startCreate(async () => {
-      const result = await createFragranceInline({ brandId: newBrandId, name: newName });
+      const result = await createFragranceInline({
+        brandId: newBrandId,
+        name: newName,
+      });
       if (!result.ok) {
         setError(result.message);
         return;
@@ -101,7 +107,9 @@ export function FragrancePicker({
                     {fragrance.brandName} {fragrance.name}
                   </span>
                   <span className="text-muted text-xs">
-                    {index === 0 ? "основной — им назван товар" : "второй аромат двойняшки"}
+                    {index === 0
+                      ? "основной — им назван товар"
+                      : "второй аромат двойняшки"}
                   </span>
                 </span>
                 <Button
@@ -168,7 +176,11 @@ export function FragrancePicker({
                 </select>
               </Field>
 
-              <Field label="Название аромата" htmlFor="new-fragrance-name" error={error ?? undefined}>
+              <Field
+                label="Название аромата"
+                htmlFor="new-fragrance-name"
+                error={error ?? undefined}
+              >
                 <TextInput
                   id="new-fragrance-name"
                   value={newName}
@@ -178,20 +190,34 @@ export function FragrancePicker({
               </Field>
 
               <div className="flex gap-3">
-                <Button type="button" onClick={create} loading={pendingCreate} disabled={!newName.trim()}>
+                <Button
+                  type="button"
+                  onClick={create}
+                  loading={pendingCreate}
+                  disabled={!newName.trim()}
+                >
                   Создать и выбрать
                 </Button>
-                <Button variant="secondary" type="button" onClick={() => setCreating(false)}>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => setCreating(false)}
+                >
                   Отмена
                 </Button>
               </div>
               <p className="text-muted text-xs">
-                Ноты, семейства и описание добавите на экране аромата — там их видно целиком.
+                Ноты, семейства и описание добавите на экране аромата — там их видно
+                целиком.
               </p>
             </div>
           ) : (
             <div className="mt-3">
-              <Button variant="secondary" type="button" onClick={() => setCreating(true)}>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => setCreating(true)}
+              >
                 Нет в списке — создать
               </Button>
             </div>

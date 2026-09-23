@@ -91,11 +91,16 @@ for (const file of listSources(SRC)) {
     if (allowed.has(name)) continue;
 
     const start = match.index ?? 0;
-    const end = index + 1 < found.length ? (found[index + 1].index ?? code.length) : code.length;
+    const end =
+      index + 1 < found.length ? (found[index + 1].index ?? code.length) : code.length;
     const body = code.slice(start, end);
 
     if (!GUARDS.some((guard) => body.includes(`${guard}(`))) {
-      violations.push({ file: rel, name, line: code.slice(0, start).split("\n").length });
+      violations.push({
+        file: rel,
+        name,
+        line: code.slice(0, start).split("\n").length,
+      });
     }
   }
 }

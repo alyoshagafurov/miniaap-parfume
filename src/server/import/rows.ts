@@ -124,8 +124,7 @@ export function parseRows(
         {
           row: 1,
           field: "row",
-          message:
-            `Слишком много строк: ${dataRows}. Максимум ${MAX_ROWS} — разделите файл на части.`,
+          message: `Слишком много строк: ${dataRows}. Максимум ${MAX_ROWS} — разделите файл на части.`,
         },
       ],
       truncatedErrors: false,

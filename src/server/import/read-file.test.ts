@@ -13,7 +13,9 @@ const ROWS = [
 async function xlsxBuffer(): Promise<Buffer> {
   // write-excel-file returns { toBuffer, toStream, toFile } — the same call the
   // import template download will use.
-  const out = writeXlsxFile(ROWS.map((r) => r.map((value) => ({ type: String, value }))));
+  const out = writeXlsxFile(
+    ROWS.map((r) => r.map((value) => ({ type: String, value }))),
+  );
   return out.toBuffer();
 }
 
@@ -112,19 +114,29 @@ describe("readTable — бюджет распаковки", () => {
     // Rewrite the declared uncompressed size in the local and central headers.
     const forged = Buffer.from(archive);
     for (let i = 0; i < forged.length - 4; i++) {
-      if (forged.readUInt32LE(i) === 0x04034b50) forged.writeUInt32LE(0xffffffff, i + 22);
-      if (forged.readUInt32LE(i) === 0x02014b50) forged.writeUInt32LE(0xffffffff, i + 24);
+      if (forged.readUInt32LE(i) === 0x04034b50)
+        forged.writeUInt32LE(0xffffffff, i + 22);
+      if (forged.readUInt32LE(i) === 0x02014b50)
+        forged.writeUInt32LE(0xffffffff, i + 24);
     }
 
-    await expect(readTable(forged, "bomb.xlsx")).rejects.toThrow(/распаковыва|повреждён/);
+    await expect(readTable(forged, "bomb.xlsx")).rejects.toThrow(
+      /распаковыва|повреждён/,
+    );
   });
 
   it("пропускает обычный .xlsx", async () => {
     const writeXlsx = (await import("write-excel-file/node")).default;
     const buffer = await writeXlsx(
       [
-        [{ value: "Артикул", type: String }, { value: "Бренд", type: String }],
-        [{ value: "ARM-1", type: String }, { value: "Chanel", type: String }],
+        [
+          { value: "Артикул", type: String },
+          { value: "Бренд", type: String },
+        ],
+        [
+          { value: "ARM-1", type: String },
+          { value: "Chanel", type: String },
+        ],
       ],
       { sheet: "Товары" },
     ).toBuffer();

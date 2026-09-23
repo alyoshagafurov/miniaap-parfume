@@ -13,7 +13,13 @@
  * drag both into the browser bundle.
  */
 
-export const SORT_KEYS = ["popular", "new", "price_asc", "price_desc", "alpha"] as const;
+export const SORT_KEYS = [
+  "popular",
+  "new",
+  "price_asc",
+  "price_desc",
+  "alpha",
+] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 
 // Written as a literal tuple rather than derived from the labels, so the list
@@ -87,7 +93,9 @@ export const NO_FILTERS: ActiveFilters = {
 };
 
 export function filterCount(f: ActiveFilters): number {
-  return f.brands.length + f.families.length + (f.gender ? 1 : 0) + (f.inStockOnly ? 1 : 0);
+  return (
+    f.brands.length + f.families.length + (f.gender ? 1 : 0) + (f.inStockOnly ? 1 : 0)
+  );
 }
 
 /** A slug as the catalog produces them; anything else is not ours. */
@@ -134,7 +142,9 @@ export function parseListFilters(
   };
 }
 
-export function parseSort(searchParams: Record<string, string | string[] | undefined>): SortKey {
+export function parseSort(
+  searchParams: Record<string, string | string[] | undefined>,
+): SortKey {
   const raw = first(searchParams.sort);
   return isSortKey(raw) ? raw : DEFAULT_SORT;
 }

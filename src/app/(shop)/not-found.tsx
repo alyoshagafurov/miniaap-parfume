@@ -26,8 +26,8 @@ export default function NotFound() {
       </h1>
       <GoldRule className="mx-auto mt-4 w-24" />
       <p className="text-muted mx-auto mt-6 max-w-md text-sm">
-        Возможно, товар сняли с продажи или ссылка устарела. Посмотрите каталог или найдите
-        нужное по названию либо артикулу.
+        Возможно, товар сняли с продажи или ссылка устарела. Посмотрите каталог или
+        найдите нужное по названию либо артикулу.
       </p>
       <div className="mt-8 flex flex-col items-center gap-3">
         <Link href="/" className="text-olive underline underline-offset-4">

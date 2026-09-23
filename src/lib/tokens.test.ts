@@ -56,7 +56,9 @@ describe("tokens.ts mirrors globals.css", () => {
   });
 
   it("nothing animates longer than the direction allows", () => {
-    for (const [, ms] of css.matchAll(/(?:transition|animation)-duration:\s*(\d+)ms/g)) {
+    for (const [, ms] of css.matchAll(
+      /(?:transition|animation)-duration:\s*(\d+)ms/g,
+    )) {
       expect(Number(ms)).toBeLessThanOrEqual(250);
     }
   });

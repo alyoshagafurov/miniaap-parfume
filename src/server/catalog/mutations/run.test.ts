@@ -4,7 +4,10 @@ import { CatalogConflict, Tags } from "./run";
 
 describe("Tags", () => {
   it("collects without repeating", () => {
-    const tags = new Tags().add("catalog", "product:a").add("catalog").addAll(["product:b", "product:a"]);
+    const tags = new Tags()
+      .add("catalog", "product:a")
+      .add("catalog")
+      .addAll(["product:b", "product:a"]);
     expect(tags.list).toEqual(["catalog", "product:a", "product:b"]);
   });
 

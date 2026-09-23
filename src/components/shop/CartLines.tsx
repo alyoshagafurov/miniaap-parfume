@@ -67,7 +67,11 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
                 {line.seenPackSize > 1 ? ` · кратно ${line.seenPackSize}` : ""}
               </p>
               <div className="mt-1">
-                <Price kop={line.seenPriceKop} showPrices={showPrices} className="text-sm" />
+                <Price
+                  kop={line.seenPriceKop}
+                  showPrices={showPrices}
+                  className="text-sm"
+                />
               </div>
             </div>
           </div>

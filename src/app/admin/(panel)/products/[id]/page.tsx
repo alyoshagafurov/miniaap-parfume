@@ -4,7 +4,11 @@ import { ProductFormLoader } from "@/components/admin/ProductFormLoader";
 
 export const metadata = { title: "Товар" };
 
-export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   return (
     <Suspense fallback={<FormSkeleton />}>
       <Loader params={params} />

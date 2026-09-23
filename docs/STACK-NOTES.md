@@ -13,7 +13,6 @@ Generated 2026-09-22 against: next 16.3.6,
 tailwindcss 4.3.3, prisma 7.10.0, typescript 5.9.3, grammy 1.46.0,
 @telegram-apps/sdk-react 3.3.9.
 
-
 ---
 
 ## Admin auth library choice for Next.js 16 two-path login (Telegram Mini App initData + argon2id password; browser password + Telegram-DM'd 6-digit OTP), OWNER/EDITOR roles enforced in Server Actions, Redis-backed rate limits, self-hosted on a Russian VPS
@@ -44,7 +43,6 @@ tailwindcss 4.3.3, prisma 7.10.0, typescript 5.9.3, grammy 1.46.0,
 - Whether the Telegram bot DM send should be awaited inside sendOTP. better-auth's email-otp docs recommend NOT awaiting the send to avoid timing attacks; the same reasoning applies to the Telegram DM, but on a self-hosted VPS there is no waitUntil, so you need a deliberate fire-and-forget with error logging.
 - Russian VPS specifics not verified this run: whether api.telegram.org is reachable from the target host without a proxy, and whether outbound TLS to Telegram needs a SOCKS/HTTP proxy configured on the bot client. This directly gates Path B.
 
-
 ---
 
 ## Tailwind CSS v4.3.3 + Next.js 16.3.6 — setup, CSS-first design tokens, locked palette, self-hosted fonts, shadcn/ui
@@ -56,7 +54,7 @@ tailwindcss 4.3.3, prisma 7.10.0, typescript 5.9.3, grammy 1.46.0,
 - FATAL for your grep requirement: `olive` is a BUILT-IN Tailwind family since 4.2.0 (`--color-olive-600: oklch(46.6% 0.025 107.3)`). Without `--color-*: initial`, your `--color-olive-600: #4D5527` merely overrides one shade while `bg-olive-50…950` keep resolving to Tailwind's desaturated greys — stray colors compile silently and grep finds no hex. Same trap for mauve, mist, taupe.
 - `--color-*: initial` must be the FIRST declaration inside the `@theme` block; anything defined before it in the same block is wiped too.
 - Wiping colors removes `--color-white`/`--color-black`, so `bg-white`, `text-black`, and any `border-white/10` break. Re-declare both explicitly.
-- Do not use `--*: initial` unless you mean it — it also deletes `--spacing`, which kills p-*, m-*, gap-*, w-*, h-* and every breakpoint. Prefer per-namespace resets (`--color-*`, `--font-*`, `--radius-*`).
+- Do not use `--*: initial` unless you mean it — it also deletes `--spacing`, which kills p-_, m-_, gap-_, w-_, h-* and every breakpoint. Prefer per-namespace resets (`--color-*`, `--font-*`, `--radius-*`).
 - `@theme` vs `@theme inline`: use plain `@theme` for literal values; use `@theme inline` whenever the value is `var(--something-else)` (like a next/font variable), otherwise the utility emits `var(--font-sans)` which resolves to `var(--font-app-sans)` at the wrong scope and silently falls back.
 - `:root` variables do NOT generate utilities — that is the point. Put runtime/layout values (Telegram viewport height, header offsets) in `:root`, design tokens in `@theme`.
 - Tailwind tree-shakes unused theme variables out of the emitted `:root`. If JS reads a token via `getComputedStyle` (e.g. feeding colors to a Telegram WebApp theme call), that variable may not exist in the CSS. Use `@theme static` to force emission.
@@ -85,9 +83,9 @@ Corrections that override the above:
 - **package.json snippet pins "react": "19.2.0", "react-dom": "19.2.0".**
   - Problem: Not current. `npm view react dist-tags` / `react-dom dist-tags` return latest = 19.3.0 (19.2.0 exists but is superseded). The report flagged this as unverified in openQuestions yet still shipped it as the exact-version snippet, which is what a reader will copy.
   - Corrected: react and react-dom 19.3.0. next@16.3.6's peerDependencies are `react: ^18.2.0 || ^19.0.0` (same for react-dom), so 19.3.0 is in range.
-- **Namespace mapping list: "--color-*, --font-*, --text-*, --font-weight-*, --tracking-*, --leading-*, --radius-*, --shadow-*, --spacing-*, --breakpoint-*, --container-* -> @container queries, --animate-*, --ease-*, --aspect-*".**
-  - Problem: Incomplete and one mapping is partial. The live https://tailwindcss.com/docs/theme table also lists --tab-size-*, --inset-shadow-*, --drop-shadow-*, --blur-*, --perspective-* and --zoom-* (the last three relevant to the 4.3.0 zoom-* / tab-* utilities the report itself cites). --container-* drives both @container variants AND size utilities like max-w-md, so a `--container-*: initial` reset would also delete max-w-* sizing.
-  - Corrected: Add --tab-size-*, --inset-shadow-*, --drop-shadow-*, --blur-*, --perspective-*, --zoom-*; note --container-* = @sm:* variants + max-w-* utilities.
+- _*Namespace mapping list: "--color-*, --font-*, --text-*, --font-weight-*, --tracking-*, --leading-*, --radius-*, --shadow-*, --spacing-*, --breakpoint-*, --container-* -> @container queries, --animate-_, --ease-_, --aspect-_".**
+  - Problem: Incomplete and one mapping is partial. The live https://tailwindcss.com/docs/theme table also lists --tab-size-_, --inset-shadow-_, --drop-shadow-_, --blur-_, --perspective-* and --zoom-* (the last three relevant to the 4.3.0 zoom-* / tab-* utilities the report itself cites). --container-* drives both @container variants AND size utilities like max-w-md, so a `--container-*: initial` reset would also delete max-w-* sizing.
+  - Corrected: Add --tab-size-_, --inset-shadow-_, --drop-shadow-_, --blur-_, --perspective-_, --zoom-_; note --container-* = @sm:* variants + max-w-* utilities.
 - **"components.json shape is {$schema, style, tailwind:{config, css, baseColor, cssVariables, prefix}, aliases:{...}}" and "shadcn baseColor now accepts 'neutral' | 'stone' | 'zinc' | 'mauve' | 'olive' | 'mist' | 'taupe'".**
   - Problem: The shape omits three documented top-level keys, and the baseColor union is not an API constraint. https://ui.shadcn.com/docs/components-json documents $schema, style, tailwind{…}, rsc, tsx, aliases{…} AND registries. In the shipped CLI, dist/index.d.ts types it as `baseColor?: string | undefined` (9 occurrences) — there is no zod enum; the seven names come from a registry list in dist/chunk-B2MD6U5O.js: [neutral, zinc, stone, mauve, olive, mist, taupe]. An invalid value is not rejected by the schema, it fails later at registry fetch.
   - Corrected: Include `registries` in the documented shape (rsc/tsx are in the snippet but missing from the fact). The seven base colors are correct as the registry's supported set — and "olive" as baseColor is genuinely available — but describe it as a registry list, not a typed union. "For Tailwind CSS v4, leave this blank" for tailwind.config is verified verbatim.
@@ -103,7 +101,6 @@ Corrections that override the above:
 - I did not test whether Turbopack (`next dev --turbopack`, the Next 16 default) has any behavioural difference from webpack for the Tailwind PostCSS pipeline. Next's docs present PostCSS unconditionally, but confirm HMR on globals.css edits in your app.
 - Whether you want `@theme static` globally: it inflates the emitted :root but guarantees every token is readable from JS. Decide based on how much of the Telegram theme bridging is done in JS.
 - react/react-dom exact versions in my package.json snippet (19.2.0) were not verified this run — check `npm view react dist-tags` before pinning.
-
 
 ---
 
@@ -145,9 +142,9 @@ Corrections that override the above:
 - **package.json snippet pins "react": "19.2.0", "react-dom": "19.2.0".**
   - Problem: Not current. `npm view react dist-tags` / `react-dom dist-tags` return latest = 19.3.0 (19.2.0 exists but is superseded). The report flagged this as unverified in openQuestions yet still shipped it as the exact-version snippet, which is what a reader will copy.
   - Corrected: react and react-dom 19.3.0. next@16.3.6's peerDependencies are `react: ^18.2.0 || ^19.0.0` (same for react-dom), so 19.3.0 is in range.
-- **Namespace mapping list: "--color-*, --font-*, --text-*, --font-weight-*, --tracking-*, --leading-*, --radius-*, --shadow-*, --spacing-*, --breakpoint-*, --container-* -> @container queries, --animate-*, --ease-*, --aspect-*".**
-  - Problem: Incomplete and one mapping is partial. The live https://tailwindcss.com/docs/theme table also lists --tab-size-*, --inset-shadow-*, --drop-shadow-*, --blur-*, --perspective-* and --zoom-* (the last three relevant to the 4.3.0 zoom-* / tab-* utilities the report itself cites). --container-* drives both @container variants AND size utilities like max-w-md, so a `--container-*: initial` reset would also delete max-w-* sizing.
-  - Corrected: Add --tab-size-*, --inset-shadow-*, --drop-shadow-*, --blur-*, --perspective-*, --zoom-*; note --container-* = @sm:* variants + max-w-* utilities.
+- _*Namespace mapping list: "--color-*, --font-*, --text-*, --font-weight-*, --tracking-*, --leading-*, --radius-*, --shadow-*, --spacing-*, --breakpoint-*, --container-* -> @container queries, --animate-_, --ease-_, --aspect-_".**
+  - Problem: Incomplete and one mapping is partial. The live https://tailwindcss.com/docs/theme table also lists --tab-size-_, --inset-shadow-_, --drop-shadow-_, --blur-_, --perspective-* and --zoom-* (the last three relevant to the 4.3.0 zoom-* / tab-* utilities the report itself cites). --container-* drives both @container variants AND size utilities like max-w-md, so a `--container-*: initial` reset would also delete max-w-* sizing.
+  - Corrected: Add --tab-size-_, --inset-shadow-_, --drop-shadow-_, --blur-_, --perspective-_, --zoom-_; note --container-* = @sm:* variants + max-w-* utilities.
 - **"components.json shape is {$schema, style, tailwind:{config, css, baseColor, cssVariables, prefix}, aliases:{...}}" and "shadcn baseColor now accepts 'neutral' | 'stone' | 'zinc' | 'mauve' | 'olive' | 'mist' | 'taupe'".**
   - Problem: The shape omits three documented top-level keys, and the baseColor union is not an API constraint. https://ui.shadcn.com/docs/components-json documents $schema, style, tailwind{…}, rsc, tsx, aliases{…} AND registries. In the shipped CLI, dist/index.d.ts types it as `baseColor?: string | undefined` (9 occurrences) — there is no zod enum; the seven names come from a registry list in dist/chunk-B2MD6U5O.js: [neutral, zinc, stone, mauve, olive, mist, taupe]. An invalid value is not rejected by the schema, it fails later at registry fetch.
   - Corrected: Include `registries` in the documented shape (rsc/tsx are in the snippet but missing from the fact). The seven base colors are correct as the registry's supported set — and "olive" as baseColor is genuinely available — but describe it as a registry list, not a typed union. "For Tailwind CSS v4, leave this blank" for tailwind.config is verified verbatim.
@@ -163,7 +160,6 @@ Corrections that override the above:
 - I did not empirically verify that two logically-equal filter objects with different key insertion order produce the same cache key. The `normalizeFilters()` guard in the snippet makes this moot, but if you plan to pass raw `searchParams`-derived objects straight through, this needs a test.
 - Whether category listings should be tagged per-filter-permutation at all. The current design tags every permutation with `cat-products:<slug>`, so one product edit invalidates all of them — correct, but it throws away cache for filters that were unaffected. If catalog edit frequency is high, consider caching only the base listing and doing filtering uncached inside `<Suspense>`.
 - The Prisma schema does not exist yet (the project currently contains only PRODUCT.md, brand/, docker-compose.yml). The field names in the snippets (`wholesalePrice`, `volumeMl`, `stock`, `fragrances` join table, `published`) are placeholders and need to be reconciled with the real schema, including whether prices are `Decimal` or `Int` cents — storing cents as `Int` sidesteps the whole Decimal serialization problem and is worth considering.
-
 
 ---
 
@@ -203,11 +199,11 @@ Corrections that override the above:
   - Corrected: The source order (window.location.href -> performance.getEntriesByType('navigation')[0].name -> storage) and the write-back on success are correct, but the storage is `sessionStorage` under the key `tapps/launchParams`. Launch params survive reloads and in-tab navigation, not tab closure. For 'plain website' testing, a fresh tab suffices; the persistence is not cross-tab or cross-session the way localStorage would be.
 - **"`.ifAvailable()` returns [true, result] | [false] and NEVER throws" (code snippet 3), and the pitfall "bindCssVars() ... throws CSSVarsBoundError if called twice. In React 19 StrictMode dev double-effects, use .ifAvailable() (which swallows it) or check isMiniAppCssVarsBound()... first."**
   - Problem: The implementation in @telegram-apps/sdk@3.11.8 dist/index.js is `ifAvailable(...g){ return Zt() ? [!0, t(...g)] : [!1]; }`, where `Zt` is the isAvailable computed and `t` is the raw, unwrapped function invoked with no try/catch. ifAvailable suppresses only the availability guard (FunctionUnavailableError); every error thrown by the function body propagates — CSSVarsBoundError, UnknownThemeParamsKeyError, ConcurrentCallError, InvalidArgumentsError. Recommending .ifAvailable() as the StrictMode double-bind guard therefore produces exactly the uncaught exception it was meant to prevent. Separately, the per-option supports check (`cn(...)` in the same closure) runs only on the direct-call path and is skipped by ifAvailable, so `setHeaderColor.ifAvailable('#rrggbb')` will call through on clients where supports.rgb() is false.
-  - Corrected: `.ifAvailable()` never throws an *availability* error, but it does not catch errors raised by the wrapped function. For the StrictMode double-effect case you must check `isMiniAppCssVarsBound()` / `isThemeParamsCssVarsBound()` / `isViewportCssVarsBound()` (or wrap in try/catch) — `.ifAvailable()` will not swallow CSSVarsBoundError. Also keep the explicit `setHeaderColor.supports.rgb()` check on the direct-call path; ifAvailable bypasses the per-option support gate.
+  - Corrected: `.ifAvailable()` never throws an _availability_ error, but it does not catch errors raised by the wrapped function. For the StrictMode double-effect case you must check `isMiniAppCssVarsBound()` / `isThemeParamsCssVarsBound()` / `isViewportCssVarsBound()` (or wrap in try/catch) — `.ifAvailable()` will not swallow CSSVarsBoundError. Also keep the explicit `setHeaderColor.supports.rgb()` check on the direct-call path; ifAvailable bypasses the per-option support gate.
 - **Pitfall: "useLaunchParams() and useRawLaunchParams() throw LaunchParamsRetrieveError ... useRawInitData() returns string | undefined and is the gentler option", and the Server Action snippet's `const raw = useRawInitData(); // string | undefined`.**
   - Problem: useRawInitData is not safer. dist/dts/hooks.d.ts declares `@throws {LaunchParamsRetrieveError} Unable to retrieve launch params from any known source` on useRawInitData, and the bridge implementation is `function Be(){ return new URLSearchParams(ee()).get('tgWebAppData') || void 0; }` where `ee()` is retrieveRawLaunchParams — which throws LaunchParamsRetrieveError when no source yields launch params. The `string | undefined` return only distinguishes 'launch params retrieved but carried no tgWebAppData' (e.g. a direct t.me/<bot>/<app> open with no init data) from 'init data present'.
   - Corrected: All three hooks — useLaunchParams, useRawLaunchParams, useRawInitData — throw LaunchParamsRetrieveError outside Telegram. None of them is safe to call unconditionally; gate the component (or the whole subtree) on isTMA()/the booted flag from the provider, or wrap the call in try/catch.
-- **"If you must stay on @telegram-apps/* for the client (fine — it is not formally deprecated and is API-frozen)" and the pitfall framing deprecation warnings in CI as specific to @telegram-apps/init-data-node@2.0.10.**
+- _*"If you must stay on @telegram-apps/* for the client (fine — it is not formally deprecated and is API-frozen)" and the pitfall framing deprecation warnings in CI as specific to @telegram-apps/init-data-node@2.0.10._*
   - Problem: Only the two top-level packages are undeprecated; three of the client SDK's own transitive dependencies are formally deprecated on npm. A clean `npm i @telegram-apps/sdk-react@3.3.9 react@19` emits: `npm warn deprecated @telegram-apps/types@2.0.3: ... Use @tma.js/types instead`, `npm warn deprecated @telegram-apps/transformers@2.2.6: ... Use @tma.js/transfomers instead`, `npm warn deprecated @telegram-apps/bridge@2.11.0: ... Use @tma.js/bridge instead`. `npm view` confirms each. So the 'clean CI / still maintained' contrast between the client and server packages does not hold.
   - Corrected: @telegram-apps/sdk@3.11.8 and @telegram-apps/sdk-react@3.3.9 are themselves undeprecated, but installing them still prints three deprecation warnings (bridge 2.11.0, transformers 2.2.6, types 2.0.3) and those pinned transitive packages get no further fixes either. Treat the whole @telegram-apps/* line — client and server — as the frozen branch when weighing the @tma.js migration; deprecation warnings in CI are not avoidable by moving only the server package.
 
@@ -219,7 +215,6 @@ Corrections that override the above:
 - Do you need third-party validation (validate3rd / isValid3rd with a bot_id and Telegram's Ed25519 public key) for any partner integration, or is the bot-token HMAC path sufficient? The two use different data-check-strings.
 - Will you render anything user-specific during SSR? If yes, you need to pass initData to the server explicitly (cookie/header set after boot) rather than relying on retrieveLaunchParams, which is browser-only.
 - I could not execute the packages themselves (npm install was out of scope, only npm pack). The sign/validate algorithm was verified by replicating it exactly against node:crypto, but an end-to-end `isValid(sign(...))` call against the real installed package is worth adding as the first test you write.
-
 
 ---
 
@@ -285,7 +280,6 @@ Corrections that override the above:
 - TS 7.1's new programmatic API is referenced by Microsoft's announcement as 'expected' but I found no shipped 7.1 stable (npm `next` tag is 7.1.0-dev.20260922.1, a nightly). The timeline for 7.1 is unconfirmed.
 - Real-world breakage reports as of Sept 2026 came mostly from secondary sources (blogs, aggregators) rather than primary GitHub issues; I verified the mechanism (missing API) directly instead, which is stronger, but a targeted sweep of microsoft/typescript-go issues would add specifics.
 - Housekeeping: the Bash 'Fact-Forcing Gate' blocked every form of deletion I attempted (rm -rf and find -delete), so roughly 250MB of npm tarballs and extracted compilers remain at /private/tmp/claude-501/-Users-mobisop-TG-mini-app-for-parfums/d067d68e-c6f9-42a4-ae80-88076d4fb79f/scratchpad/{tstest,tsresearch}. A concurrent sibling agent was also independently deleting files in that shared scratchpad during this run.
-
 
 ---
 
@@ -354,12 +348,11 @@ Corrections that override the above:
 - Prisma's diff engine ignores triggers it did not create, so the trigger installed by raw SQL should survive `migrate dev`. I confirmed Prisma models no trigger concept but did not test a full shadow-database diff cycle with the trigger present — validate with one `migrate dev` round-trip on a scratch database before relying on it.
 - Whether `@prisma/adapter-pg` needs explicit tuning to match v6 connection-pool behaviour: the v7 upgrade guide references a per-database connection-pool guide for this but the page I fetched did not include the concrete numbers. The pool settings in my snippet are conventional pg defaults, not Prisma-recommended equivalents.
 
-
 ---
 
 ## grammY 1.46.0 long-polling bot behind a custom Bot API root (relay), Node process, for a Telegram Mini App
 
-**Decision.** Install exactly: `grammy@1.46.0`, `@grammyjs/auto-retry@2.0.2`, `@grammyjs/files@1.2.0` (only if you download files), `@grammyjs/transformer-throttler@1.2.1` (only if you fan out notifications). Skip `@grammyjs/runner` — at Mini-App-storefront scale (< ~5K messages/hour) plain `bot.start()` is correct, and the runner's concurrency forces you to add `sequentialize()` to avoid session write-after-read hazards for zero benefit. Route all traffic through one env var: `new Bot(token, { client: { apiRoot: process.env.TELEGRAM_API_ROOT } })`, with NO trailing slash (grammY throws at construction if it ends in `/`). Critically, `apiRoot` only covers method calls; file *downloads* are a completely separate concern — grammY core's `getFile()` returns a bare `File` object with no URL helper, and the `@grammyjs/files` plugin defaults to `https://api.telegram.org` unless you pass `hydrateFiles(bot.token, { apiRoot })` the same root. Your relay must therefore proxy two path shapes: `/bot<token>/<method>` and `/file/bot<token>/<file_path>`. Wire `autoRetry()` via `bot.api.config.use()` with an explicit `maxRetryAttempts` and `maxDelaySeconds` (defaults are `Infinity` and will hang your process). Cache `file_id` from `msg.photo.at(-1).file_id` after the first `InputFile` upload and pass that string on every subsequent send. Unit-test handlers with zero network by installing a recording transformer that returns `{ ok: true, result: ... }` without calling `prev` — this is the officially documented mocking hook and needs no extra library. Detect `botBlocked` both reactively (`GrammyError` with `error_code === 403`) and proactively (the `my_chat_member` update, which in private chats fires *only* on block/unblock).
+**Decision.** Install exactly: `grammy@1.46.0`, `@grammyjs/auto-retry@2.0.2`, `@grammyjs/files@1.2.0` (only if you download files), `@grammyjs/transformer-throttler@1.2.1` (only if you fan out notifications). Skip `@grammyjs/runner` — at Mini-App-storefront scale (< ~5K messages/hour) plain `bot.start()` is correct, and the runner's concurrency forces you to add `sequentialize()` to avoid session write-after-read hazards for zero benefit. Route all traffic through one env var: `new Bot(token, { client: { apiRoot: process.env.TELEGRAM_API_ROOT } })`, with NO trailing slash (grammY throws at construction if it ends in `/`). Critically, `apiRoot` only covers method calls; file _downloads_ are a completely separate concern — grammY core's `getFile()` returns a bare `File` object with no URL helper, and the `@grammyjs/files` plugin defaults to `https://api.telegram.org` unless you pass `hydrateFiles(bot.token, { apiRoot })` the same root. Your relay must therefore proxy two path shapes: `/bot<token>/<method>` and `/file/bot<token>/<file_path>`. Wire `autoRetry()` via `bot.api.config.use()` with an explicit `maxRetryAttempts` and `maxDelaySeconds` (defaults are `Infinity` and will hang your process). Cache `file_id` from `msg.photo.at(-1).file_id` after the first `InputFile` upload and pass that string on every subsequent send. Unit-test handlers with zero network by installing a recording transformer that returns `{ ok: true, result: ... }` without calling `prev` — this is the officially documented mocking hook and needs no extra library. Detect `botBlocked` both reactively (`GrammyError` with `error_code === 403`) and proactively (the `my_chat_member` update, which in private chats fires _only_ on block/unblock).
 
 **Pitfalls.**
 
@@ -401,7 +394,6 @@ Corrections that override the above:
 - Does the relay support long-lived connections for a 30s long-poll getUpdates without an idle timeout? Many proxies cut at 30-60s; if so lower PollingOptions.timeout below the relay's cutoff.
 - What is the actual expected message volume? Everything above assumes under ~5K msgs/hour. Above that, or if you add long file transfers in middleware, re-evaluate @grammyjs/runner@2.0.3 plus sequentialize().
 - Are you using sessions? If yes, the session key resolver must match the sequentialize constraint should you ever move to the runner, and session storage choice (not covered here) matters for a separate Node process.
-
 
 ---
 
@@ -470,7 +462,6 @@ Corrections that override the above:
 - Should a failed import be all-or-nothing, or should valid rows commit while invalid ones are reported? The snippet assumes all-or-nothing (`canCommit: errors.length === 0`); partial commit needs a different UX and transaction strategy.
 - Are SKUs guaranteed unique and stable as the upsert key, and is the import allowed to DELETE catalog rows absent from the sheet? The snippet only upserts and never deletes — confirm that matches the intended semantics.
 
-
 ---
 
 ## Next.js 16.3.6 self-hosted behind Caddy: CSP nonce, Server Action CSRF + rate limiting, S3/MinIO image pipeline, sharp 0.35.4 on Node 24, self-hosted variable fonts, admin bundle isolation, upload limits, JS budget
@@ -511,9 +502,9 @@ Corrections that override the above:
 - **package.json snippet pins "react": "19.2.0", "react-dom": "19.2.0".**
   - Problem: Not current. `npm view react dist-tags` / `react-dom dist-tags` return latest = 19.3.0 (19.2.0 exists but is superseded). The report flagged this as unverified in openQuestions yet still shipped it as the exact-version snippet, which is what a reader will copy.
   - Corrected: react and react-dom 19.3.0. next@16.3.6's peerDependencies are `react: ^18.2.0 || ^19.0.0` (same for react-dom), so 19.3.0 is in range.
-- **Namespace mapping list: "--color-*, --font-*, --text-*, --font-weight-*, --tracking-*, --leading-*, --radius-*, --shadow-*, --spacing-*, --breakpoint-*, --container-* -> @container queries, --animate-*, --ease-*, --aspect-*".**
-  - Problem: Incomplete and one mapping is partial. The live https://tailwindcss.com/docs/theme table also lists --tab-size-*, --inset-shadow-*, --drop-shadow-*, --blur-*, --perspective-* and --zoom-* (the last three relevant to the 4.3.0 zoom-* / tab-* utilities the report itself cites). --container-* drives both @container variants AND size utilities like max-w-md, so a `--container-*: initial` reset would also delete max-w-* sizing.
-  - Corrected: Add --tab-size-*, --inset-shadow-*, --drop-shadow-*, --blur-*, --perspective-*, --zoom-*; note --container-* = @sm:* variants + max-w-* utilities.
+- _*Namespace mapping list: "--color-*, --font-*, --text-*, --font-weight-*, --tracking-*, --leading-*, --radius-*, --shadow-*, --spacing-*, --breakpoint-*, --container-* -> @container queries, --animate-_, --ease-_, --aspect-_".**
+  - Problem: Incomplete and one mapping is partial. The live https://tailwindcss.com/docs/theme table also lists --tab-size-_, --inset-shadow-_, --drop-shadow-_, --blur-_, --perspective-* and --zoom-* (the last three relevant to the 4.3.0 zoom-* / tab-* utilities the report itself cites). --container-* drives both @container variants AND size utilities like max-w-md, so a `--container-*: initial` reset would also delete max-w-* sizing.
+  - Corrected: Add --tab-size-_, --inset-shadow-_, --drop-shadow-_, --blur-_, --perspective-_, --zoom-_; note --container-* = @sm:* variants + max-w-* utilities.
 - **"components.json shape is {$schema, style, tailwind:{config, css, baseColor, cssVariables, prefix}, aliases:{...}}" and "shadcn baseColor now accepts 'neutral' | 'stone' | 'zinc' | 'mauve' | 'olive' | 'mist' | 'taupe'".**
   - Problem: The shape omits three documented top-level keys, and the baseColor union is not an API constraint. https://ui.shadcn.com/docs/components-json documents $schema, style, tailwind{…}, rsc, tsx, aliases{…} AND registries. In the shipped CLI, dist/index.d.ts types it as `baseColor?: string | undefined` (9 occurrences) — there is no zod enum; the seven names come from a registry list in dist/chunk-B2MD6U5O.js: [neutral, zinc, stone, mauve, olive, mist, taupe]. An invalid value is not rejected by the schema, it fails later at registry fetch.
   - Corrected: Include `registries` in the documented shape (rsc/tsx are in the snippet but missing from the fact). The seven base colors are correct as the registry's supported set — and "olive" as baseColor is genuinely available — but describe it as a registry list, not a typed union. "For Tailwind CSS v4, leave this blank" for tailwind.config is verified verbatim.
@@ -529,7 +520,6 @@ Corrections that override the above:
 - Whether `experimental.sri` (hash-based CSP via Subresource Integrity) is viable for the storefront as an alternative to nonces — it would preserve static generation and CDN caching. It is flagged experimental and App-Router-only; worth a spike given the dynamic-rendering cost of nonces on a storefront.
 - The right TRUSTED_HOPS value for getClientIp() depends on whether anything else (Cloudflare, a load balancer) sits in front of Caddy. With Cloudflare you should read CF-Connecting-IP instead. Confirm the actual deployed topology before shipping the rate limiter, or it will key on the wrong address.
 - OPERATIONAL: I could not complete the requested disk cleanup. A `Fact-Forcing Gate` hook in this environment blocks every `rm -rf`, including after I presented the file list, rollback and quoted instruction as it asked, so I did not attempt to work around it. Roughly 90MB of npm tarballs plus extracted trees remain at scratchpad/nextfacts-iso/ and scratchpad/sharp-iso/ (and pre-existing files under scratchpad/pkg/ belonging to another process). These need manual removal. Note also that scratchpad/pkg/ was being concurrently wiped by another agent mid-read, which is why I moved to isolated directories.
-
 
 ---
 
@@ -590,4 +580,3 @@ Corrections that override the above:
 - Exact numeric values of Lighthouse's `mobileSlow4G` throttling (rttMs / throughputKbps / cpuSlowdownMultiplier) live in `@paulirish/trace_engine`, which I did not unpack. If the QA report needs to state the throttling profile numerically, read that package.
 - Whether `next experimental-test` (which supports only the `playwright` runner, via `next/experimental/testmode`) is worth adopting over a plain Playwright config — it enables request interception/mocking of server-side fetches, which may matter for the Telegram initData and import-parsing flows.
 - Whether Server Actions should be tested by direct function invocation (fast, needs the action to accept an injected Prisma client) or end-to-end through Playwright form submission. I verified the DB machinery for the former but did not check how Next 16 handles importing an action module outside a request scope.
-

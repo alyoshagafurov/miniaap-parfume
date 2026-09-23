@@ -8,9 +8,12 @@ export const metadata = { title: "Категории" };
 export default function CategoriesPage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Категории</h1>
+      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+        Категории
+      </h1>
       <p className="text-muted mt-2 text-sm">
-        Это форматы: 35 мл, 100 мл, двойняшки, дезодоранты. Порядок здесь — порядок на главной.
+        Это форматы: 35 мл, 100 мл, двойняшки, дезодоранты. Порядок здесь — порядок на
+        главной.
       </p>
       <div className="mt-6">
         <Suspense fallback={<ListSkeleton />}>

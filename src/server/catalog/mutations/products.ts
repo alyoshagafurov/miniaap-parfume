@@ -59,12 +59,18 @@ async function tagsForProduct(tx: Tx, productId: string): Promise<string[]> {
     select: {
       slug: true,
       category: { select: { slug: true } },
-      fragrances: { select: { fragrance: { select: { brand: { select: { slug: true } } } } } },
+      fragrances: {
+        select: { fragrance: { select: { brand: { select: { slug: true } } } } },
+      },
     },
   });
   if (!product) return [CATALOG_TAG];
 
-  const tags = new Tags().add(CATALOG_TAG, productTag(product.slug), categoryTag(product.category.slug));
+  const tags = new Tags().add(
+    CATALOG_TAG,
+    productTag(product.slug),
+    categoryTag(product.category.slug),
+  );
   for (const link of product.fragrances) tags.add(brandTag(link.fragrance.brand.slug));
   return tags.list;
 }
@@ -82,7 +88,8 @@ async function generateTitle(tx: Tx, fragranceIds: readonly string[]): Promise<s
     const f = byId.get(id);
     return f ? [f] : [];
   });
-  if (ordered.length === 0) throw new CatalogConflict("Не найден ни один из выбранных ароматов");
+  if (ordered.length === 0)
+    throw new CatalogConflict("Не найден ни один из выбранных ароматов");
 
   const brand = ordered[0]?.brand.name ?? "";
   return `${brand} ${ordered.map((f) => f.name).join(" + ")}`.trim();
@@ -111,7 +118,9 @@ function validate(input: ProductInput): void {
   if (input.volumeMl <= 0) throw new CatalogConflict("Укажите объём");
 }
 
-export async function createProduct(input: ProductInput): Promise<Mutation<ProductRef>> {
+export async function createProduct(
+  input: ProductInput,
+): Promise<Mutation<ProductRef>> {
   return inTransaction((tx) => createInside(tx, input));
 }
 
@@ -138,10 +147,15 @@ export async function updateProduct(
     if (clash) throw new CatalogConflict(`Артикул ${sku} уже занят`);
 
     const title = input.title?.trim() || (await generateTitle(tx, input.fragranceIds));
-    const slug = await allocateSlug(tx, "product", `${title} ${input.volumeMl}ml ${sku}`, {
-      exceptId: id,
-      override: input.slug ?? before.slug,
-    });
+    const slug = await allocateSlug(
+      tx,
+      "product",
+      `${title} ${input.volumeMl}ml ${sku}`,
+      {
+        exceptId: id,
+        override: input.slug ?? before.slug,
+      },
+    );
 
     // Replaced rather than diffed, and both statements inside this transaction:
     // the "at least one fragrance" trigger is deferred to COMMIT, so a delete
@@ -175,7 +189,9 @@ export async function updateProduct(
         // ordered by it, and re-saving an old product would otherwise send it
         // to the top of the lane.
         publishedAt:
-          input.status === "PUBLISHED" ? (before.publishedAt ?? new Date()) : before.publishedAt,
+          input.status === "PUBLISHED"
+            ? (before.publishedAt ?? new Date())
+            : before.publishedAt,
       },
       select: { id: true, slug: true, sku: true },
     });
@@ -201,7 +217,13 @@ export async function updateProduct(
  */
 export async function copyToFormat(
   id: string,
-  input: { categoryId: string; sku: string; volumeMl: number; priceKop: number; packSize: number },
+  input: {
+    categoryId: string;
+    sku: string;
+    volumeMl: number;
+    priceKop: number;
+    packSize: number;
+  },
 ): Promise<Mutation<ProductRef>> {
   return inTransaction(async (tx) => {
     const source = await tx.product.findUniqueOrThrow({
@@ -212,7 +234,10 @@ export async function copyToFormat(
         isNew: true,
         isHit: true,
         popularity: true,
-        fragrances: { select: { fragranceId: true, position: true }, orderBy: { position: "asc" } },
+        fragrances: {
+          select: { fragranceId: true, position: true },
+          orderBy: { position: "asc" },
+        },
       },
     });
 
@@ -245,7 +270,10 @@ export async function copyToFormat(
  * transactions, and a crash between them leaves a copy of a product that was
  * meanwhile deleted.
  */
-async function createInside(tx: Tx, input: ProductInput): Promise<Mutation<ProductRef>> {
+async function createInside(
+  tx: Tx,
+  input: ProductInput,
+): Promise<Mutation<ProductRef>> {
   validate(input);
 
   const sku = input.sku.trim();
@@ -253,9 +281,14 @@ async function createInside(tx: Tx, input: ProductInput): Promise<Mutation<Produ
   if (clash) throw new CatalogConflict(`Артикул ${sku} уже занят`);
 
   const title = input.title?.trim() || (await generateTitle(tx, input.fragranceIds));
-  const slug = await allocateSlug(tx, "product", `${title} ${input.volumeMl}ml ${sku}`, {
-    override: input.slug,
-  });
+  const slug = await allocateSlug(
+    tx,
+    "product",
+    `${title} ${input.volumeMl}ml ${sku}`,
+    {
+      override: input.slug,
+    },
+  );
 
   const product = await tx.product.create({
     data: {
@@ -274,7 +307,10 @@ async function createInside(tx: Tx, input: ProductInput): Promise<Mutation<Produ
       popularity: input.popularity,
       publishedAt: input.status === "PUBLISHED" ? new Date() : null,
       fragrances: {
-        create: input.fragranceIds.map((fragranceId, position) => ({ fragranceId, position })),
+        create: input.fragranceIds.map((fragranceId, position) => ({
+          fragranceId,
+          position,
+        })),
       },
     },
     select: { id: true, slug: true, sku: true },
@@ -390,7 +426,10 @@ export async function bulkUpdateProducts(
 }
 
 /** Inline edits from the table: one field, one row, no form. */
-export async function setProductPrice(id: string, priceKop: number): Promise<Mutation<ProductRef>> {
+export async function setProductPrice(
+  id: string,
+  priceKop: number,
+): Promise<Mutation<ProductRef>> {
   if (priceKop <= 0) throw new CatalogConflict("Цена должна быть больше нуля");
   return inTransaction(async (tx) => {
     const product = await tx.product.update({
@@ -402,7 +441,10 @@ export async function setProductPrice(id: string, priceKop: number): Promise<Mut
   });
 }
 
-export async function setProductStock(id: string, stock: StockState): Promise<Mutation<ProductRef>> {
+export async function setProductStock(
+  id: string,
+  stock: StockState,
+): Promise<Mutation<ProductRef>> {
   return inTransaction(async (tx) => {
     const product = await tx.product.update({
       where: { id },

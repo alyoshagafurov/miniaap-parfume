@@ -29,7 +29,9 @@ export default function ProductsPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Товары</h1>
+        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+          Товары
+        </h1>
         <Link
           href="/admin/products/new"
           className="bg-olive text-surface hover:bg-olive-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
@@ -52,7 +54,10 @@ async function Table({ searchParams }: { searchParams: Promise<SearchParams> }) 
     getProductFacets(),
     // Ids, for the bulk "move to category" control; the facets carry slugs,
     // which is what a URL needs and not what a write needs.
-    prisma.category.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true } }),
+    prisma.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   return (

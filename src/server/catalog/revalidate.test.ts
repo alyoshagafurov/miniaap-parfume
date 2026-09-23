@@ -38,7 +38,9 @@ describe("fromAction", () => {
   });
 
   it("applies nothing when the transaction rolled back", async () => {
-    await expect(fromAction(Promise.reject(new Error("откат")))).rejects.toThrow("откат");
+    await expect(fromAction(Promise.reject(new Error("откат")))).rejects.toThrow(
+      "откат",
+    );
     expect(updated).toEqual([]);
   });
 
@@ -52,9 +54,7 @@ describe("fromAction", () => {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const pending = fromAction(
-      gate.then(() => ({ data: null, tags: ["catalog"] })),
-    );
+    const pending = fromAction(gate.then(() => ({ data: null, tags: ["catalog"] })));
 
     // The mutation has not committed yet; nothing may be invalidated, or a
     // request arriving now would re-cache the old rows for another hour.
@@ -83,7 +83,9 @@ describe("fromRoute", () => {
   });
 
   it("applies nothing when the transaction rolled back", async () => {
-    await expect(fromRoute(Promise.reject(new Error("откат")))).rejects.toThrow("откат");
+    await expect(fromRoute(Promise.reject(new Error("откат")))).rejects.toThrow(
+      "откат",
+    );
     expect(revalidated).toEqual([]);
   });
 });

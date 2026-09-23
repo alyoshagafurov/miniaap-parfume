@@ -31,17 +31,17 @@
   --color-*: initial;
 
   /* Grounds */
-  --color-canvas: #f8f5ee;   /* page background */
-  --color-surface: #fffdf8;  /* raised: cards, sheets, inputs */
+  --color-canvas: #f8f5ee; /* page background */
+  --color-surface: #fffdf8; /* raised: cards, sheets, inputs */
 
   /* Ink */
-  --color-ink: #23241e;      /* body text — 14.4:1 on canvas */
-  --color-muted: #6b6a5e;    /* secondary text — 5.0:1 on canvas */
+  --color-ink: #23241e; /* body text — 14.4:1 on canvas */
+  --color-muted: #6b6a5e; /* secondary text — 5.0:1 on canvas */
 
   /* Brand. Olive is sampled from the ÁRUMI wordmark (#4D522C); the direction
      specified #4D5527, a difference of 5.8/255 — below the perceptual
      threshold, so the logo's value is the one that ships. */
-  --color-olive: #4d522c;       /* brand, CTA, active — 7.5:1 on canvas */
+  --color-olive: #4d522c; /* brand, CTA, active — 7.5:1 on canvas */
   --color-olive-hover: #3f4620;
   /* Tint for selected chips and subtle brand washes. */
   --color-olive-wash: #eceade;
@@ -54,12 +54,11 @@
      decorative (dividers, card edges) and exempt from contrast minimums;
      `control` bounds a form field and must clear WCAG 1.4.11's 3:1. */
   --color-rule: #e7e0cf;
-  --color-control: #858277;  /* 3.53:1 on canvas, 3.79:1 on surface */
+  --color-control: #858277; /* 3.53:1 on canvas, 3.79:1 on surface */
 
   /* State. Success is the brand olive — this palette has no second green. */
-  --color-danger: #a33a2b;   /* 6.0:1 on canvas */
+  --color-danger: #a33a2b; /* 6.0:1 on canvas */
   --color-danger-wash: #f7ebe8;
-
 }
 
 @theme {
@@ -71,12 +70,12 @@
   --font-sans: var(--font-manrope), system-ui, -apple-system, sans-serif;
 
   --text-*: initial;
-  --text-xs: 0.75rem;    /* 12 — captions, spaced caps */
-  --text-sm: 0.875rem;   /* 14 — secondary, metadata */
-  --text-base: 1rem;     /* 16 — body, never smaller for prices */
-  --text-lg: 1.25rem;    /* 20 — card titles, section heads */
-  --text-2xl: 1.75rem;   /* 28 — display floor */
-  --text-4xl: 2.5rem;    /* 40 — display ceiling */
+  --text-xs: 0.75rem; /* 12 — captions, spaced caps */
+  --text-sm: 0.875rem; /* 14 — secondary, metadata */
+  --text-base: 1rem; /* 16 — body, never smaller for prices */
+  --text-lg: 1.25rem; /* 20 — card titles, section heads */
+  --text-2xl: 1.75rem; /* 28 — display floor */
+  --text-4xl: 2.5rem; /* 40 — display ceiling */
   /* The one fluid step: an H1 that fits a 390px phone and still carries a
      1440px desktop. Declared here so it cannot be re-improvised per page. */
   --text-h1: clamp(1.75rem, 7vw, 2.5rem);
@@ -89,20 +88,20 @@
   --tracking-caps-wide: 0.22em;
 
   --leading-*: initial;
-  --leading-tight: 1.15;   /* display */
-  --leading-snug: 1.35;    /* titles */
-  --leading-normal: 1.55;  /* body */
+  --leading-tight: 1.15; /* display */
+  --leading-snug: 1.35; /* titles */
+  --leading-normal: 1.55; /* body */
 
   /* ── Form ─────────────────────────────────────────────────────────────── */
   --radius-*: initial;
-  --radius-md: 10px;    /* cards, inputs, sheets, buttons */
+  --radius-md: 10px; /* cards, inputs, sheets, buttons */
   --radius-full: 999px; /* filter chips only */
 
   /* Warm shadows: neutral grey shadows read as dirt against a cream ground. */
   --shadow-*: initial;
   --shadow-sm: 0 1px 2px rgb(77 82 44 / 0.06);
   --shadow-md: 0 4px 16px rgb(77 82 44 / 0.08);
-  --shadow-lg: 0 12px 32px rgb(77 82 44 / 0.10);
+  --shadow-lg: 0 12px 32px rgb(77 82 44 / 0.1);
 
   /* ── Motion ───────────────────────────────────────────────────────────── */
   /* Stage 1 animates sheets and modals only. Nothing exceeds 250ms and

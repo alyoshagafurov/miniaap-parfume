@@ -23,7 +23,9 @@ test.describe("Каталог", () => {
     await shot(page, info, "02-category");
   });
 
-  test("фильтрует по полу и бренду, и складывает это в адрес", async ({ page }, info) => {
+  test("фильтрует по полу и бренду, и складывает это в адрес", async ({
+    page,
+  }, info) => {
     await page.goto(CATEGORY);
 
     const before = await foundCount(page);
@@ -92,7 +94,9 @@ test.describe("Каталог", () => {
 
   test("честно говорит, когда ничего не нашлось", async ({ page }, info) => {
     // A brand that exists and a gender it has nothing in.
-    await page.goto(`${CATEGORY}?brand=chanel&family=WOODY&family=ORIENTAL&gender=MALE&stock=1`);
+    await page.goto(
+      `${CATEGORY}?brand=chanel&family=WOODY&family=ORIENTAL&gender=MALE&stock=1`,
+    );
 
     const heading = page
       .getByText(/Ничего не найдено|Найдено: \d+/)

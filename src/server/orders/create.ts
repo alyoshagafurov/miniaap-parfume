@@ -118,7 +118,8 @@ export type CreateOrderResult =
   | { ok: true; orderId: string; number: string; totalKop: number; quote: Quote }
   | {
       ok: false;
-      reason: "VALIDATION" | "RATE_LIMITED" | "BELOW_MINIMUM" | "UNAVAILABLE" | "CHANGED";
+      reason:
+        "VALIDATION" | "RATE_LIMITED" | "BELOW_MINIMUM" | "UNAVAILABLE" | "CHANGED";
       message: string;
       fieldErrors?: Record<string, string>;
       quote?: Quote;

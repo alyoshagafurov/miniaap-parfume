@@ -74,9 +74,7 @@ export function ImportScreen() {
     try {
       const response = await fetch("/api/admin/import", { method: "POST", body });
       const payload = (await response.json().catch(() => ({}))) as
-        | Preview
-        | Outcome
-        | { error?: string };
+        Preview | Outcome | { error?: string };
 
       if (!response.ok) {
         setError("error" in payload ? (payload.error ?? "Не удалось") : "Не удалось");
@@ -152,7 +150,10 @@ export function ImportScreen() {
       </div>
 
       {error ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+        >
           {error}
         </p>
       ) : null}
@@ -160,14 +161,19 @@ export function ImportScreen() {
       {preview ? (
         <div className="flex flex-col gap-4">
           {preview.fatal ? (
-            <p role="alert" className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm">
+            <p
+              role="alert"
+              className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+            >
               {preview.fatal}
             </p>
           ) : (
             <>
               <p className="text-ink text-base tabular-nums">
                 Готово к загрузке: {preview.total} строк
-                {preview.errors.length > 0 ? `, с ошибками: ${preview.errors.length}` : ""}
+                {preview.errors.length > 0
+                  ? `, с ошибками: ${preview.errors.length}`
+                  : ""}
               </p>
 
               {preview.unknownColumns.length > 0 ? (
@@ -180,7 +186,8 @@ export function ImportScreen() {
 
               {preview.duplicateColumns.length > 0 ? (
                 <p className="text-muted text-sm">
-                  Повторяющиеся колонки — возьмём левую: {preview.duplicateColumns.join(", ")}
+                  Повторяющиеся колонки — возьмём левую:{" "}
+                  {preview.duplicateColumns.join(", ")}
                 </p>
               ) : null}
 
@@ -192,12 +199,24 @@ export function ImportScreen() {
                     </caption>
                     <thead>
                       <tr className="border-rule border-b text-left">
-                        <th scope="col" className="caps text-muted py-2">Строка</th>
-                        <th scope="col" className="caps text-muted py-2">Артикул</th>
-                        <th scope="col" className="caps text-muted py-2">Бренд</th>
-                        <th scope="col" className="caps text-muted py-2">Аромат</th>
-                        <th scope="col" className="caps text-muted py-2">Объём</th>
-                        <th scope="col" className="caps text-muted py-2">Цена</th>
+                        <th scope="col" className="caps text-muted py-2">
+                          Строка
+                        </th>
+                        <th scope="col" className="caps text-muted py-2">
+                          Артикул
+                        </th>
+                        <th scope="col" className="caps text-muted py-2">
+                          Бренд
+                        </th>
+                        <th scope="col" className="caps text-muted py-2">
+                          Аромат
+                        </th>
+                        <th scope="col" className="caps text-muted py-2">
+                          Объём
+                        </th>
+                        <th scope="col" className="caps text-muted py-2">
+                          Цена
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -207,8 +226,12 @@ export function ImportScreen() {
                           <td className="text-ink py-2 font-mono text-xs">{row.sku}</td>
                           <td className="text-ink py-2">{row.brand}</td>
                           <td className="text-ink py-2">{row.fragrance}</td>
-                          <td className="text-muted py-2 tabular-nums">{row.volumeMl} мл</td>
-                          <td className="text-ink py-2 tabular-nums">{formatRub(row.priceKop)}</td>
+                          <td className="text-muted py-2 tabular-nums">
+                            {row.volumeMl} мл
+                          </td>
+                          <td className="text-ink py-2 tabular-nums">
+                            {formatRub(row.priceKop)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -221,8 +244,13 @@ export function ImportScreen() {
                   <h2 className="caps text-muted">Строки с ошибками — их пропустим</h2>
                   <ul className="mt-2 flex flex-col gap-1">
                     {preview.errors.map((rowError, i) => (
-                      <li key={`${rowError.row}-${rowError.field}-${i}`} className="text-sm">
-                        <span className="text-ink tabular-nums">Строка {rowError.row}</span>
+                      <li
+                        key={`${rowError.row}-${rowError.field}-${i}`}
+                        className="text-sm"
+                      >
+                        <span className="text-ink tabular-nums">
+                          Строка {rowError.row}
+                        </span>
                         <span className="text-muted"> · {rowError.message}</span>
                         {rowError.value ? (
                           <span className="text-muted"> — «{rowError.value}»</span>
@@ -263,8 +291,8 @@ export function ImportScreen() {
 
           {outcome.createdBrands.length > 0 ? (
             <p className="text-muted text-sm">
-              Новые бренды: {outcome.createdBrands.join(", ")}. Добавьте им алиасы —
-              без них по-русски не найдут.
+              Новые бренды: {outcome.createdBrands.join(", ")}. Добавьте им алиасы — без
+              них по-русски не найдут.
             </p>
           ) : null}
           {outcome.createdCategories.length > 0 ? (
@@ -286,7 +314,10 @@ export function ImportScreen() {
                 {outcome.skipped.map((s, i) => (
                   <li key={`${s.row}-${i}`} className="text-sm">
                     <span className="text-ink tabular-nums">Строка {s.row}</span>
-                    <span className="text-muted"> · {s.sku} · {s.reason}</span>
+                    <span className="text-muted">
+                      {" "}
+                      · {s.sku} · {s.reason}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -294,8 +325,8 @@ export function ImportScreen() {
           ) : null}
 
           <p className="text-muted text-sm">
-            Новые товары созданы черновиками, если в файле не указан статус. Опубликовать
-            их можно массовым действием в таблице товаров.
+            Новые товары созданы черновиками, если в файле не указан статус.
+            Опубликовать их можно массовым действием в таблице товаров.
           </p>
         </div>
       ) : null}

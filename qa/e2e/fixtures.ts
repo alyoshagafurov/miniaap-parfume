@@ -166,7 +166,12 @@ export async function asTelegram(page: Page, initDataRaw: string): Promise<void>
               reply("safe_area_changed", { top: 0, bottom: 0, left: 0, right: 0 });
               break;
             case "web_app_request_content_safe_area":
-              reply("content_safe_area_changed", { top: 0, bottom: 0, left: 0, right: 0 });
+              reply("content_safe_area_changed", {
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+              });
               break;
             default:
               // Everything else — setHeaderColor, haptics, MainButton — is
@@ -204,9 +209,12 @@ export interface SeedLine {
  * silently by design, so a wrong fixture would look like an empty basket.
  */
 export async function seedCart(page: Page, lines: SeedLine[]): Promise<void> {
-  await page.addInitScript((payload: { v: number; lines: SeedLine[] }) => {
-    localStorage.setItem("arumi.cart.v1", JSON.stringify(payload));
-  }, { v: 1, lines });
+  await page.addInitScript(
+    (payload: { v: number; lines: SeedLine[] }) => {
+      localStorage.setItem("arumi.cart.v1", JSON.stringify(payload));
+    },
+    { v: 1, lines },
+  );
 }
 
 // ── Console and network ──────────────────────────────────────────────────────
@@ -301,7 +309,9 @@ export const test = base.extend<{ audit: Audit }>({
     // six of the five requests a buyer is allowed in ten minutes — so the
     // desktop run passed and the mobile one failed at checkout, which reads
     // like a mobile bug and is not one.
-    const n = fingerprint(`${testInfo.project.name} › ${testInfo.titlePath.join(" › ")}`);
+    const n = fingerprint(
+      `${testInfo.project.name} › ${testInfo.titlePath.join(" › ")}`,
+    );
     const ip = `10.${(n >> 16) & 0xff}.${(n >> 8) & 0xff}.${(n % 254) + 1}`;
     await use({
       ...contextOptions,
@@ -362,7 +372,10 @@ export { expect };
  * one run in three — a flake that says nothing about the catalog.
  */
 export async function foundCount(page: Page): Promise<number> {
-  const label = page.getByText(/Найдено: \d+/).filter({ visible: true }).first();
+  const label = page
+    .getByText(/Найдено: \d+/)
+    .filter({ visible: true })
+    .first();
   await expect(label).toBeVisible();
   return Number((await label.innerText()).replace(/\D+/g, ""));
 }

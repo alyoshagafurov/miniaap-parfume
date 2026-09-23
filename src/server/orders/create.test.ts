@@ -10,7 +10,13 @@ const VALID = {
   comment: "",
   consent: true,
   items: [
-    { productId: "p1", qty: 6, seenPriceKop: 100_000, seenPackSize: 1, seenStock: "IN_STOCK" },
+    {
+      productId: "p1",
+      qty: 6,
+      seenPriceKop: 100_000,
+      seenPackSize: 1,
+      seenStock: "IN_STOCK",
+    },
   ],
 };
 
@@ -36,12 +42,16 @@ describe("normalizePhone", () => {
     expect(normalizePhone(input)).toBe(expected);
   });
 
-  it.each(["", "123", "+1 555 0100", "не телефон", "+7 928 314 40 0", "+7 928 314 40 000"])(
-    "rejects %j",
-    (input) => {
-      expect(normalizePhone(input)).toBeNull();
-    },
-  );
+  it.each([
+    "",
+    "123",
+    "+1 555 0100",
+    "не телефон",
+    "+7 928 314 40 0",
+    "+7 928 314 40 000",
+  ])("rejects %j", (input) => {
+    expect(normalizePhone(input)).toBeNull();
+  });
 });
 
 describe("parseOrderInput", () => {
@@ -122,7 +132,9 @@ describe("parseOrderInput", () => {
   });
 
   it("refuses a basket with absurdly many lines", () => {
-    const items = Array.from({ length: 500 }, (_, i) => line({ productId: `p${i}`, qty: 1 }));
+    const items = Array.from({ length: 500 }, (_, i) =>
+      line({ productId: `p${i}`, qty: 1 }),
+    );
     expect(parseOrderInput({ ...VALID, items }).ok).toBe(false);
   });
 });
@@ -200,7 +212,10 @@ describe.skipIf(!hasDb)("createOrder", () => {
     );
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    const saved = await prisma.order.findUnique({ where: { id: r.orderId }, include: { items: true } });
+    const saved = await prisma.order.findUnique({
+      where: { id: r.orderId },
+      include: { items: true },
+    });
     expect(saved?.items[0]?.priceKop).toBe(priceKop);
   });
 
@@ -300,7 +315,15 @@ describe.skipIf(!hasDb)("createOrder refuses a stale basket", () => {
     await createOrder(
       {
         ...VALID,
-        items: [{ productId, qty: packSize * 40, seenPriceKop: 1, seenPackSize: packSize, seenStock: "IN_STOCK" }],
+        items: [
+          {
+            productId,
+            qty: packSize * 40,
+            seenPriceKop: 1,
+            seenPackSize: packSize,
+            seenStock: "IN_STOCK",
+          },
+        ],
       },
       { ip: `test-${Math.random()}`, initDataRaw: null, botToken: null },
     );
@@ -315,7 +338,18 @@ describe.skipIf(!hasDb)("createOrder refuses a stale basket", () => {
     const ip = `test-${Math.random()}`;
 
     const stale = await createOrder(
-      { ...VALID, items: [{ productId, qty, seenPriceKop: priceKop - 5_000, seenPackSize: packSize, seenStock: "IN_STOCK" }] },
+      {
+        ...VALID,
+        items: [
+          {
+            productId,
+            qty,
+            seenPriceKop: priceKop - 5_000,
+            seenPackSize: packSize,
+            seenStock: "IN_STOCK",
+          },
+        ],
+      },
       { ip, initDataRaw: null, botToken: null },
     );
     expect(stale.ok).toBe(false);

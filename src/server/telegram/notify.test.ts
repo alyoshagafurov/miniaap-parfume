@@ -28,7 +28,14 @@ const ORDER = {
   totalKop: 1_240_000,
   username: null as string | null,
   telegramId: null as bigint | null,
-  lines: [{ title: "Chanel Coco Mademoiselle", sku: "ARM-1001", qty: 10, lineTotalKop: 1_240_000 }],
+  lines: [
+    {
+      title: "Chanel Coco Mademoiselle",
+      sku: "ARM-1001",
+      qty: 10,
+      lineTotalKop: 1_240_000,
+    },
+  ],
 };
 
 const SETTINGS = { showPrices: true };
@@ -63,13 +70,22 @@ describe("notifyNewOrder", () => {
   it("offers a button straight to the request in the admin panel", async () => {
     const { api, calls } = recordingApi();
     await notifyNewOrder(api, deps(), { orderId: "o1", ...ORDER }, SETTINGS);
-    const markup = calls[0]?.payload.reply_markup as { inline_keyboard: Array<Array<{ url?: string }>> };
-    expect(markup.inline_keyboard[0]?.[0]?.url).toBe("https://arumi.example.ru/admin/orders/o1");
+    const markup = calls[0]?.payload.reply_markup as {
+      inline_keyboard: Array<Array<{ url?: string }>>;
+    };
+    expect(markup.inline_keyboard[0]?.[0]?.url).toBe(
+      "https://arumi.example.ru/admin/orders/o1",
+    );
   });
 
   it("omits sums when the client has hidden prices", async () => {
     const { api, calls } = recordingApi();
-    await notifyNewOrder(api, deps(), { orderId: "o1", ...ORDER }, { showPrices: false });
+    await notifyNewOrder(
+      api,
+      deps(),
+      { orderId: "o1", ...ORDER },
+      { showPrices: false },
+    );
     expect(String(calls[0]?.payload.text)).not.toContain("12\u00a0400");
   });
 
@@ -77,14 +93,24 @@ describe("notifyNewOrder", () => {
     // A missing ADMIN_CHAT_ID must not fail the buyer's submission — their
     // request is already recorded.
     const { api, calls } = recordingApi();
-    const r = await notifyNewOrder(api, deps({ adminChatId: null }), { orderId: "o1", ...ORDER }, SETTINGS);
+    const r = await notifyNewOrder(
+      api,
+      deps({ adminChatId: null }),
+      { orderId: "o1", ...ORDER },
+      SETTINGS,
+    );
     expect(calls).toHaveLength(0);
     expect(r.managerNotified).toBe(false);
   });
 
   it("also confirms to the buyer when Telegram vouched for them", async () => {
     const { api, calls } = recordingApi();
-    await notifyNewOrder(api, deps(), { orderId: "o1", ...ORDER, telegramId: 501n }, SETTINGS);
+    await notifyNewOrder(
+      api,
+      deps(),
+      { orderId: "o1", ...ORDER, telegramId: 501n },
+      SETTINGS,
+    );
     expect(calls).toHaveLength(2);
     const buyer = calls.find((c) => c.payload.chat_id === "501");
     expect(String(buyer?.payload.text)).toContain("ARM-000042");
@@ -92,7 +118,12 @@ describe("notifyNewOrder", () => {
 
   it("sends no confirmation to a web buyer, who has no Telegram to send it to", async () => {
     const { api, calls } = recordingApi();
-    await notifyNewOrder(api, deps(), { orderId: "o1", ...ORDER, telegramId: null }, SETTINGS);
+    await notifyNewOrder(
+      api,
+      deps(),
+      { orderId: "o1", ...ORDER, telegramId: null },
+      SETTINGS,
+    );
     expect(calls).toHaveLength(1);
   });
 
@@ -114,7 +145,12 @@ describe("notifyNewOrder", () => {
       return Promise.resolve({ ok: true, result: { message_id: 1, payload } } as never);
     });
 
-    const r = await notifyNewOrder(api, deps({ markBlocked }), { orderId: "o1", ...ORDER, telegramId: 501n }, SETTINGS);
+    const r = await notifyNewOrder(
+      api,
+      deps({ markBlocked }),
+      { orderId: "o1", ...ORDER, telegramId: 501n },
+      SETTINGS,
+    );
     expect(markBlocked).toHaveBeenCalledWith(501n);
     // The manager still got it — that is the part the business depends on.
     expect(r.managerNotified).toBe(true);

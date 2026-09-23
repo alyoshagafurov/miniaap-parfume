@@ -84,7 +84,10 @@ async function boot(): Promise<void> {
   for (const admin of admins) {
     try {
       await bot.api.setMyCommands(
-        [...PUBLIC_COMMANDS, { command: "admin", description: COMMAND_DESCRIPTION.admin }],
+        [
+          ...PUBLIC_COMMANDS,
+          { command: "admin", description: COMMAND_DESCRIPTION.admin },
+        ],
         { scope: { type: "chat", chat_id: Number(admin.telegramId) } },
       );
     } catch {
@@ -99,7 +102,9 @@ async function boot(): Promise<void> {
 
   const running = bot.start({
     onStart: (me) =>
-      console.log(`Бот @${me.username} запущен, long polling через ${clientOptions().apiRoot}`),
+      console.log(
+        `Бот @${me.username} запущен, long polling через ${clientOptions().apiRoot}`,
+      ),
   });
 
   // bot.stop() does not wait for the middleware stack — the start promise does.

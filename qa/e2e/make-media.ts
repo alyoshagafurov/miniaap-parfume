@@ -26,7 +26,12 @@ async function main(): Promise<void> {
   writeFileSync(
     join(MEDIA, "phone-portrait.jpg"),
     await sharp({
-      create: { width: 1200, height: 600, channels: 3, background: { r: 77, g: 82, b: 44 } },
+      create: {
+        width: 1200,
+        height: 600,
+        channels: 3,
+        background: { r: 77, g: 82, b: 44 },
+      },
     })
       .withMetadata({ orientation: 6 })
       .jpeg({ quality: 82 })
@@ -37,7 +42,12 @@ async function main(): Promise<void> {
   writeFileSync(
     join(MEDIA, "upright.jpg"),
     await sharp({
-      create: { width: 1600, height: 2000, channels: 3, background: { r: 200, g: 195, b: 180 } },
+      create: {
+        width: 1600,
+        height: 2000,
+        channels: 3,
+        background: { r: 200, g: 195, b: 180 },
+      },
     })
       .jpeg({ quality: 82 })
       .toBuffer(),
@@ -47,7 +57,12 @@ async function main(): Promise<void> {
   writeFileSync(
     join(MEDIA, "upright-2.jpg"),
     await sharp({
-      create: { width: 1500, height: 1875, channels: 3, background: { r: 120, g: 130, b: 100 } },
+      create: {
+        width: 1500,
+        height: 1875,
+        channels: 3,
+        background: { r: 120, g: 130, b: 100 },
+      },
     })
       .jpeg({ quality: 82 })
       .toBuffer(),
@@ -58,15 +73,41 @@ async function main(): Promise<void> {
   //    and not fall through to a 500. Only the container brand matters for that
   //    refusal, so a real HEIF encoder is not needed to write one.
   const brand = Buffer.from([
-    0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, // size + 'ftyp'
-    0x68, 0x65, 0x69, 0x63, // major brand 'heic'
-    0x00, 0x00, 0x00, 0x00, // minor version
-    0x6d, 0x69, 0x66, 0x31, 0x68, 0x65, 0x69, 0x63, // compatible brands
+    0x00,
+    0x00,
+    0x00,
+    0x18,
+    0x66,
+    0x74,
+    0x79,
+    0x70, // size + 'ftyp'
+    0x68,
+    0x65,
+    0x69,
+    0x63, // major brand 'heic'
+    0x00,
+    0x00,
+    0x00,
+    0x00, // minor version
+    0x6d,
+    0x69,
+    0x66,
+    0x31,
+    0x68,
+    0x65,
+    0x69,
+    0x63, // compatible brands
   ]);
-  writeFileSync(join(MEDIA, "iphone.heic"), Buffer.concat([brand, Buffer.alloc(2048, 0x11)]));
+  writeFileSync(
+    join(MEDIA, "iphone.heic"),
+    Buffer.concat([brand, Buffer.alloc(2048, 0x11)]),
+  );
 
   // 5. Not an image at all, wearing an image's extension.
-  writeFileSync(join(MEDIA, "not-an-image.jpg"), Buffer.from("это просто текст, а не фотография"));
+  writeFileSync(
+    join(MEDIA, "not-an-image.jpg"),
+    Buffer.from("это просто текст, а не фотография"),
+  );
 
   console.log(`Фикстуры записаны в ${MEDIA}`);
 }

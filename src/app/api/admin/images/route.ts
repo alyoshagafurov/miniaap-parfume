@@ -88,7 +88,9 @@ export async function POST(request: Request) {
   const productId = form.get("productId");
   // Either an id, from the product form, or an article, from the bulk screen
   // where the filename is all there is to go on.
-  const candidates = form.getAll("sku").filter((v): v is string => typeof v === "string");
+  const candidates = form
+    .getAll("sku")
+    .filter((v): v is string => typeof v === "string");
   const file = form.get("file");
 
   if (typeof productId !== "string" && candidates.length === 0) {
@@ -103,7 +105,10 @@ export async function POST(request: Request) {
   // matches ARM-1005 rather than looking for ARM.
   const product =
     typeof productId === "string" && productId !== ""
-      ? await prisma.product.findUnique({ where: { id: productId }, select: { id: true, sku: true } })
+      ? await prisma.product.findUnique({
+          where: { id: productId },
+          select: { id: true, sku: true },
+        })
       : await findBySku(candidates);
 
   if (!product) {

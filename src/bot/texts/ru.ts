@@ -31,7 +31,11 @@ export function terms(settings: Settings): string {
     "",
     settings.deliveryTerms.trim(),
   ];
-  return lines.filter((l) => l !== "" || true).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return lines
+    .filter((l) => l !== "" || true)
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function contacts(settings: Settings): string {
@@ -45,7 +49,11 @@ export function contacts(settings: Settings): string {
 }
 
 /** Sent to the buyer once their request is recorded. */
-export function orderAccepted(number: string, totalKop: number, showPrices: boolean): string {
+export function orderAccepted(
+  number: string,
+  totalKop: number,
+  showPrices: boolean,
+): string {
   const total = showPrices ? `\nСумма: ${formatRub(totalKop)}` : "";
   return (
     `Заявка ${number} принята.${total}\n\n` +

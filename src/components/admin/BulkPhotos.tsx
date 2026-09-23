@@ -81,7 +81,11 @@ export function BulkPhotos() {
             r.token === row.token
               ? response.ok
                 ? { ...r, state: "done", sku: payload.sku }
-                : { ...r, state: "failed", error: payload.error ?? "Не удалось загрузить" }
+                : {
+                    ...r,
+                    state: "failed",
+                    error: payload.error ?? "Не удалось загрузить",
+                  }
               : r,
           ),
         );
@@ -173,14 +177,18 @@ export function BulkPhotos() {
         <h2 className="caps text-muted">Как называть файлы</h2>
         <ul className="text-muted mt-3 flex flex-col gap-1 text-sm">
           <li>
-            <span className="text-ink font-mono">ARM-1005.jpg</span> — обложка товара ARM-1005
+            <span className="text-ink font-mono">ARM-1005.jpg</span> — обложка товара
+            ARM-1005
           </li>
           <li>
-            <span className="text-ink font-mono">ARM-1005-2.jpg</span> — второе фото того же
-            товара
+            <span className="text-ink font-mono">ARM-1005-2.jpg</span> — второе фото
+            того же товара
           </li>
           <li>Регистр не важен, фотографии добавляются после уже загруженных.</li>
-          <li>JPEG, PNG или WebP, до {MAX_UPLOAD_MB} МБ. HEIC с айфона сначала сохраните как JPEG.</li>
+          <li>
+            JPEG, PNG или WebP, до {MAX_UPLOAD_MB} МБ. HEIC с айфона сначала сохраните
+            как JPEG.
+          </li>
         </ul>
       </div>
     </div>

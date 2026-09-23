@@ -124,7 +124,9 @@ export async function repeatOrderFor(
           volumeMl: true,
           images: { select: { key: true }, orderBy: { sortOrder: "asc" }, take: 1 },
           fragrances: {
-            select: { fragrance: { select: { name: true, brand: { select: { name: true } } } } },
+            select: {
+              fragrance: { select: { name: true, brand: { select: { name: true } } } },
+            },
             orderBy: { position: "asc" },
           },
         },

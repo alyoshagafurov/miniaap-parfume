@@ -124,7 +124,8 @@ export function CategoryList({
   };
 
   const active = filterCount(filters);
-  const brandName = (slug: string) => facets.brands.find((b) => b.slug === slug)?.name ?? slug;
+  const brandName = (slug: string) =>
+    facets.brands.find((b) => b.slug === slug)?.name ?? slug;
 
   return (
     <>
@@ -161,7 +162,10 @@ export function CategoryList({
               <RemoveChip
                 label={brandName(slug)}
                 onRemove={() =>
-                  go({ ...filters, brands: filters.brands.filter((b) => b !== slug) }, sort)
+                  go(
+                    { ...filters, brands: filters.brands.filter((b) => b !== slug) },
+                    sort,
+                  )
                 }
               />
             </li>
@@ -179,7 +183,13 @@ export function CategoryList({
               <RemoveChip
                 label={FAMILY_LABELS[value] ?? value}
                 onRemove={() =>
-                  go({ ...filters, families: filters.families.filter((f) => f !== value) }, sort)
+                  go(
+                    {
+                      ...filters,
+                      families: filters.families.filter((f) => f !== value),
+                    },
+                    sort,
+                  )
                 }
               />
             </li>
@@ -210,7 +220,9 @@ export function CategoryList({
             </p>
             {active > 0 ? (
               <>
-                <p className="text-muted mt-2 text-sm">Попробуйте убрать часть условий.</p>
+                <p className="text-muted mt-2 text-sm">
+                  Попробуйте убрать часть условий.
+                </p>
                 <div className="mt-6 flex justify-center">
                   <Button variant="secondary" onClick={() => go(NO_FILTERS, sort)}>
                     Сбросить фильтры

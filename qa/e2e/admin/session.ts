@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from "node:fs";
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type BrowserContext, type Page } from "@playwright/test";
 
 /**
  * Signing in to the admin panel from a browser, the long way.
@@ -18,7 +18,11 @@ import { expect, type Page } from "@playwright/test";
  * by the only route production will have.
  */
 
-export const OWNER = { login: "test", password: "e2e-owner-pass-2026", chatId: "777000333" };
+export const OWNER = {
+  login: "test",
+  password: "e2e-owner-pass-2026",
+  chatId: "777000333",
+};
 export const EDITOR = {
   login: "redaktor",
   password: "e2e-editor-pass-2026",
@@ -69,7 +73,9 @@ async function codeSentAfter(
     // run of exactly six digits in that sentence.
     const decoded = text
       .replace(/\\n/g, "\n")
-      .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+      .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) =>
+        String.fromCharCode(parseInt(hex, 16)),
+      );
     // Scoped to this administrator's chat: two sign-ins in flight at once would
     // otherwise each take whichever code landed first and both be refused.
     const line = /"chat_id":"CHAT"[^\n]*Код для входа в админ-панель: (\d{6})/g;
@@ -79,7 +85,9 @@ async function codeSentAfter(
     if (found) return found;
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
-  throw new Error(`Код не пришёл в релей за ${timeoutMs} мс. Хвост лога:\n${last.slice(-600)}`);
+  throw new Error(
+    `Код не пришёл в релей за ${timeoutMs} мс. Хвост лога:\n${last.slice(-600)}`,
+  );
 }
 
 /** Password, then the code the bot sent. Leaves the page inside the panel. */
@@ -101,4 +109,36 @@ export async function signIn(
   await page.getByRole("button", { name: "Войти" }).click();
 
   await expect(page).toHaveURL(/\/admin(?!\/login)/, { timeout: 15_000 });
+}
+
+/**
+ * A signed-in panel, paying for the sign-in only once.
+ *
+ * Signing in is limited to ten attempts per login name in ten minutes, and
+ * rightly so. A suite that signs in afresh for every test spent that budget on
+ * itself: the full run made about ten sign-ins as the owner and the last admin
+ * test in it failed at the door — intermittently, and never when run alone,
+ * which is the shape of a defect that costs an afternoon.
+ *
+ * So the session is bought once per worker and lent to every test after it. The
+ * cookie is the whole session; nothing else is carried over. The sign-in itself
+ * still has a test of its own — this is a shortcut past a mechanism that is
+ * checked elsewhere, not past a mechanism that is checked nowhere.
+ */
+const sessions = new Map<string, Awaited<ReturnType<BrowserContext["cookies"]>>>();
+
+export async function useAdmin(
+  page: Page,
+  who: { login: string; password: string; chatId: string } = OWNER,
+): Promise<void> {
+  const cached = sessions.get(who.login);
+  if (cached) {
+    await page.context().addCookies(cached);
+    await page.goto("/admin");
+    await expect(page).toHaveURL(/\/admin(?!\/login)/);
+    return;
+  }
+
+  await signIn(page, who);
+  sessions.set(who.login, await page.context().cookies());
 }

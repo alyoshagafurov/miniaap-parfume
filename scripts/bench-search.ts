@@ -40,8 +40,12 @@ async function main() {
   const total = await prisma.product.count();
   console.log(`\nТоваров в базе: ${total}\n`);
   console.log(
-    "сценарий".padEnd(22) + "запрос".padEnd(14) + "нашлось".padStart(8) +
-    "p50".padStart(9) + "p95".padStart(8) + "  первый результат",
+    "сценарий".padEnd(22) +
+      "запрос".padEnd(14) +
+      "нашлось".padStart(8) +
+      "p50".padStart(9) +
+      "p95".padStart(8) +
+      "  первый результат",
   );
   console.log("─".repeat(104));
 
@@ -61,14 +65,20 @@ async function main() {
     const p95 = pct(times, 95);
     worst = Math.max(worst, p95);
     console.log(
-      s.label.padEnd(22) + s.query.padEnd(14) + String(found).padStart(8) +
-      `${p50.toFixed(1)}ms`.padStart(9) + `${p95.toFixed(1)}ms`.padStart(8) +
-      "  " + first.slice(0, 34),
+      s.label.padEnd(22) +
+        s.query.padEnd(14) +
+        String(found).padStart(8) +
+        `${p50.toFixed(1)}ms`.padStart(9) +
+        `${p95.toFixed(1)}ms`.padStart(8) +
+        "  " +
+        first.slice(0, 34),
     );
   }
 
   console.log("─".repeat(104));
-  console.log(`\nХудший p95: ${worst.toFixed(1)} ms  (бюджет 150 ms) — ${worst <= 150 ? "OK" : "ПРЕВЫШЕН"}\n`);
+  console.log(
+    `\nХудший p95: ${worst.toFixed(1)} ms  (бюджет 150 ms) — ${worst <= 150 ? "OK" : "ПРЕВЫШЕН"}\n`,
+  );
   await prisma.$disconnect();
   if (worst > 150) process.exit(1);
 }

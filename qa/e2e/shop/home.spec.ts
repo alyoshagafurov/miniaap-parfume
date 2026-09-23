@@ -12,7 +12,9 @@ test.describe("Главная", () => {
   test("открывается в обычном браузере", async ({ page }, info) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { level: 1, name: "Оптовый каталог" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Оптовый каталог" }),
+    ).toBeVisible();
 
     // The four categories from the brief, as links rather than as decoration.
     for (const name of [
@@ -21,7 +23,9 @@ test.describe("Главная", () => {
       "Парфюм 2 в 1 «двойняшки» 100 мл",
       "Дезодоранты 200 мл",
     ]) {
-      await expect(page.getByRole("link", { name, exact: false }).first()).toBeVisible();
+      await expect(
+        page.getByRole("link", { name, exact: false }).first(),
+      ).toBeVisible();
     }
 
     // Both lanes carry products, not empty rails.
@@ -41,21 +45,28 @@ test.describe("Главная", () => {
       .getAttribute("aria-label");
     expect(label).toBeTruthy();
     const brand = label!.split(" ")[0]!;
-    expect(label!.startsWith(`${brand} ${brand} `), `подпись повторяет бренд: ${label}`).toBe(false);
+    expect(
+      label!.startsWith(`${brand} ${brand} `),
+      `подпись повторяет бренд: ${label}`,
+    ).toBe(false);
   });
 
   test("открывается внутри Telegram и поднимает SDK", async ({ page }, info) => {
     await asTelegram(page, signInitData(BUYER));
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { level: 1, name: "Оптовый каталог" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Оптовый каталог" }),
+    ).toBeVisible();
 
     // The provider only reaches isTelegram: true after init() succeeded and
     // the launch parameters were found — the whole boot path in one boolean.
     // It is read from the DOM rather than from React internals: inside
     // Telegram the header shows no browser affordances.
     const bound = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue("--tg-theme-bg-color").trim(),
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--tg-theme-bg-color")
+        .trim(),
     );
     expect(bound, "bindCssVars не отработал — SDK не поднялся").not.toBe("");
 

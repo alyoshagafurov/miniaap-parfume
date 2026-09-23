@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 const store = { value: new Map<string, string>() };
 
 vi.mock("next/headers", () => ({
-  headers: () => Promise.resolve({ get: (k: string) => store.value.get(k.toLowerCase()) ?? null }),
+  headers: () =>
+    Promise.resolve({ get: (k: string) => store.value.get(k.toLowerCase()) ?? null }),
 }));
 
 const { clientIp } = await import("./client-ip");
@@ -21,7 +22,10 @@ function withHeaders(h: Record<string, string>) {
  */
 describe("clientIp", () => {
   it("prefers X-Real-IP, which a client cannot extend", async () => {
-    withHeaders({ "x-real-ip": "203.0.113.7", "x-forwarded-for": "10.0.0.1, 198.51.100.9" });
+    withHeaders({
+      "x-real-ip": "203.0.113.7",
+      "x-forwarded-for": "10.0.0.1, 198.51.100.9",
+    });
     expect(await clientIp()).toBe("203.0.113.7");
   });
 

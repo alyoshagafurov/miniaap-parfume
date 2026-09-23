@@ -48,8 +48,12 @@ describe("highlightParts", () => {
   });
 
   it("returns the original text unchanged for an empty query", () => {
-    expect(highlightParts("Miss Dior", "")).toEqual([{ text: "Miss Dior", match: false }]);
-    expect(highlightParts("Miss Dior", "   ")).toEqual([{ text: "Miss Dior", match: false }]);
+    expect(highlightParts("Miss Dior", "")).toEqual([
+      { text: "Miss Dior", match: false },
+    ]);
+    expect(highlightParts("Miss Dior", "   ")).toEqual([
+      { text: "Miss Dior", match: false },
+    ]);
   });
 
   it("reassembles the original exactly, whatever the query", () => {

@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { bulkProducts, editPrice, editStock } from "@/app/admin/(panel)/products/actions";
+import {
+  bulkProducts,
+  editPrice,
+  editStock,
+} from "@/app/admin/(panel)/products/actions";
 import { Button } from "@/components/ui/Button";
 import {
   PUBLISH_STATUSES,
@@ -75,7 +79,8 @@ export function ProductTable({
   };
 
   const allSelected = rows.length > 0 && selected.size === rows.length;
-  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  const toggleAll = () =>
+    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
 
   const applyBulk = (action: BulkChoice) => {
     startTransition(async () => {
@@ -91,7 +96,10 @@ export function ProductTable({
   return (
     <div>
       {notice ? (
-        <p role="alert" className="border-danger bg-danger-wash text-ink mb-4 rounded-md border p-3 text-sm">
+        <p
+          role="alert"
+          className="border-danger bg-danger-wash text-ink mb-4 rounded-md border p-3 text-sm"
+        >
           {notice}
         </p>
       ) : null}
@@ -129,12 +137,24 @@ export function ProductTable({
                   />
                 </label>
               </th>
-              <th scope="col" className="caps text-muted py-2">Товар</th>
-              <th scope="col" className="caps text-muted py-2">Артикул</th>
-              <th scope="col" className="caps text-muted py-2">Категория</th>
-              <th scope="col" className="caps text-muted py-2">Цена</th>
-              <th scope="col" className="caps text-muted py-2">Наличие</th>
-              <th scope="col" className="caps text-muted py-2">Статус</th>
+              <th scope="col" className="caps text-muted py-2">
+                Товар
+              </th>
+              <th scope="col" className="caps text-muted py-2">
+                Артикул
+              </th>
+              <th scope="col" className="caps text-muted py-2">
+                Категория
+              </th>
+              <th scope="col" className="caps text-muted py-2">
+                Цена
+              </th>
+              <th scope="col" className="caps text-muted py-2">
+                Наличие
+              </th>
+              <th scope="col" className="caps text-muted py-2">
+                Статус
+              </th>
             </tr>
           </thead>
 
@@ -154,7 +174,9 @@ export function ProductTable({
                         onChange={() => toggle(row.id)}
                         aria-label={`Выбрать ${row.sku}`}
                       />
-                      <span className="text-muted font-mono text-xs md:hidden">{row.sku}</span>
+                      <span className="text-muted font-mono text-xs md:hidden">
+                        {row.sku}
+                      </span>
                     </label>
                     <span className="md:hidden">
                       <StatusBadge status={row.status} />
@@ -224,7 +246,9 @@ function BulkBar({
 }) {
   return (
     <div className="border-olive bg-olive-wash sticky top-28 z-10 flex flex-wrap items-center gap-3 rounded-md border p-3">
-      <span className="text-ink text-sm font-medium tabular-nums">Выбрано: {count}</span>
+      <span className="text-ink text-sm font-medium tabular-nums">
+        Выбрано: {count}
+      </span>
 
       <label className="sr-only" htmlFor="bulk-status">
         Статус
@@ -309,7 +333,9 @@ function BulkBar({
 function PriceCell({ id, priceKop }: { id: string; priceKop: number }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(() => String(kopToRub(priceKop)).replace(".", ","));
+  const [value, setValue] = useState(() =>
+    String(kopToRub(priceKop)).replace(".", ","),
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -430,7 +456,9 @@ function StatusBadge({ status }: { status: PublishStatusName }) {
         ? "bg-surface text-muted border-control"
         : "bg-surface text-muted border-rule";
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${tone}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${tone}`}
+    >
       {PUBLISH_STATUS_LABELS[status]}
     </span>
   );

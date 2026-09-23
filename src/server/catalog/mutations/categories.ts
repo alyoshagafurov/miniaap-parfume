@@ -26,7 +26,9 @@ export async function createCategory(
   input: CategoryInput,
 ): Promise<Mutation<{ id: string; slug: string }>> {
   return inTransaction(async (tx) => {
-    const slug = await allocateSlug(tx, "category", input.name, { override: input.slug });
+    const slug = await allocateSlug(tx, "category", input.name, {
+      override: input.slug,
+    });
     // Appended, not inserted: a new category goes to the end of the list, where
     // the owner can drag it, rather than displacing something silently.
     const last = await tx.category.aggregate({ _max: { sortOrder: true } });
@@ -80,7 +82,11 @@ export async function updateCategory(
     return {
       data: category,
       // Both slugs: the old page has to stop being served from cache too.
-      tags: new Tags().add(CATALOG_TAG, categoryTag(before.slug), categoryTag(category.slug)).list,
+      tags: new Tags().add(
+        CATALOG_TAG,
+        categoryTag(before.slug),
+        categoryTag(category.slug),
+      ).list,
     };
   });
 }
@@ -92,7 +98,9 @@ export async function updateCategory(
  * generated CASE: four rows, once in a while, and the readable version is the
  * one that will still be understood when the order changes again.
  */
-export async function reorderCategories(ids: readonly string[]): Promise<Mutation<number>> {
+export async function reorderCategories(
+  ids: readonly string[],
+): Promise<Mutation<number>> {
   return inTransaction(async (tx) => {
     const tags = new Tags().add(CATALOG_TAG);
     for (const [index, id] of ids.entries()) {

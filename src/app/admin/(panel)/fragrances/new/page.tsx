@@ -6,7 +6,9 @@ export const metadata = { title: "Новый аромат" };
 
 export default function NewFragrancePage() {
   return (
-    <Suspense fallback={<div aria-hidden className="bg-surface h-96 w-full rounded-md" />}>
+    <Suspense
+      fallback={<div aria-hidden className="bg-surface h-96 w-full rounded-md" />}
+    >
       <FragranceFormLoader id={null} />
     </Suspense>
   );

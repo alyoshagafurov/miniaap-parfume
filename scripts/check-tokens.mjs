@@ -18,8 +18,15 @@ import { join, relative, sep } from "node:path";
 
 const ROOT = process.cwd();
 const SKIP_DIRS = new Set([
-  "node_modules", ".next", ".git", "dist", "build", "coverage",
-  "playwright-report", "test-results", "qa",
+  "node_modules",
+  ".next",
+  ".git",
+  "dist",
+  "build",
+  "coverage",
+  "playwright-report",
+  "test-results",
+  "qa",
 ]);
 const SCAN_EXT = new Set([".ts", ".tsx", ".css", ".mjs", ".js", ".jsx"]);
 
@@ -59,27 +66,57 @@ function stripComments(source) {
     const blank = c === "\n" ? "\n" : " ";
 
     if (state === "code") {
-      if (c === "/" && next === "/") { state = "line"; out += "  "; i += 2; continue; }
-      if (c === "/" && next === "*") { state = "block"; out += "  "; i += 2; continue; }
+      if (c === "/" && next === "/") {
+        state = "line";
+        out += "  ";
+        i += 2;
+        continue;
+      }
+      if (c === "/" && next === "*") {
+        state = "block";
+        out += "  ";
+        i += 2;
+        continue;
+      }
       if (c === SQ) state = "single";
       else if (c === DQ) state = "double";
       else if (c === BT) state = "template";
-      out += c; i += 1; continue;
+      out += c;
+      i += 1;
+      continue;
     }
     if (state === "line") {
       if (c === "\n") state = "code";
-      out += blank; i += 1; continue;
+      out += blank;
+      i += 1;
+      continue;
     }
     if (state === "block") {
-      if (c === "*" && next === "/") { state = "code"; out += "  "; i += 2; continue; }
-      out += blank; i += 1; continue;
+      if (c === "*" && next === "/") {
+        state = "code";
+        out += "  ";
+        i += 2;
+        continue;
+      }
+      out += blank;
+      i += 1;
+      continue;
     }
     // inside a string literal
-    if (c === "\\") { out += c + (next ?? ""); i += 2; continue; }
-    if ((state === "single" && c === SQ) || (state === "double" && c === DQ) || (state === "template" && c === BT)) {
+    if (c === "\\") {
+      out += c + (next ?? "");
+      i += 2;
+      continue;
+    }
+    if (
+      (state === "single" && c === SQ) ||
+      (state === "double" && c === DQ) ||
+      (state === "template" && c === BT)
+    ) {
       state = "code";
     }
-    out += c; i += 1;
+    out += c;
+    i += 1;
   }
   return out;
 }
@@ -169,12 +206,20 @@ for (const file of walk(ROOT)) {
   const lines = stripComments(readFileSync(file, "utf8")).split("\n");
 
   for (const rule of RULES) {
-    if (rule.skipFiles?.some((s) => rel === s || rel === s.split("/").join(sep))) continue;
+    if (rule.skipFiles?.some((s) => rel === s || rel === s.split("/").join(sep)))
+      continue;
     lines.forEach((line, i) => {
       rule.test.lastIndex = 0;
       const hits = line.match(rule.test);
       if (hits) {
-        findings.push({ rel, line: i + 1, id: rule.id, why: rule.why, hit: hits[0], text: line.trim().slice(0, 100) });
+        findings.push({
+          rel,
+          line: i + 1,
+          id: rule.id,
+          why: rule.why,
+          hit: hits[0],
+          text: line.trim().slice(0, 100),
+        });
       }
     });
   }

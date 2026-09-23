@@ -40,7 +40,9 @@ export function ChangesPanel({
       <ul className="mt-4 flex flex-col gap-3">
         {changes.map((change, i) => (
           <li key={`${change.productId}-${change.kind}-${i}`} className="text-sm">
-            <span className="text-ink block font-medium">{change.title || "Позиция"}</span>
+            <span className="text-ink block font-medium">
+              {change.title || "Позиция"}
+            </span>
             <span className="text-muted">{describe(change, showPrices)}</span>
           </li>
         ))}
@@ -48,7 +50,8 @@ export function ChangesPanel({
 
       {showPrices && previousTotalKop !== totalKop ? (
         <p className="border-rule text-ink mt-4 border-t pt-3 text-sm">
-          Сумма: <s className="text-muted tabular-nums">{formatRub(previousTotalKop)}</s>{" "}
+          Сумма:{" "}
+          <s className="text-muted tabular-nums">{formatRub(previousTotalKop)}</s>{" "}
           <span aria-hidden>→</span>{" "}
           <span className="font-semibold tabular-nums">{formatRub(totalKop)}</span>
         </p>

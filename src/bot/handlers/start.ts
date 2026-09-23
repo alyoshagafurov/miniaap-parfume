@@ -47,16 +47,22 @@ export async function handleStart(ctx: Context, deps: StartDeps): Promise<void> 
   }
 
   if (settings.bannerFileId) {
-    await ctx.replyWithPhoto(settings.bannerFileId, { caption: text, reply_markup: keyboard });
+    await ctx.replyWithPhoto(settings.bannerFileId, {
+      caption: text,
+      reply_markup: keyboard,
+    });
     return;
   }
 
   // First send: upload, then remember the id Telegram gives back. A fresh
   // InputFile per send — stream-backed ones are single-use.
-  const message = await ctx.replyWithPhoto(new InputFile(new URL(objectUrl(settings.bannerKey))), {
-    caption: text,
-    reply_markup: keyboard,
-  });
+  const message = await ctx.replyWithPhoto(
+    new InputFile(new URL(objectUrl(settings.bannerKey))),
+    {
+      caption: text,
+      reply_markup: keyboard,
+    },
+  );
   const fileId = message.photo?.at(-1)?.file_id;
   if (fileId) await rememberBannerFileId(fileId);
 }

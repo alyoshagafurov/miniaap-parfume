@@ -23,7 +23,10 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
       <div>
         <p className="text-ink text-lg">Товар не найден</p>
         <p className="text-muted mt-2 text-sm">Возможно, его удалили.</p>
-        <Link href="/admin/products" className="text-olive mt-4 inline-block underline underline-offset-4">
+        <Link
+          href="/admin/products"
+          className="text-olive mt-4 inline-block underline underline-offset-4"
+        >
           Ко всем товарам
         </Link>
       </div>
@@ -36,7 +39,10 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
     <>
       <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <Link href="/admin/products" className="text-muted inline-flex min-h-11 items-center text-sm">
+          <Link
+            href="/admin/products"
+            className="text-muted inline-flex min-h-11 items-center text-sm"
+          >
             ← Все товары
           </Link>
           <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
@@ -45,7 +51,10 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
           {product ? (
             <p className="text-muted mt-1 text-sm">
               {product.sku} ·{" "}
-              <Link href={`/p/${product.slug}`} className="underline underline-offset-4">
+              <Link
+                href={`/p/${product.slug}`}
+                className="underline underline-offset-4"
+              >
                 открыть на витрине
               </Link>
             </p>

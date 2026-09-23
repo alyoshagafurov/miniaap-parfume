@@ -4,7 +4,11 @@ import { z } from "zod";
 
 import { FAMILIES, GENDERS } from "@/lib/list-url";
 import { requirePermission } from "@/server/auth/roles";
-import { createBrand, deleteBrand, updateBrand } from "@/server/catalog/mutations/brands";
+import {
+  createBrand,
+  deleteBrand,
+  updateBrand,
+} from "@/server/catalog/mutations/brands";
 import {
   createCategory,
   deleteCategory,
@@ -54,7 +58,10 @@ const BrandFields = z.object({
 });
 
 function splitAliases(value: string): string[] {
-  return value.split(/[,\n;]/).map((a) => a.trim()).filter(Boolean);
+  return value
+    .split(/[,\n;]/)
+    .map((a) => a.trim())
+    .filter(Boolean);
 }
 
 export async function saveBrand(input: unknown): Promise<Result<{ id: string }>> {
@@ -120,7 +127,9 @@ export async function saveCategory(input: unknown): Promise<Result<{ id: string 
   });
 }
 
-export async function removeCategory(input: unknown): Promise<Result<{ slug: string }>> {
+export async function removeCategory(
+  input: unknown,
+): Promise<Result<{ slug: string }>> {
   await requirePermission("catalog:write");
   const parsed = z.object({ id: z.string().min(1).max(64) }).safeParse(input);
   if (!parsed.success) return { ok: false, message: "Некорректный запрос" };
@@ -180,7 +189,9 @@ export async function saveFragrance(input: unknown): Promise<Result<{ id: string
   });
 }
 
-export async function removeFragrance(input: unknown): Promise<Result<{ slug: string }>> {
+export async function removeFragrance(
+  input: unknown,
+): Promise<Result<{ slug: string }>> {
   await requirePermission("catalog:write");
   const parsed = z.object({ id: z.string().min(1).max(64) }).safeParse(input);
   if (!parsed.success) return { ok: false, message: "Некорректный запрос" };

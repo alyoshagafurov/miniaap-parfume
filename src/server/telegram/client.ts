@@ -79,9 +79,7 @@ export function telegramApi(): Api {
 
   const token = process.env.BOT_TOKEN;
   if (!token || token.trim() === "") {
-    throw new Error(
-      "BOT_TOKEN не задан — Telegram API недоступен. Проверьте .env",
-    );
+    throw new Error("BOT_TOKEN не задан — Telegram API недоступен. Проверьте .env");
   }
 
   const api = new Api(token, clientOptions());

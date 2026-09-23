@@ -37,7 +37,10 @@ export async function listBrands(): Promise<BrandRow[]> {
       _count: { select: { fragrances: true } },
     },
   });
-  return rows.map(({ _count, ...rest }) => ({ ...rest, fragranceCount: _count.fragrances }));
+  return rows.map(({ _count, ...rest }) => ({
+    ...rest,
+    fragranceCount: _count.fragrances,
+  }));
 }
 
 export interface CategoryRow {
@@ -66,7 +69,10 @@ export async function listCategories(): Promise<CategoryRow[]> {
       _count: { select: { products: true } },
     },
   });
-  return rows.map(({ _count, ...rest }) => ({ ...rest, productCount: _count.products }));
+  return rows.map(({ _count, ...rest }) => ({
+    ...rest,
+    productCount: _count.products,
+  }));
 }
 
 export interface FragranceRow {
@@ -136,7 +142,9 @@ export async function listFragrances(params: {
       description: true,
       brand: { select: { name: true } },
       products: {
-        select: { product: { select: { volumeMl: true, category: { select: { name: true } } } } },
+        select: {
+          product: { select: { volumeMl: true, category: { select: { name: true } } } },
+        },
         orderBy: { product: { volumeMl: "asc" } },
       },
     },
@@ -197,7 +205,12 @@ export async function getFragrance(id: string): Promise<FragranceDetail | null> 
         orderBy: { product: { volumeMl: "asc" } },
         select: {
           product: {
-            select: { id: true, sku: true, volumeMl: true, category: { select: { name: true } } },
+            select: {
+              id: true,
+              sku: true,
+              volumeMl: true,
+              category: { select: { name: true } },
+            },
           },
         },
       },

@@ -55,7 +55,9 @@ function where(query: ProductQuery): Prisma.ProductWhereInput {
 
   if (query.categorySlug) and.push({ category: { slug: query.categorySlug } });
   if (query.brandSlug) {
-    and.push({ fragrances: { some: { fragrance: { brand: { slug: query.brandSlug } } } } });
+    and.push({
+      fragrances: { some: { fragrance: { brand: { slug: query.brandSlug } } } },
+    });
   }
   if (query.status) and.push({ status: query.status });
   if (query.stock) and.push({ stock: query.stock });
@@ -98,7 +100,9 @@ function orderBy(sort: ProductQuery["sort"]): Prisma.ProductOrderByWithRelationI
   }
 }
 
-export async function listAdminProducts(query: ProductQuery): Promise<AdminProductPage> {
+export async function listAdminProducts(
+  query: ProductQuery,
+): Promise<AdminProductPage> {
   await requireAdminPage();
 
   const filter = where(query);
@@ -187,7 +191,11 @@ export async function getProductFacets(): Promise<ProductFacets> {
   ]);
 
   return {
-    categories: categories.map((c) => ({ slug: c.slug, name: c.name, count: c._count.products })),
+    categories: categories.map((c) => ({
+      slug: c.slug,
+      name: c.name,
+      count: c._count.products,
+    })),
     brands,
   };
 }

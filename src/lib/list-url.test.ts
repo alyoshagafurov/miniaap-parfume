@@ -67,7 +67,10 @@ describe("parseListFilters", () => {
   });
 
   it("ignores empty segments", () => {
-    expect(parseListFilters({ brand: "dior,,chanel," }).brands).toEqual(["dior", "chanel"]);
+    expect(parseListFilters({ brand: "dior,,chanel," }).brands).toEqual([
+      "dior",
+      "chanel",
+    ]);
   });
 });
 
@@ -85,7 +88,9 @@ describe("parseSort", () => {
 
 describe("buildListHref", () => {
   it("leaves a plain listing plain", () => {
-    expect(buildListHref("/c/parfyum-100-ml", NO_FILTERS, "popular")).toBe("/c/parfyum-100-ml");
+    expect(buildListHref("/c/parfyum-100-ml", NO_FILTERS, "popular")).toBe(
+      "/c/parfyum-100-ml",
+    );
   });
 
   it("omits the default sort but writes any other", () => {
@@ -98,7 +103,9 @@ describe("buildListHref", () => {
   });
 
   it("drops an extra with no value", () => {
-    expect(buildListHref("/search", NO_FILTERS, "popular", { q: undefined })).toBe("/search");
+    expect(buildListHref("/search", NO_FILTERS, "popular", { q: undefined })).toBe(
+      "/search",
+    );
   });
 });
 

@@ -1,0 +1,9 @@
+# Сгенерированное и машинное — форматировать нечего.
+.next/
+node_modules/
+pnpm-lock.yaml
+prisma/migrations/
+qa/stage-1/
+public/
+brand/
+*.min.*

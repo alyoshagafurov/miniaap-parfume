@@ -10,43 +10,46 @@ import { checkSearchHealth, describeSearchHealth } from "./db-health";
  */
 const reachable = Boolean(process.env.DATABASE_URL);
 
-describe.skipIf(!reachable)("checkSearchHealth — the guard that stops a silently broken search", () => {
-  it("passes against a correctly configured database", async () => {
-    const health = await checkSearchHealth();
-    expect(health.ok).toBe(true);
-    expect(health.problems).toEqual([]);
-  });
+describe.skipIf(!reachable)(
+  "checkSearchHealth — the guard that stops a silently broken search",
+  () => {
+    it("passes against a correctly configured database", async () => {
+      const health = await checkSearchHealth();
+      expect(health.ok).toBe(true);
+      expect(health.problems).toEqual([]);
+    });
 
-  it("confirms pg_trgm actually produces trigrams for Cyrillic", async () => {
-    // The whole point. Under LC_CTYPE=C this returns zero trigrams, Latin search
-    // keeps working, and Russian typo tolerance is silently dead.
-    const health = await checkSearchHealth();
-    expect(health.cyrillicTrigrams).toBeGreaterThan(0);
-  });
+    it("confirms pg_trgm actually produces trigrams for Cyrillic", async () => {
+      // The whole point. Under LC_CTYPE=C this returns zero trigrams, Latin search
+      // keeps working, and Russian typo tolerance is silently dead.
+      const health = await checkSearchHealth();
+      expect(health.cyrillicTrigrams).toBeGreaterThan(0);
+    });
 
-  it("confirms the Russian ICU collation exists", async () => {
-    const health = await checkSearchHealth();
-    expect(health.hasRussianCollation).toBe(true);
-  });
+    it("confirms the Russian ICU collation exists", async () => {
+      const health = await checkSearchHealth();
+      expect(health.hasRussianCollation).toBe(true);
+    });
 
-  it("reports ctype and collation so a failure message is actionable", async () => {
-    const health = await checkSearchHealth();
-    expect(health.ctype.toUpperCase()).toContain("UTF-8");
-  });
+    it("reports ctype and collation so a failure message is actionable", async () => {
+      const health = await checkSearchHealth();
+      expect(health.ctype.toUpperCase()).toContain("UTF-8");
+    });
 
-  it("describes a failure in terms someone can act on", () => {
-    const text = describeSearchHealth({
-      ok: false,
-      cyrillicTrigrams: 0,
-      hasRussianCollation: false,
-      ctype: "C",
-      collate: "C",
-      problems: ["pg_trgm не извлекает триграммы из кириллицы"],
+    it("describes a failure in terms someone can act on", () => {
+      const text = describeSearchHealth({
+        ok: false,
+        cyrillicTrigrams: 0,
+        hasRussianCollation: false,
+        ctype: "C",
+        collate: "C",
+        problems: ["pg_trgm не извлекает триграммы из кириллицы"],
       });
-    expect(text).toContain("pg_trgm");
-    expect(text).toContain("C.UTF-8");
-  });
-});
+      expect(text).toContain("pg_trgm");
+      expect(text).toContain("C.UTF-8");
+    });
+  },
+);
 
 describe.skipIf(!reachable)("Cyrillic ordering", () => {
   it("sorts ё in its alphabetical place, not after я", async () => {

@@ -123,7 +123,10 @@ const ProductInputSchema = z.object({
     .trim()
     .min(1)
     .max(64)
-    .regex(/^[A-Za-z0-9._-]+$/, "Артикул: латиница, цифры, точка, дефис, подчёркивание"),
+    .regex(
+      /^[A-Za-z0-9._-]+$/,
+      "Артикул: латиница, цифры, точка, дефис, подчёркивание",
+    ),
   title: z.string().trim().max(200).nullish(),
   slug: z.string().trim().max(200).nullish(),
   volumeMl: z.number().int().positive().max(100_000),
@@ -138,8 +141,7 @@ const ProductInputSchema = z.object({
 });
 
 export type SaveResult =
-  | { ok: true; id: string; slug: string }
-  | { ok: false; message: string };
+  { ok: true; id: string; slug: string } | { ok: false; message: string };
 
 export async function saveProduct(input: unknown): Promise<SaveResult> {
   await requirePermission("catalog:write");
@@ -173,7 +175,10 @@ const CopyInput = z.object({
     .trim()
     .min(1)
     .max(64)
-    .regex(/^[A-Za-z0-9._-]+$/, "Артикул: латиница, цифры, точка, дефис, подчёркивание"),
+    .regex(
+      /^[A-Za-z0-9._-]+$/,
+      "Артикул: латиница, цифры, точка, дефис, подчёркивание",
+    ),
   volumeMl: z.number().int().positive().max(100_000),
   priceKop: z.number().int().positive().max(2_147_483_647),
   packSize: z.number().int().min(1).max(9999),
@@ -214,7 +219,9 @@ export async function reorderImages(input: unknown): Promise<ActionResult> {
     .safeParse(input);
   if (!parsed.success) return { ok: false, message: "Некорректный запрос" };
 
-  return run(() => fromAction(reorderProductImages(parsed.data.productId, parsed.data.imageIds)));
+  return run(() =>
+    fromAction(reorderProductImages(parsed.data.productId, parsed.data.imageIds)),
+  );
 }
 
 /**
@@ -247,8 +254,7 @@ const InlineFragrance = z.object({
 });
 
 export type FragranceCreated =
-  | { ok: true; id: string; name: string }
-  | { ok: false; message: string };
+  { ok: true; id: string; name: string } | { ok: false; message: string };
 
 /**
  * A fragrance created from inside the product form.

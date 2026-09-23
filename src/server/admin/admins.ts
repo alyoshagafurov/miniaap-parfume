@@ -68,7 +68,9 @@ export class AdminConflict extends Error {
 function parseTelegramId(value: string): bigint {
   const digits = value.trim();
   if (!/^\d{5,20}$/.test(digits)) {
-    throw new AdminConflict("Telegram ID — это число. Его покажет бот по команде /admin.");
+    throw new AdminConflict(
+      "Telegram ID — это число. Его покажет бот по команде /admin.",
+    );
   }
   return BigInt(digits);
 }
@@ -97,7 +99,10 @@ function normalizeLogin(value: string): string {
  */
 const MIN_PASSWORD = 10;
 
-function assertPassword(password: string, { allowEmpty }: { allowEmpty: boolean }): void {
+function assertPassword(
+  password: string,
+  { allowEmpty }: { allowEmpty: boolean },
+): void {
   if (allowEmpty && password === "") return;
   if (password.length < MIN_PASSWORD) {
     throw new AdminConflict(`Пароль не короче ${MIN_PASSWORD} символов`);
@@ -192,7 +197,9 @@ export async function setAdminActive(id: string, isActive: boolean): Promise<voi
       where: { role: "OWNER", isActive: true, id: { not: id } },
     });
     if (owners === 0) {
-      throw new AdminConflict("Это последний активный владелец — отключать некому будет вернуть");
+      throw new AdminConflict(
+        "Это последний активный владелец — отключать некому будет вернуть",
+      );
     }
   }
 

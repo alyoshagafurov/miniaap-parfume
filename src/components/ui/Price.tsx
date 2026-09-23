@@ -29,7 +29,9 @@ export function Price({
     <span className={`inline-flex items-baseline gap-2 ${className}`}>
       <span className="text-ink font-semibold tabular-nums">{formatRub(kop)}</span>
       {oldKop !== null && oldKop > kop ? (
-        <s className="text-muted text-sm tabular-nums decoration-1">{formatRub(oldKop)}</s>
+        <s className="text-muted text-sm tabular-nums decoration-1">
+          {formatRub(oldKop)}
+        </s>
       ) : null}
     </span>
   );
