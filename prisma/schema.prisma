@@ -364,6 +364,11 @@ model AdminUser {
   /// Allow-list. Presence here is necessary but not sufficient: a password is
   /// always required as well.
   telegramId BigInt  @unique
+  /// What is typed into the browser login form. Separate from `name` because a
+  /// display name is not an identifier: two people may be called Магомед, and
+  /// renaming someone must not change how they sign in. Lower-cased on write,
+  /// so case cannot split one administrator into two.
+  login        String @unique
   name       String
   /// argon2id. Never a plain or reversibly-encoded value.
   passwordHash String

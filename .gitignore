@@ -43,3 +43,4 @@ Thumbs.db
 # transient probe files written by research subagents into the repo root
 __tx_probe*
 tsconfig.tsbuildinfo
+relay-stub.log

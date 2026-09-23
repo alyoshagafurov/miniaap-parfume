@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/server/db";
 
@@ -94,6 +95,25 @@ export async function currentSession(): Promise<SessionPayload | null> {
 export async function requireAdmin(): Promise<SessionPayload> {
   const session = await currentSession();
   if (!session) throw new NotAuthenticatedError();
+  return session;
+}
+
+/**
+ * The guard a page or a read for a page calls.
+ *
+ * Redirects where requireAdmin throws, and the difference is deliberate. Next
+ * renders a layout and the page beneath it concurrently, so the layout's own
+ * redirect does not stop the page from running first — with requireAdmin, every
+ * unauthenticated visit to the panel threw before the redirect landed, which
+ * works but fills the log with errors that are not errors and would surface an
+ * error screen the moment a redirect lost the race.
+ *
+ * A Server Action must keep throwing: an action that quietly redirects looks to
+ * its caller like an action that succeeded.
+ */
+export async function requireAdminPage(): Promise<SessionPayload> {
+  const session = await currentSession();
+  if (!session) redirect("/admin/login");
   return session;
 }
 

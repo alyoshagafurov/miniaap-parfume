@@ -35,7 +35,8 @@
     "bench:search": "tsx scripts/bench-search.ts",
     "seed:clear": "tsx scripts/seed-clear.ts",
     "check:bot-boundary": "node scripts/check-bot-boundary.mjs",
-    "ci": "pnpm typecheck && pnpm lint && pnpm check:tokens && pnpm check:bot-boundary && pnpm test && pnpm build"
+    "ci": "pnpm typecheck && pnpm lint && pnpm check:tokens && pnpm check:bot-boundary && pnpm test && pnpm build",
+    "relay:stub": "node scripts/relay-stub.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
