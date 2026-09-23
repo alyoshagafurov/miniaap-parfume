@@ -99,6 +99,60 @@ export function toOrderItems(lines: readonly CartLine[]) {
   }));
 }
 
+/**
+ * The corrections the server sends back when the catalog has moved.
+ *
+ * Deliberately narrower than CartLine: the server knows the price, the pack and
+ * the availability, and has no business restating the buyer's slug or picture.
+ */
+export interface CorrectedLine {
+  productId: string;
+  qty: number;
+  seenPriceKop: number;
+  seenPackSize: number;
+  seenStock: string;
+}
+
+/**
+ * Accepting the server's corrections.
+ *
+ * Applied only when the buyer has seen the difference and said yes. What is
+ * merged is the numbers; the display fields — title, brand, picture — stay as
+ * they are, because they came with the product and did not change.
+ *
+ * A line the server did not return is gone from the catalog and is dropped.
+ * Order is preserved, so the basket does not rearrange itself under a buyer who
+ * just agreed to a price.
+ */
+export function applyCorrections(
+  lines: readonly CartLine[],
+  corrected: readonly CorrectedLine[],
+): CartLine[] {
+  const byId = new Map(corrected.map((c) => [c.productId, c]));
+  const out: CartLine[] = [];
+
+  for (const line of lines) {
+    const fix = byId.get(line.productId);
+    if (!fix) continue;
+    if (!isStock(fix.seenStock)) continue;
+    out.push({
+      ...line,
+      qty: fix.qty,
+      seenPriceKop: fix.seenPriceKop,
+      seenPackSize: fix.seenPackSize,
+      seenStock: fix.seenStock,
+    });
+  }
+
+  return out;
+}
+
+const STOCK_STATES = ["IN_STOCK", "LOW", "OUT", "PREORDER"] as const;
+
+function isStock(value: string): value is CartLine["seenStock"] {
+  return (STOCK_STATES as readonly string[]).includes(value);
+}
+
 // ── Storage ──────────────────────────────────────────────────────────────────
 
 interface StoredCart {

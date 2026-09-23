@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   CART_STORAGE_KEY,
   addLine,
+  applyCorrections,
   cartCount,
   cartTotalKop,
   readCart,
@@ -173,5 +174,61 @@ describe("storage", () => {
     expect(readCart()).toEqual([]);
     expect(() => writeCart([line()])).not.toThrow();
     if (original) Object.defineProperty(globalThis, "localStorage", original);
+  });
+});
+
+describe("applyCorrections", () => {
+  const base: CartLine = {
+    productId: "p1",
+    qty: 6,
+    seenPriceKop: 100_000,
+    seenPackSize: 6,
+    seenStock: "IN_STOCK",
+    slug: "chanel-coco",
+    title: "Coco Mademoiselle",
+    brandName: "Chanel",
+    format: "100 мл",
+    imageKey: "img/1.jpg",
+  };
+
+  it("takes the server's numbers and keeps what is on the card", () => {
+    const [line] = applyCorrections(
+      [base],
+      [{ productId: "p1", qty: 12, seenPriceKop: 110_000, seenPackSize: 12, seenStock: "LOW" }],
+    );
+    expect(line).toEqual({
+      ...base,
+      qty: 12,
+      seenPriceKop: 110_000,
+      seenPackSize: 12,
+      seenStock: "LOW",
+    });
+  });
+
+  it("drops a line the server no longer knows about", () => {
+    expect(applyCorrections([base], [])).toEqual([]);
+  });
+
+  it("keeps the buyer's order", () => {
+    const second = { ...base, productId: "p2" };
+    const out = applyCorrections(
+      [base, second],
+      [
+        { productId: "p2", qty: 6, seenPriceKop: 1, seenPackSize: 6, seenStock: "IN_STOCK" },
+        { productId: "p1", qty: 6, seenPriceKop: 1, seenPackSize: 6, seenStock: "IN_STOCK" },
+      ],
+    );
+    expect(out.map((l) => l.productId)).toEqual(["p1", "p2"]);
+  });
+
+  it("refuses a stock value it does not recognise", () => {
+    // The corrections arrive over the wire; an unknown state would otherwise be
+    // written into the basket and sent back as if the storefront had shown it.
+    expect(
+      applyCorrections(
+        [base],
+        [{ productId: "p1", qty: 6, seenPriceKop: 1, seenPackSize: 6, seenStock: "SOLD" }],
+      ),
+    ).toEqual([]);
   });
 });
