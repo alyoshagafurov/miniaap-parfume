@@ -24,11 +24,17 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 pb-16">
+      {/*
+        The wordmark is not repeated here. The sticky header carries it on every
+        screen, and at 390 the two sat sixty pixels apart in the same face,
+        which reads as a mistake rather than as a hierarchy. This audience is
+        buying stock, not admiring a brand — the page gets to the terms and the
+        categories instead.
+      */}
       <header className="pt-8 pb-6 text-center">
-        <h1 className="font-display text-olive text-h1 leading-tight font-semibold">
-          {settings.companyName.replace(" Parfum & Care", "")}
+        <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
+          Оптовый каталог
         </h1>
-        <p className="caps text-muted mt-2">Parfum &amp; Care</p>
         <GoldRule className="mx-auto mt-4 w-40" />
         <p className="text-muted mt-4 text-sm">
           Известные бренды · Выгодные условия · Надёжные поставки
@@ -54,7 +60,7 @@ export default async function HomePage() {
             <div>
               <dt className="caps text-muted">Телефон</dt>
               <dd className="mt-1">
-                <a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`} className="text-olive underline underline-offset-4">
+                <a href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`} className="text-olive inline-flex min-h-11 items-center underline underline-offset-4">
                   {settings.phone}
                 </a>
               </dd>
@@ -66,7 +72,7 @@ export default async function HomePage() {
               <dd className="mt-1">
                 <a
                   href={`https://wa.me/${settings.whatsappPhone.replace(/\D/g, "")}`}
-                  className="text-olive underline underline-offset-4"
+                  className="text-olive inline-flex min-h-11 items-center underline underline-offset-4"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
