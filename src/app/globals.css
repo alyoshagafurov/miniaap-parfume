@@ -194,6 +194,13 @@
    gradients, and the logo's own flourish is a solid braided rule. */
 
 /* Spaced caps used for brand names and section labels. */
+/* A bottom sheet never covers the whole screen: what is behind it has to stay
+   visible, or the sheet reads as a new page and the back gesture becomes a
+   guess. */
+@utility sheet-height {
+  max-height: 85dvh;
+}
+
 @utility caps {
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
@@ -211,4 +218,29 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── The filter sheet ────────────────────────────────────────────────────────
+   vaul injects its own stylesheet into <head> at import time, unlayered, after
+   our stylesheet link. An unlayered author rule beats everything Tailwind emits
+   inside @layer, and it wins on source order too — so overriding it needs rules
+   that are themselves unlayered.
+
+   `!important` is not decoration here. vaul writes the drag-release settle as
+   an INLINE style (`el.style.transition = 'transform 0.5s …'`), and only an
+   important author declaration outranks an inline one. Without it the sheet
+   still takes half a second to settle after every drag.
+
+   The direction caps motion at 250ms, ease-out, transform and opacity only.
+   ────────────────────────────────────────────────────────────────────────── */
+[data-vaul-drawer] {
+  transition-duration: 250ms !important;
+  transition-timing-function: var(--ease-out) !important;
+  animation-duration: 250ms !important;
+  animation-timing-function: var(--ease-out) !important;
+}
+
+[data-vaul-overlay] {
+  animation-duration: 250ms !important;
+  animation-timing-function: var(--ease-out) !important;
 }
