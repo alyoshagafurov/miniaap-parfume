@@ -143,6 +143,62 @@ Relay этапа 3 обязан проксировать **обе** формы: 
 Это проверяется правилом eslint `no-restricted-imports` и smoke-тестом, который
 поднимает бота в чистом Node.
 
+### Факты для вех D и E
+
+Проверено по отгруженным `.d.ts` и официальной документации. Состязательная
+перепроверка трёх из четырёх тем на момент записи ещё шла — помечено ниже.
+
+**`@tma.js/sdk-react` — это НЕ тот же API, что `@telegram-apps/sdk`.**
+- Ставить только `@tma.js/sdk-react`; он тянет `@tma.js/sdk` и реэкспортирует
+  его целиком. Старый `@telegram-apps/sdk-react` надо удалить — оба вешают
+  глобальные слушатели на один `window.TelegramWebviewProxy`.
+- `mountSync` и `restoreInitData` **не существуют**. Монтирование —
+  `component.mount()`; восстановление init data — `initData.restore()`.
+- **Не использовать** `useLaunchParams`, `useRawLaunchParams`, `useRawInitData`:
+  все три зовут `retrieve*` внутри `useMemo`, то есть во время рендера — на
+  сервере это `ReferenceError` на `window`, в обычном браузере
+  `LaunchParamsRetrieveError`. Брать `retrieveRawInitData()` в эффекте в try/catch.
+  SSR-безопасен только `useSignal`.
+- `isTMA()` разыменовывает `window` — только внутри `useEffect` в `'use client'`.
+- `bindCssVars` бросает `CSSVarsBoundError` при втором вызове, а StrictMode React 19
+  вызывает эффекты дважды. Оборачивать в `isCssVarsBound()`.
+- `viewport.mount()` возвращает промис (в отличие от кнопок), и у viewport **нет**
+  `unmount()`.
+- `.ifAvailable()` уже включает «это Telegram + SDK поднят + isSupported + isMounted» —
+  отдельные проверки не нужны.
+
+**Next 16 + cacheComponents.**
+- `searchParams` не разворачивать в теле страницы — передавать промис в дочерний
+  компонент внутри `<Suspense>`, иначе ошибка сборки.
+- В `'use cache'` нельзя трогать `searchParams`, `cookies()`, `headers()`.
+- `useSearchParams()` без `<Suspense>` **работает в dev и падает на `next build`**.
+- `router.replace(url, {scroll:false})` — полноценная навигация с перезапросом RSC;
+  по-настоящему поверхностное обновление только `history.replaceState`.
+- В Server Action — `updateTag(tag)`; в Route Handler он бросает, там
+  `revalidateTag(tag, 'max')`. Одноаргументный `revalidateTag` не проходит typecheck.
+- Ключ `'use cache'` выводится из аргументов: листинг с фильтрами кэшировать не надо,
+  иначе LRU забьётся перестановками.
+
+**Server Actions и формы.**
+- React зовёт `form.reset()` на каждой отправке `<form action={fn}>`, которая не
+  бросила. Введённое пользователем **исчезнет**, если не вернуть его в состоянии и не
+  положить в `defaultValue`.
+- zod 4: `z.flattenError(parsed.error).fieldErrors`, а не `.flatten()` (deprecated).
+- Файл с `'use server'` может экспортировать **только** async-функции.
+- `redirect()` бросает — вызывать вне try/catch.
+- Лимит тела Server Action 1 МБ; импорт Excel и загрузка фото — через Route Handler.
+- `x-forwarded-for` Next **не санитизирует**: relay обязан перезаписывать его
+  `$remote_addr`, иначе лимит по IP обходится подделкой заголовка.
+
+**vaul 1.1.2.**
+- Всегда рендерить `Drawer.Overlay` (в нём живёт блокировка скролла) и
+  `Drawer.Title` с `sr-only` — без заголовка нет `aria-labelledby` и **нет
+  предупреждения в консоли**.
+- Без `autoFocus` фокус не заходит в шит, а ловушка фокуса уже активна.
+- Дефолт 500 мс — нарушает правило ≤ 250 мс. Переопределять `!important` вне слоёв:
+  анимация докрутки после перетаскивания задана инлайновым стилем.
+- Жёстко зашитое окно 500 мс после открытия, в котором перетаскивание не работает.
+
 ### Секреты и ПДн
 
 Секреты только в env, `.env*` в `.gitignore`. Контакты, минимальный заказ и тексты —
