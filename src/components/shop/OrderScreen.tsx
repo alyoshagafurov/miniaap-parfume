@@ -204,7 +204,9 @@ export function OrderScreen({
   if (count === 0) {
     return (
       <section className="py-12 text-center">
-        <p className="text-ink text-lg">В заявке пока пусто</p>
+        {/* Every state of this screen needs its heading, not only the one that
+            happens to have items in it. */}
+        <h1 className="text-ink text-lg">В заявке пока пусто</h1>
         <p className="text-muted mt-2 text-sm">
           Добавьте товары из каталога — минимальный заказ {formatRub(minOrderKop)}.
         </p>
@@ -366,7 +368,9 @@ export function OrderScreen({
         </div>
 
         <div>
-          <label className="flex items-start gap-3">
+          {/* min-h-11: measured at 43px, one pixel under the floor. The box is
+              20px; the label is the target. */}
+          <label className="flex min-h-11 items-start gap-3">
             <input
               type="checkbox"
               className="accent-olive mt-0.5 h-5 w-5 shrink-0"

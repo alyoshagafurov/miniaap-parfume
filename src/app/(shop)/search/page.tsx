@@ -32,6 +32,13 @@ const MAX_QUERY = 100;
 export default function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-16">
+      {/*
+        Visually hidden, but present. The screen deliberately does not print the
+        query — it is already in the sticky field, and repeating it costs a line
+        of a 390px screen. That left the page with no first-level heading at
+        all, which is the one thing a screen reader needs to say where it is.
+      */}
+      <h1 className="sr-only">Поиск по каталогу</h1>
       <Suspense fallback={<ResultsSkeleton />}>
         <Results searchParams={searchParams} />
       </Suspense>
@@ -58,6 +65,8 @@ async function Results({ searchParams }: { searchParams: Promise<SearchParams> }
       <p className="text-muted text-sm tabular-nums" aria-live="polite">
         Найдено: {found.total}
       </p>
+      {/* The cards are h3. Without this the outline jumps h1 → h3. */}
+      <h2 className="sr-only">Результаты поиска</h2>
       <div className="mt-6">
         <SearchResults
           query={query}

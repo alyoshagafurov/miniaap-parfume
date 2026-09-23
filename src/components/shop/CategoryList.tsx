@@ -195,6 +195,11 @@ export function CategoryList({
         </ul>
       ) : null}
 
+      {/* The cards are h3; without this the outline jumps straight from the
+          category's h1 to them. Hidden because the visible heading above the
+          grid is the category name, and a second one would only repeat it. */}
+      <h2 className="sr-only">Товары</h2>
+
       <div className="mt-6" aria-busy={pending || undefined}>
         {items.length > 0 ? (
           <ProductGrid products={items} showPrices={showPrices} />

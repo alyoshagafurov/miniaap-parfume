@@ -197,9 +197,15 @@ export function ImageManager({
       ) : null}
 
       <div>
+        {/* aria-hidden and out of the tab order: it is `sr-only`, not `hidden`,
+        so without this a screen reader tabs onto an unlabelled file input
+        beside the button that already does the job. One control, the visible
+        one. */}
         <input
           ref={input}
           type="file"
+          aria-hidden
+          tabIndex={-1}
           multiple
           accept={ACCEPT_ATTRIBUTE}
           className="sr-only"
