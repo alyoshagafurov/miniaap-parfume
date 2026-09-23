@@ -1,0 +1,157 @@
+import Link from "next/link";
+import { Suspense } from "react";
+
+import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
+import { formatDateTimeRu } from "@/lib/format";
+import { formatRub } from "@/lib/money";
+import { isOrderStatus, ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/lib/orders";
+import { listOrders } from "@/server/admin/orders";
+
+export const metadata = { title: "Заявки" };
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  return (
+    <>
+      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">Заявки</h1>
+      <Suspense fallback={<ListSkeleton />}>
+        <List searchParams={searchParams} />
+      </Suspense>
+    </>
+  );
+}
+
+async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const sp = await searchParams;
+  const rawStatus = Array.isArray(sp.status) ? sp.status[0] : sp.status;
+  const status = isOrderStatus(rawStatus) ? rawStatus : undefined;
+  const rawQuery = Array.isArray(sp.q) ? sp.q[0] : sp.q;
+  const query = (rawQuery ?? "").slice(0, 100).trim() || undefined;
+
+  const { orders, total, counts } = await listOrders({ status, query });
+
+  const href = (next: string | undefined) => {
+    const params = new URLSearchParams();
+    if (next) params.set("status", next);
+    if (query) params.set("q", query);
+    const s = params.toString();
+    return s ? `/admin/orders?${s}` : "/admin/orders";
+  };
+
+  return (
+    <>
+      <nav aria-label="Фильтр по статусу" className="mt-4 flex flex-wrap gap-2">
+        <FilterTab href={href(undefined)} active={!status}>
+          Все
+        </FilterTab>
+        {ORDER_STATUSES.map((value) => (
+          <FilterTab key={value} href={href(value)} active={status === value}>
+            {ORDER_STATUS_LABELS[value]}
+            <span className="tabular-nums opacity-70">{counts[value]}</span>
+          </FilterTab>
+        ))}
+      </nav>
+
+      {/*
+        A GET form, not a client component: search here is a bookmarkable place
+        in the panel, and one that keeps working before any JavaScript arrives.
+      */}
+      <form action="/admin/orders" className="mt-4 flex gap-2">
+        {status ? <input type="hidden" name="status" value={status} /> : null}
+        <label htmlFor="q" className="sr-only">
+          Поиск по номеру, имени, телефону, городу
+        </label>
+        <input
+          id="q"
+          name="q"
+          type="search"
+          defaultValue={query ?? ""}
+          placeholder="Номер, имя, телефон, город"
+          className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full max-w-md rounded-md border px-3 py-3 text-base"
+        />
+        <button
+          type="submit"
+          className="bg-olive text-surface hover:bg-olive-hover inline-flex items-center rounded-md px-5 text-base font-medium transition-colors"
+        >
+          Найти
+        </button>
+      </form>
+
+      <p className="text-muted mt-4 text-sm tabular-nums" aria-live="polite">
+        {total === 0 ? "Ничего не найдено" : `Показано: ${orders.length} из ${total}`}
+      </p>
+
+      {orders.length === 0 ? null : (
+        <ul className="mt-4 flex flex-col gap-4">
+          {orders.map((order) => (
+            <li key={order.id} className="border-rule bg-surface rounded-md border p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <Link
+                  href={`/admin/orders/${order.id}`}
+                  className="text-ink text-base font-semibold tabular-nums underline-offset-4 hover:underline"
+                >
+                  № {order.number}
+                </Link>
+                <span className="text-ink text-base font-semibold tabular-nums">
+                  {formatRub(order.totalKop)}
+                </span>
+              </div>
+
+              <p className="text-muted mt-1 text-sm">
+                {formatDateTimeRu(order.createdAt)} · {order.itemCount} поз. ·{" "}
+                {order.source === "TELEGRAM" ? "Telegram" : "сайт"}
+              </p>
+              <p className="text-ink mt-2 text-sm">
+                {order.name} · {order.phone} · {order.city}
+              </p>
+
+              <div className="mt-3">
+                <OrderStatusControl id={order.id} status={order.status} variant="select" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function FilterTab({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm transition-colors ${
+        active
+          ? "bg-olive text-surface border-olive"
+          : "bg-surface text-ink border-control hover:bg-olive-wash"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function ListSkeleton() {
+  return (
+    <div aria-hidden className="mt-4 flex flex-col gap-4">
+      <div className="bg-surface h-11 w-full rounded-md" />
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="border-rule bg-surface h-36 rounded-md border" />
+      ))}
+    </div>
+  );
+}

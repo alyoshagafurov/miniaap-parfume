@@ -1,4 +1,4 @@
-import { objectUrl } from "@/server/storage/urls";
+import { objectUrl } from "@/lib/media";
 
 /**
  * A product image, or the state that stands in for one.

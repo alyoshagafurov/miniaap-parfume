@@ -17,7 +17,7 @@ import {
   getProductBySlug,
 } from "@/server/catalog/queries";
 import { getSettings } from "@/server/settings.cached";
-import { objectUrl } from "@/server/storage/urls";
+import { objectUrl } from "@/lib/media";
 
 interface PageProps {
   params: Promise<{ slug: string }>;

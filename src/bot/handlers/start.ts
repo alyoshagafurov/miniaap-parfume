@@ -3,7 +3,7 @@ import { InputFile, type Context } from "grammy";
 import { mainKeyboard } from "@/bot/keyboards/main";
 import { greeting } from "@/bot/texts/ru";
 import { readSettings, rememberBannerFileId } from "@/server/settings";
-import { objectUrl } from "@/server/storage/urls";
+import { objectUrl } from "@/lib/media";
 
 /**
  * /start.

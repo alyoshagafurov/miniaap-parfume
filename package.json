@@ -31,12 +31,13 @@
     "search:reindex": "tsx scripts/reindex-search.ts",
     "admin:create": "tsx scripts/create-admin.ts",
     "check:tokens": "node scripts/check-tokens.mjs",
-    "verify": "pnpm typecheck && pnpm lint && pnpm check:tokens && pnpm check:bot-boundary && pnpm test",
+    "verify": "pnpm typecheck && pnpm lint && pnpm check:tokens && pnpm check:bot-boundary && pnpm check:client-boundary && pnpm test",
     "bench:search": "tsx scripts/bench-search.ts",
     "seed:clear": "tsx scripts/seed-clear.ts",
     "check:bot-boundary": "node scripts/check-bot-boundary.mjs",
-    "ci": "pnpm typecheck && pnpm lint && pnpm check:tokens && pnpm check:bot-boundary && pnpm test && pnpm build",
-    "relay:stub": "node scripts/relay-stub.mjs"
+    "ci": "pnpm typecheck && pnpm lint && pnpm check:tokens && pnpm check:bot-boundary && pnpm check:client-boundary && pnpm test && pnpm build",
+    "relay:stub": "node scripts/relay-stub.mjs",
+    "check:client-boundary": "node scripts/check-client-boundary.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

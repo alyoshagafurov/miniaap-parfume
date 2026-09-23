@@ -42,7 +42,7 @@ const serverSchema = z.object({
   S3_BUCKET: z.string().min(1),
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
-  S3_PUBLIC_URL: z.string().url(),
+  NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url(),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

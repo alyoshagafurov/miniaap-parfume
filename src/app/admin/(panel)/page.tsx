@@ -45,11 +45,12 @@ async function Counters() {
             >
               <span className="caps text-muted">{card.label}</span>
               {/*
-                lining-nums: the display face sets figures old-style, so "139"
-                drops the 1 and the 3 below the baseline. Beautiful in a
-                sentence, wrong for a count someone is scanning.
+                Not the display face. Cormorant's figures are old-style and the
+                subset carries no lining set, so "139" drops its 1 and 3 below
+                the baseline — lovely in a sentence, wrong for a number someone
+                is scanning. Numbers are set in the body face everywhere.
               */}
-              <span className="font-display text-ink text-h1 leading-none font-semibold lining-nums tabular-nums">
+              <span className="text-ink text-h1 leading-none font-semibold tabular-nums">
                 {card.value}
               </span>
             </Link>

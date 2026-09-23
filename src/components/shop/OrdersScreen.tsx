@@ -152,8 +152,10 @@ function OrderCard({
       <ul className="mt-3 flex flex-col gap-1">
         {order.items.map((item) => (
           <li key={item.sku} className="text-muted flex justify-between gap-3 text-sm">
+            {/* The snapshot's title already begins with the brand — it is the
+                product's generated name, not the fragrance alone. */}
             <span className="min-w-0">
-              {item.brandName} {item.title} · {item.format}
+              {item.title} · {item.format}
             </span>
             <span className="shrink-0 tabular-nums">×{item.qty}</span>
           </li>

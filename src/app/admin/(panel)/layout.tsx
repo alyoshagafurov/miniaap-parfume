@@ -88,7 +88,9 @@ async function Guard({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</div>
+      {/* A landmark, not a div: the panel has a header and a nav above it, and
+          without <main> there is no way to skip past them. */}
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
 
       <footer className="mx-auto w-full max-w-6xl px-4 pb-8">
         <GoldRule />

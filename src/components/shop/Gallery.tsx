@@ -18,8 +18,9 @@ export interface GalleryImage {
  * the finger is down. The only thing script does here is mirror the position
  * into the dots and move the track when a dot is tapped.
  *
- * URLs are resolved on the server: objectUrl reads S3_PUBLIC_URL, which is
- * server env and must not be inlined into the client bundle.
+ * URLs are resolved on the server and handed in, rather than built here from
+ * the image keys — this component only lays photographs out, and the page it
+ * belongs to already has them.
  *
  * With one image there is no track and no dots at all, which is the common case
  * while the client is still photographing their range.
