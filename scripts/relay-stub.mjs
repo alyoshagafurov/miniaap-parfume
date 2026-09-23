@@ -46,7 +46,31 @@ createServer((req, res) => {
       return;
     }
 
+    // getMe отвечает как getMe. Заглушка, отдающая на любой метод форму
+    // ответа sendMessage, выглядит рабочей ровно до того момента, когда
+    // кто-нибудь спросит у неё, кто этот бот, — а спрашивают двое: проверка
+    // развёртывания и пульс самого бота, то есть ровно те, кто должен ловить
+    // сломанный релей. Заглушка обязана быть отличима от неработающего релея
+    // тем же способом, каким от него отличим настоящий.
     res.writeHead(200, { "content-type": "application/json" });
+    if (req.url?.includes("/getMe")) {
+      res.end(
+        JSON.stringify({
+          ok: true,
+          result: {
+            id: 111111,
+            is_bot: true,
+            first_name: "ÁRUMI (заглушка)",
+            username: "arumi_local_stub",
+            can_join_groups: true,
+            can_read_all_group_messages: false,
+            supports_inline_queries: false,
+          },
+        }),
+      );
+      return;
+    }
+
     res.end(
       JSON.stringify({
         ok: true,

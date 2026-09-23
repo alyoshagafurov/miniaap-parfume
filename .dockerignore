@@ -1,0 +1,32 @@
+# Всё, что не нужно внутри образа. Каждая строка — это либо секрет, который
+# нельзя запекать в слой, либо мегабайты, которые удлиняют каждую сборку.
+
+.git
+node_modules
+.next
+out
+dist
+
+# Секреты. .env* попадает сюда в том числе потому, что COPY . . в сборочном
+# слое утащил бы их в образ, откуда их достаёт любой, у кого есть образ.
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Артефакты проверок и разработки
+qa/stage-1/screens
+qa/stage-1/test-results
+qa/stage-1/playwright-report
+qa/final
+relay-stub.log
+coverage
+*.log
+
+# Ничего из этого не исполняется в продакшене
+.claude
+.impeccable
+.vscode
+.idea
+docs
+brand

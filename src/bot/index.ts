@@ -1,3 +1,5 @@
+import { writeFileSync } from "node:fs";
+
 import { createBot } from "@/bot/bot";
 import { miniAppUrlFor } from "@/bot/handlers/start";
 import { BUTTON, COMMAND_DESCRIPTION } from "@/bot/texts/ru";
@@ -56,6 +58,45 @@ const miniAppUrl = requireEnv("MINI_APP_URL", "кнопке каталога н�
 
 const bot = createBot({ token, miniAppUrl });
 
+/**
+ * Proof of life for the container's health check.
+ *
+ * A long-polling bot has no port to probe, so `docker compose` can only see
+ * whether the process exists — and a process that exists is not the same as a
+ * bot that is still talking to Telegram. A hung event loop, a relay that
+ * accepts connections and never answers, a poller wedged after a network
+ * change: all of them leave a healthy-looking process and a bot that has
+ * silently stopped taking orders.
+ *
+ * So the loop proves it is running by asking Telegram who it is and writing the
+ * time down. The health check reads the file's age; when it stops being
+ * refreshed the container is restarted. `getMe` is the cheapest call in the Bot
+ * API and is not rate limited in any way that matters at one per minute.
+ */
+const HEARTBEAT_FILE = process.env.BOT_HEARTBEAT_FILE ?? "";
+const HEARTBEAT_INTERVAL_MS = 60_000;
+
+function startHeartbeat(): () => void {
+  if (!HEARTBEAT_FILE) return () => undefined;
+
+  const beat = async () => {
+    try {
+      await bot.api.getMe();
+      writeFileSync(HEARTBEAT_FILE, `${new Date().toISOString()}\n`);
+    } catch {
+      // Deliberately not rewritten and deliberately not logged per failure: a
+      // relay that is down for a minute is ordinary, and the file going stale
+      // is exactly the signal the health check is watching for.
+    }
+  };
+
+  void beat();
+  const timer = setInterval(() => void beat(), HEARTBEAT_INTERVAL_MS);
+  // Must not hold the process open on its own; shutdown clears it anyway.
+  timer.unref();
+  return () => clearInterval(timer);
+}
+
 async function boot(): Promise<void> {
   // Refuse to start against a database whose search is silently broken. The bot
   // does not search itself, but it shares the database with the catalog, and a
@@ -100,6 +141,8 @@ async function boot(): Promise<void> {
     menu_button: { type: "web_app", text: BUTTON.menu, web_app: { url: miniAppUrl } },
   });
 
+  const stopHeartbeat = startHeartbeat();
+
   const running = bot.start({
     onStart: (me) =>
       console.log(
@@ -110,6 +153,7 @@ async function boot(): Promise<void> {
   // bot.stop() does not wait for the middleware stack — the start promise does.
   const shutdown = async (signal: string) => {
     console.log(`\n${signal}: останавливаю бота…`);
+    stopHeartbeat();
     await bot.stop();
     await running;
     await prisma.$disconnect();

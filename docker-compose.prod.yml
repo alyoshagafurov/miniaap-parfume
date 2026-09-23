@@ -1,0 +1,224 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ÁRUMI в продакшене: один российский VPS.
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#
+# Пять сервисов и одна разовая задача. Порядок не случаен: миграции обязаны
+# завершиться до старта web и bot, иначе первый же запрос придёт в схему,
+# которой ещё нет, а бот упадёт на assertSearchHealth.
+#
+# Наружу смотрит только Caddy. Postgres, Redis, web и bot общаются по
+# внутренней сети докера и не публикуют ни одного порта на хост — на VPS с
+# белым IP опубликованный 5432 находят за часы.
+#
+# Бот ходит в Telegram не напрямую, а через TELEGRAM_API_ROOT: с российского
+# хостинга api.telegram.org недоступен. Релей живёт на отдельной зарубежной
+# машине, его конфиг — в relay/.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: arumi
+
+# Ротация логов задаётся один раз и подмешивается в каждый сервис. Без неё
+# json-file растёт без ограничений и однажды забивает диск VPS целиком —
+# отказ, который выглядит как «всё сломалось» и чинится за минуту, если знать.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  # ── Хранилище ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?нужен POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?нужен POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-arumi}
+      # Это не косметика и не «локаль по вкусу». Под LC_CTYPE=C расширение
+      # pg_trgm извлекает из кириллицы НОЛЬ триграмм: поиск с опечаткой
+      # по-русски перестаёт работать полностью, а по-латински продолжает — то
+      # есть дефект незаметен, пока кто-нибудь не наберёт «шанел».
+      # C.UTF-8 даёт datctype=C.UTF-8 при datcollate=C: классификация символов
+      # по UTF-8 для триграмм плюс детерминированный побайтовый порядок,
+      # который не разъезжается между машинами. Порядок А–Я применяется
+      # в запросах через COLLATE "ru-RU-x-icu", а не локалью всей базы.
+      LANG: C.UTF-8
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    # Счётчики лимитов и одноразовые коды входа. Потерять их при перезапуске
+    # не страшно — код просто запрашивается заново, — поэтому персистентности
+    # нет и диск не изнашивается ради данных со сроком жизни в пять минут.
+    command:
+      [
+        "redis-server",
+        "--save",
+        "",
+        "--appendonly",
+        "no",
+        "--maxmemory",
+        "128mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # ── Разовая задача: схема ──────────────────────────────────────────────────
+  # Отдельным сервисом, а не командой внутри web. Так миграции выполняются
+  # ровно один раз, а не по разу на каждую реплику, и падение миграции
+  # останавливает развёртывание вместо того, чтобы поднять приложение на
+  # половине схемы.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    restart: "no"
+    logging: *logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?нужен DATABASE_URL}
+    command: ["pnpm", "prisma", "migrate", "deploy"]
+
+  # ── Приложение ─────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Вшиваются в бандл при сборке — поменять их можно только пересборкой.
+        NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL:?нужен NEXT_PUBLIC_S3_PUBLIC_URL}
+        NEXT_PUBLIC_YANDEX_METRICA_ID: ${NEXT_PUBLIC_YANDEX_METRICA_ID:-}
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      AUTH_SECRET: ${AUTH_SECRET:?нужен AUTH_SECRET}
+      BOT_TOKEN: ${BOT_TOKEN:?нужен BOT_TOKEN}
+      BOT_USERNAME: ${BOT_USERNAME:?нужен BOT_USERNAME}
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
+      MINI_APP_URL: ${MINI_APP_URL:?нужен MINI_APP_URL}
+      TELEGRAM_API_ROOT: ${TELEGRAM_API_ROOT:?нужен TELEGRAM_API_ROOT}
+      S3_ENDPOINT: ${S3_ENDPOINT:?нужен S3_ENDPOINT}
+      S3_REGION: ${S3_REGION:-ru-central1}
+      S3_BUCKET: ${S3_BUCKET:?нужен S3_BUCKET}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?нужен S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?нужен S3_SECRET_KEY}
+      NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL}
+      # Caddy — единственный прокси перед приложением, поэтому доверенный
+      # переход ровно один. Next не санитизирует x-forwarded-for, и без этого
+      # числа лимит по IP обходится подделкой заголовка.
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+      ENABLE_HSTS: ${ENABLE_HSTS:-}
+      CSP_REPORT_ONLY: ${CSP_REPORT_ONLY:-}
+    healthcheck:
+      # Именно /api/health, а не «/»: главная отдаётся из кэша и отвечает 200
+      # при недоступной базе — то есть ровно в том случае, ради которого
+      # проверка и существует.
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://127.0.0.1:3000/api/health'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_USERNAME: ${BOT_USERNAME}
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
+      MINI_APP_URL: ${MINI_APP_URL}
+      TELEGRAM_API_ROOT: ${TELEGRAM_API_ROOT}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION:-ru-central1}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL}
+      BOT_HEARTBEAT_FILE: /run/arumi/bot-alive
+    healthcheck:
+      # У long polling нет порта, который можно опросить, а живой процесс — не
+      # то же самое, что живой бот: зависший цикл опроса выглядит совершенно
+      # здоровым. Бот раз в минуту спрашивает у Telegram, кто он, и записывает
+      # время; проверка смотрит на возраст файла. Перестал обновляться —
+      # контейнер перезапускается.
+      test:
+        [
+          "CMD-SHELL",
+          "test $(( $(date +%s) - $(stat -c %Y /run/arumi/bot-alive 2>/dev/null || echo 0) )) -lt 180",
+        ]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  # ── Вход снаружи ───────────────────────────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?нужен DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?нужен ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Сертификаты переживают перезапуск. Без этого тома Let's Encrypt
+      # выпускает их заново на каждый `up` и упирается в недельный лимит.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

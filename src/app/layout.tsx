@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { cormorant, manrope } from "@/app/fonts";
+import { YandexMetrica } from "@/components/analytics/YandexMetrica";
 import { CANVAS } from "@/lib/tokens";
 
 import "./globals.css";
@@ -29,10 +30,22 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Read at module scope, not per render.
+ *
+ * `NEXT_PUBLIC_*` is inlined at build time, so this is a constant in the bundle
+ * — and when it is empty the whole component and its import are dropped by the
+ * bundler rather than shipped as a branch that never runs.
+ */
+const METRICA_ID = process.env.NEXT_PUBLIC_YANDEX_METRICA_ID ?? "";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${cormorant.variable} ${manrope.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {METRICA_ID ? <YandexMetrica counterId={METRICA_ID} /> : null}
+      </body>
     </html>
   );
 }
