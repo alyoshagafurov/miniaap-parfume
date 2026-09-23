@@ -47,7 +47,11 @@ export function Gallery({
   const goTo = (i: number) => {
     const el = track.current;
     if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    // Instant, not smooth. Tapping a dot is navigating a list, which the
+    // direction keeps still — and a JS `behavior: "smooth"` would override the
+    // stylesheet's reduced-motion `scroll-behavior: auto` anyway, so the one
+    // person who asked for no motion would have been the one to get it.
+    el.scrollTo({ left: i * el.clientWidth, behavior: "auto" });
   };
 
   if (images.length === 0) return null;

@@ -110,6 +110,14 @@
   --ease-*: initial;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* Tailwind's own defaults for a bare `transition-colors`, overridden so the
+     rule holds without every call site repeating it. Stock Tailwind eases with
+     cubic-bezier(0.4, 0, 0.2, 1) — a symmetric curve, not ease-out — so a
+     `transition-colors` written without `ease-out` quietly used the wrong one.
+     Setting it here means the next person cannot get it wrong by omission. */
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: var(--ease-out);
+
   --animate-*: initial;
 }
 
@@ -243,4 +251,16 @@
 [data-vaul-overlay] {
   animation-duration: 250ms !important;
   animation-timing-function: var(--ease-out) !important;
+}
+
+/* The reduced-motion block above uses `*`, which loses to `[data-vaul-drawer]`
+   on specificity even though both are !important — so without this the one
+   piece of motion in the whole interface was the one piece that ignored the
+   preference. Repeated here at matching specificity, and after. */
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer],
+  [data-vaul-overlay] {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

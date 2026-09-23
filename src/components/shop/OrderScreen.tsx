@@ -424,10 +424,11 @@ function MinimumProgress({ totalKop, minOrderKop }: { totalKop: number; minOrder
         aria-valuemax={100}
         aria-label="Прогресс до минимального заказа"
       >
-        <div
-          className="bg-olive h-full transition-transform duration-200 ease-out"
-          style={{ width: `${pct}%` }}
-        />
+        {/* No transition. It declared transition-transform and animated width,
+            so the class did nothing — and had it worked it would have animated
+            a layout property, which the direction does not allow. Motion in
+            this interface is sheets and modals; a progress bar snaps. */}
+        <div className="bg-olive h-full" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-muted mt-2 text-sm">
         {short === 0

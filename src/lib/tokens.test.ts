@@ -36,4 +36,28 @@ describe("tokens.ts mirrors globals.css", () => {
   it("the H1 clamp is a token, not improvised per page", () => {
     expect(css).toMatch(/--text-h1:\s*clamp\(/);
   });
+
+  /**
+   * The blanket reduced-motion block selects `*`, which loses on specificity to
+   * any selector with a class or an attribute — even when both are !important.
+   * The sheet override is `[data-vaul-drawer]`, so for a while the single piece
+   * of motion in this interface was the single piece that ignored the
+   * preference. This asserts the counterpart exists and comes after it.
+   */
+  it("reduced motion reaches the sheet, which the blanket rule cannot", () => {
+    const override = css.indexOf("[data-vaul-drawer] {");
+    expect(override).toBeGreaterThan(-1);
+
+    const guard = css.indexOf("prefers-reduced-motion", override);
+    expect(guard).toBeGreaterThan(override);
+    // And it must actually name the sheet; a second blanket `*` block would
+    // lose the same way the first one does.
+    expect(css.slice(guard, guard + 300)).toContain("data-vaul");
+  });
+
+  it("nothing animates longer than the direction allows", () => {
+    for (const [, ms] of css.matchAll(/(?:transition|animation)-duration:\s*(\d+)ms/g)) {
+      expect(Number(ms)).toBeLessThanOrEqual(250);
+    }
+  });
 });
