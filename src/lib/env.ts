@@ -70,18 +70,57 @@ function withoutBlanks(source: NodeJS.ProcessEnv): Record<string, string | undef
   return out;
 }
 
+/**
+ * A misconfigured environment, distinguishable from anything else that failed.
+ *
+ * It has its own class because of a real afternoon: `env()` is called lazily
+ * from the S3 client, so an empty BOT_USERNAME made an image upload answer
+ * «хранилище недоступно» while the bucket was in perfect health. A caller that
+ * cannot tell a configuration fault from an outage will report the outage,
+ * every time.
+ */
+export class EnvError extends Error {
+  constructor(
+    /** The variables at fault, by name, for an operator to act on. */
+    readonly variables: string[],
+    message: string,
+  ) {
+    super(message);
+    this.name = "EnvError";
+  }
+}
+
 /** Throws on first call if the environment is incomplete. */
 export function env(): ServerEnv {
   if (cached) return cached;
   const parsed = serverSchema.safeParse(withoutBlanks(process.env));
   if (!parsed.success) {
+    const variables = [...new Set(parsed.error.issues.map((i) => String(i.path[0] ?? "?")))];
     const issues = parsed.error.issues
       .map((i) => `  ${i.path.join(".")}: ${i.message}`)
       .join("\n");
-    throw new Error(`Некорректное окружение:\n${issues}`);
+    throw new EnvError(variables, `Некорректное окружение:\n${issues}`);
   }
   cached = parsed.data;
   return cached;
+}
+
+/**
+ * Checks the environment without throwing.
+ *
+ * For the two startup paths, which want to print every fault at once rather
+ * than the first one and then exit.
+ */
+export function checkEnv(): { ok: true } | { ok: false; variables: string[]; message: string } {
+  try {
+    env();
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof EnvError) {
+      return { ok: false, variables: error.variables, message: error.message };
+    }
+    throw error;
+  }
 }
 
 /**

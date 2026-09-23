@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/server/auth/roles";
 import { addProductImages } from "@/server/catalog/mutations/images";
 import { fromRoute } from "@/server/catalog/revalidate";
+import { EnvError } from "@/lib/env";
 import { MAX_UPLOAD_BYTES } from "@/lib/images";
 import { ImageRejected, processImage } from "@/server/storage/images";
 import { putObjects } from "@/server/storage/s3";
@@ -136,7 +137,16 @@ export async function POST(request: Request) {
 
   try {
     await putObjects(processed.renditions);
-  } catch {
+  } catch (error) {
+    // A misconfigured environment is not an outage, and saying it is sends the
+    // operator to check a bucket that was never the problem. env() is lazy, so
+    // this is the first place a missing S3 variable can surface.
+    if (error instanceof EnvError) {
+      return refuse(
+        `Хранилище не настроено: ${error.variables.join(", ")}. Это конфигурация, не сбой.`,
+        500,
+      );
+    }
     return refuse("Хранилище недоступно. Попробуйте ещё раз.", 502);
   }
 

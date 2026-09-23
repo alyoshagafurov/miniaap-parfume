@@ -14,6 +14,26 @@ export async function register() {
   // database driver.
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  // The environment first, and by name.
+  //
+  // env() is called lazily — the S3 client asks for it on the first upload —
+  // so a missing variable used to surface hours later, wearing whatever
+  // message that call site had for a failure. An empty BOT_USERNAME once
+  // reported itself as «хранилище недоступно» while the bucket was fine.
+  // Checking here means a misconfigured deployment says so at boot, naming the
+  // variables, instead of working until somebody touches the wrong feature.
+  const { checkEnv } = await import("@/lib/env");
+  const result = checkEnv();
+  if (!result.ok) {
+    console.error(
+      `\nНе запускаюсь: проблема с переменными окружения — ${result.variables.join(", ")}\n\n` +
+        `${result.message}\n\nПроверьте .env (образец — .env.example).\n`,
+    );
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(`Некорректное окружение: ${result.variables.join(", ")}`);
+    }
+  }
+
   const { assertSearchHealth } = await import("@/server/db-health");
 
   try {

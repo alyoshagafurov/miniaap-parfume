@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
+import { EnvError } from "@/lib/env";
 import { MAX_UPLOAD_BYTES } from "@/lib/images";
 import { requirePermission } from "@/server/auth/roles";
 import { setBannerKey } from "@/server/catalog/mutations/settings";
@@ -69,7 +70,13 @@ export async function POST(request: Request) {
 
   try {
     await putObjects(processed.renditions);
-  } catch {
+  } catch (error) {
+    if (error instanceof EnvError) {
+      return NextResponse.json(
+        { error: `Хранилище не настроено: ${error.variables.join(", ")}` },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({ error: "Хранилище недоступно" }, { status: 502 });
   }
 

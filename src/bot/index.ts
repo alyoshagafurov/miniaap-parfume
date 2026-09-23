@@ -1,7 +1,7 @@
 import { createBot } from "@/bot/bot";
 import { miniAppUrlFor } from "@/bot/handlers/start";
 import { BUTTON, COMMAND_DESCRIPTION } from "@/bot/texts/ru";
-import { loadDotEnv } from "@/lib/env";
+import { checkEnv, loadDotEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
 import { assertSearchHealth } from "@/server/db-health";
 import { clientOptions } from "@/server/telegram/client";
@@ -31,6 +31,24 @@ function requireEnv(name: string, why: string): string {
     process.exit(1);
   }
   return value;
+}
+
+/**
+ * The whole environment, before anything that needs it.
+ *
+ * requireEnv below covers the two the bot reaches for by name. The rest —
+ * DATABASE_URL, AUTH_SECRET, the S3 group — are validated by the same schema
+ * the web process uses, so a bot that starts is a bot whose database and
+ * storage configuration is already known good, rather than one that dies on
+ * the first /start.
+ */
+const envCheck = checkEnv();
+if (!envCheck.ok) {
+  console.error(
+    `\nНе запускаюсь: проблема с переменными окружения — ${envCheck.variables.join(", ")}\n\n` +
+      `${envCheck.message}\n\nПроверьте .env (образец — .env.example).\n`,
+  );
+  process.exit(1);
 }
 
 const token = requireEnv("BOT_TOKEN", "бот не запущен");
