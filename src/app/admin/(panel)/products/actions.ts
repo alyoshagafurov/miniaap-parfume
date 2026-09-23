@@ -3,15 +3,26 @@
 import { z } from "zod";
 
 import { PUBLISH_STATUSES, STOCK_STATES } from "@/lib/admin-products";
+import { searchFragrances, type FragranceOption } from "@/server/admin/product-form";
 import { requirePermission } from "@/server/auth/roles";
 import { fromAction } from "@/server/catalog/revalidate";
+import { createFragrance } from "@/server/catalog/mutations/fragrances";
+import {
+  removeProductImage,
+  reorderProductImages,
+} from "@/server/catalog/mutations/images";
 import {
   bulkUpdateProducts,
+  copyToFormat,
+  createProduct,
+  deleteProduct,
   setProductPrice,
   setProductStock,
+  updateProduct,
   type BulkAction,
 } from "@/server/catalog/mutations/products";
 import { CatalogConflict } from "@/server/catalog/mutations/run";
+import { deleteObjects, renditionKeys } from "@/server/storage/s3";
 
 /**
  * Edits from the table.
@@ -96,4 +107,175 @@ export async function editStock(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, message: "Некорректное значение" };
 
   return run(() => fromAction(setProductStock(parsed.data.id, parsed.data.stock)));
+}
+
+// ── The form ─────────────────────────────────────────────────────────────────
+
+const ProductInputSchema = z.object({
+  categoryId: z.string().min(1).max(64),
+  fragranceIds: z.array(z.string().min(1).max(64)).min(1).max(2),
+  sku: z.string().trim().min(1).max(64),
+  title: z.string().trim().max(200).nullish(),
+  slug: z.string().trim().max(200).nullish(),
+  volumeMl: z.number().int().positive().max(100_000),
+  priceKop: z.number().int().positive().max(2_147_483_647),
+  oldPriceKop: z.number().int().positive().max(2_147_483_647).nullable(),
+  packSize: z.number().int().min(1).max(9999),
+  stock: z.enum(STOCK_STATES),
+  status: z.enum(PUBLISH_STATUSES),
+  isNew: z.boolean(),
+  isHit: z.boolean(),
+  popularity: z.number().int().min(0).max(1_000_000),
+});
+
+export type SaveResult =
+  | { ok: true; id: string; slug: string }
+  | { ok: false; message: string };
+
+export async function saveProduct(input: unknown): Promise<SaveResult> {
+  await requirePermission("catalog:write");
+
+  const parsed = z
+    .object({ id: z.string().min(1).max(64).nullish(), product: ProductInputSchema })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Проверьте заполнение формы" };
+
+  try {
+    const { id, product } = parsed.data;
+    const saved = id
+      ? await fromAction(updateProduct(id, product))
+      : await fromAction(createProduct(product));
+    return { ok: true, id: saved.id, slug: saved.slug };
+  } catch (error) {
+    if (error instanceof CatalogConflict) return { ok: false, message: error.message };
+    return { ok: false, message: "Не удалось сохранить. Попробуйте ещё раз." };
+  }
+}
+
+const CopyInput = z.object({
+  id: z.string().min(1).max(64),
+  categoryId: z.string().min(1).max(64),
+  sku: z.string().trim().min(1).max(64),
+  volumeMl: z.number().int().positive().max(100_000),
+  priceKop: z.number().int().positive().max(2_147_483_647),
+  packSize: z.number().int().min(1).max(9999),
+});
+
+export async function copyProduct(input: unknown): Promise<SaveResult> {
+  await requirePermission("catalog:write");
+  const parsed = CopyInput.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Проверьте заполнение формы" };
+
+  try {
+    const { id, ...rest } = parsed.data;
+    const copy = await fromAction(copyToFormat(id, rest));
+    return { ok: true, id: copy.id, slug: copy.slug };
+  } catch (error) {
+    if (error instanceof CatalogConflict) return { ok: false, message: error.message };
+    return { ok: false, message: "Не удалось создать копию" };
+  }
+}
+
+export async function removeProduct(input: unknown): Promise<ActionResult> {
+  await requirePermission("catalog:write");
+  const parsed = z.object({ id: z.string().min(1).max(64) }).safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Некорректный запрос" };
+
+  return run(() => fromAction(deleteProduct(parsed.data.id)));
+}
+
+// ── Photographs ──────────────────────────────────────────────────────────────
+
+export async function reorderImages(input: unknown): Promise<ActionResult> {
+  await requirePermission("catalog:write");
+  const parsed = z
+    .object({
+      productId: z.string().min(1).max(64),
+      imageIds: z.array(z.string().min(1).max(64)).max(50),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Некорректный запрос" };
+
+  return run(() => fromAction(reorderProductImages(parsed.data.productId, parsed.data.imageIds)));
+}
+
+/**
+ * Deletes a photograph, then its bytes.
+ *
+ * In that order, and the bytes only if the row is really gone: an object with
+ * no row is wasted storage, and a row with no object is a broken image in front
+ * of a buyer.
+ */
+export async function removeImage(input: unknown): Promise<ActionResult> {
+  await requirePermission("catalog:write");
+  const parsed = z.object({ imageId: z.string().min(1).max(64) }).safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Некорректный запрос" };
+
+  try {
+    const removed = await fromAction(removeProductImage(parsed.data.imageId));
+    await deleteObjects(renditionKeys(removed.key));
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof CatalogConflict) return { ok: false, message: error.message };
+    return { ok: false, message: "Не удалось удалить фото" };
+  }
+}
+
+// ── Fragrances, created without leaving the form ─────────────────────────────
+
+const InlineFragrance = z.object({
+  brandId: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(200),
+});
+
+export type FragranceCreated =
+  | { ok: true; id: string; name: string }
+  | { ok: false; message: string };
+
+/**
+ * A fragrance created from inside the product form.
+ *
+ * Only the brand and the name: the notes, the families and the description are
+ * the fragrance screen's job, and asking for them here would turn adding a
+ * product into filling in two forms. What it creates is complete enough to be
+ * correct and obviously incomplete enough to be finished later.
+ */
+export async function createFragranceInline(input: unknown): Promise<FragranceCreated> {
+  await requirePermission("catalog:write");
+  const parsed = InlineFragrance.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Укажите бренд и название" };
+
+  try {
+    const created = await fromAction(
+      createFragrance({
+        brandId: parsed.data.brandId,
+        name: parsed.data.name,
+        aliases: [],
+        gender: "UNISEX",
+        families: [],
+        notesTop: [],
+        notesHeart: [],
+        notesBase: [],
+        description: null,
+      }),
+    );
+    return { ok: true, id: created.id, name: created.name };
+  } catch (error) {
+    if (error instanceof CatalogConflict) return { ok: false, message: error.message };
+    return { ok: false, message: "Не удалось создать аромат" };
+  }
+}
+
+/**
+ * The picker's search.
+ *
+ * A Server Action rather than a route: it returns twenty rows of two strings,
+ * which is well inside an action's budget, and it keeps the permission check in
+ * the same place as every other one.
+ */
+export async function findFragrances(input: unknown): Promise<FragranceOption[]> {
+  await requirePermission("catalog:write");
+  const parsed = z.object({ query: z.string().max(100) }).safeParse(input);
+  if (!parsed.success) return [];
+  return searchFragrances(parsed.data.query);
 }

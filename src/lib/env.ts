@@ -49,10 +49,31 @@ export type ServerEnv = z.infer<typeof serverSchema>;
 
 let cached: ServerEnv | undefined;
 
+/**
+ * A variable written as empty is a variable that is not set.
+ *
+ * `.env.example` lists every key with nothing after the `=`, which is the
+ * normal way to document one — and copying it produces `BOT_USERNAME=""`, not
+ * an absent key. Zod's `.optional()` admits `undefined` and refuses `""`, so
+ * without this the whole environment fails to parse over a variable nobody
+ * needed, and every caller of env() throws: the S3 client, the bot's startup,
+ * the share link.
+ *
+ * It cost an afternoon once. An upload returned "хранилище недоступно" while
+ * the bucket was fine, because the real error was `BOT_USERNAME: Too small`.
+ */
+function withoutBlanks(source: NodeJS.ProcessEnv): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(source)) {
+    out[key] = value?.trim() === "" ? undefined : value;
+  }
+  return out;
+}
+
 /** Throws on first call if the environment is incomplete. */
 export function env(): ServerEnv {
   if (cached) return cached;
-  const parsed = serverSchema.safeParse(process.env);
+  const parsed = serverSchema.safeParse(withoutBlanks(process.env));
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  ${i.path.join(".")}: ${i.message}`)

@@ -186,9 +186,11 @@ Relay этапа 3 обязан проксировать **обе** формы: 
   `revalidateTag(tag, 'max')`. Одноаргументный `revalidateTag` не проходит typecheck.
 - Ключ `'use cache'` выводится из аргументов: листинг с фильтрами кэшировать не надо,
   иначе LRU забьётся перестановками.
-- Под `cacheComponents` из старых экспортов сегмента выживают только `runtime`,
-  `preferredRegion`, `maxDuration`, плюс новые `instant` и `prefetch`.
-  `dynamic`, `revalidate`, `fetchCache` и `dynamicParams` **ломают сборку**.
+- Под `cacheComponents` из старых экспортов сегмента выживают только
+  `preferredRegion` и `maxDuration`, плюс новые `instant` и `prefetch`.
+  `dynamic`, `revalidate`, `fetchCache`, `dynamicParams` и — вопреки прежней
+  записи — `runtime` **ломают сборку**: «Route segment config "runtime" is not
+  compatible with nextConfig.cacheComponents». Node и так рантайм по умолчанию.
 - `cookies()` внутри `'use cache'` — ошибка E831, `headers()` — E833. Не пустое
   значение, а бросок. Это и есть причина разделения settings.ts / settings.cached.ts.
 - Содержимое, зависящее от `searchParams`, по умолчанию **не префетчится**. Нужен

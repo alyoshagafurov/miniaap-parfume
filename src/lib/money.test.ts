@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatRub,
+  kopToField,
   kopToRub,
   parsePriceToKop,
   rubToKop,
@@ -92,5 +93,25 @@ describe("sumKop", () => {
 
   it("rejects non-integer kopecks", () => {
     expect(() => sumKop([100.5])).toThrow();
+  });
+});
+
+describe("kopToField", () => {
+  it("returns nothing for an absent price", () => {
+    expect(kopToField(null)).toBe("");
+  });
+
+  it("drops the decimals a person would not have typed", () => {
+    expect(kopToField(125_000)).toBe("1250");
+  });
+
+  it("keeps kopecks, with a comma", () => {
+    expect(kopToField(125_050)).toBe("1250,5");
+  });
+
+  it("round-trips through the parser the import uses", () => {
+    for (const kop of [1, 99, 100, 125_050, 91_000, 2_147_483_647]) {
+      expect(parsePriceToKop(kopToField(kop))).toBe(kop);
+    }
   });
 });

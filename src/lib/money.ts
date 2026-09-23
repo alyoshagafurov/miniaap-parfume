@@ -108,3 +108,17 @@ export function sumKop(amounts: readonly number[]): number {
   }
   return total;
 }
+
+/**
+ * Kopecks as an administrator types them into a roubles field.
+ *
+ * The inverse of parsePriceToKop, and beside it on purpose: a form that reads
+ * with one and writes with the other must round-trip, and two functions in two
+ * files drift. A whole number has no decimals — «1250», not «1250,00» — because
+ * that is what somebody would have typed.
+ */
+export function kopToField(kop: number | null): string {
+  if (kop === null) return "";
+  const rub = kopToRub(kop);
+  return Number.isInteger(rub) ? String(rub) : String(rub).replace(".", ",");
+}
