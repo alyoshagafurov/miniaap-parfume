@@ -5,6 +5,7 @@ import {
   preserve,
   project,
   redis,
+  ref,
   service,
 } from "railway/iac";
 
@@ -40,14 +41,21 @@ export default defineRailway(() => {
    * Фотографии товаров и баннер бота.
    *
    * Railway Bucket — S3-совместимый, то есть код приложения не меняется вовсе:
-   * там уже @aws-sdk/client-s3. Регион не задан здесь намеренно — он выбирается
-   * при создании бакета и после не меняется, так что зашивать его в файл
-   * значило бы однажды получить план, который ничего не может сделать.
+   * там уже @aws-sdk/client-s3.
+   *
+   * Регион обязателен — выбирать можно из sjc, iad, ams, sin. Здесь `ams`
+   * (Амстердам): из четырёх он ближе всех к покупателям, а фотографии идут не
+   * напрямую из бакета, а через /api/media/… у витрины, то есть каждый запрос
+   * картинки — это ещё и путь «витрина → бакет». Его стоит держать коротким,
+   * поэтому сам сервис web имеет смысл держать в европейском регионе.
+   *
+   * Раньше здесь стояло, что регион не задан намеренно. Это было неверно:
+   * `railway config plan` отказывается строить план без него.
    *
    * Бакет закрытый: публичные бакеты Railway не поддерживает. Поэтому браузер
    * забирает фотографии не из бакета, а через /api/media/… — см. src/lib/media.ts.
    */
-  const photos = bucket("photos");
+  const photos = bucket("photos", { region: "ams" });
 
   // ── Витрина ───────────────────────────────────────────────────────────────
 
@@ -81,11 +89,15 @@ export default defineRailway(() => {
       DATABASE_URL: db.env.DATABASE_URL,
       REDIS_URL: cache.env.REDIS_URL,
 
-      S3_ENDPOINT: photos.env.ENDPOINT,
-      S3_BUCKET: photos.env.BUCKET,
-      S3_ACCESS_KEY: photos.env.ACCESS_KEY_ID,
-      S3_SECRET_KEY: photos.env.SECRET_ACCESS_KEY,
-      S3_REGION: photos.env.REGION,
+      // `ref(photos, …)`, а не `photos.env.…`: у бакета нет `.env`.
+      // Referencable-узлы в SDK — только базы (`postgres`, `redis`); `bucket()`
+      // возвращает обычный узел, и обращение к `.env` роняет `railway config
+      // plan` на TypeError. Это и было первым, что план поймал.
+      S3_ENDPOINT: ref(photos, "ENDPOINT"),
+      S3_BUCKET: ref(photos, "BUCKET"),
+      S3_ACCESS_KEY: ref(photos, "ACCESS_KEY_ID"),
+      S3_SECRET_KEY: ref(photos, "SECRET_ACCESS_KEY"),
+      S3_REGION: ref(photos, "REGION"),
       // Пусто намеренно: бакет закрытый, публичного адреса у него нет, и
       // фотографии идут через /api/media/…. Значение появляется здесь только
       // если каталог переедет на публичный бакет.
@@ -144,11 +156,11 @@ export default defineRailway(() => {
       DATABASE_URL: db.env.DATABASE_URL,
       REDIS_URL: cache.env.REDIS_URL,
 
-      S3_ENDPOINT: photos.env.ENDPOINT,
-      S3_BUCKET: photos.env.BUCKET,
-      S3_ACCESS_KEY: photos.env.ACCESS_KEY_ID,
-      S3_SECRET_KEY: photos.env.SECRET_ACCESS_KEY,
-      S3_REGION: photos.env.REGION,
+      S3_ENDPOINT: ref(photos, "ENDPOINT"),
+      S3_BUCKET: ref(photos, "BUCKET"),
+      S3_ACCESS_KEY: ref(photos, "ACCESS_KEY_ID"),
+      S3_SECRET_KEY: ref(photos, "SECRET_ACCESS_KEY"),
+      S3_REGION: ref(photos, "REGION"),
       NEXT_PUBLIC_S3_PUBLIC_URL: "",
 
       MINI_APP_URL: preserve(),
