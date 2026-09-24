@@ -1,4 +1,9 @@
-import { DeleteObjectsCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 import { env } from "@/lib/env";
 
@@ -21,7 +26,11 @@ function client(): S3Client {
   const e = env();
   cached = new S3Client({
     endpoint: e.S3_ENDPOINT,
-    region: "us-east-1",
+    // From the environment, because an S3-compatible store decides for itself
+    // what it wants here: MinIO ignores it, Yandex wants ru-central1, and a
+    // Railway bucket reports `auto`. It is only used to sign, but a signature
+    // computed for the wrong region is rejected by the ones that check.
+    region: process.env.S3_REGION ?? "us-east-1",
     forcePathStyle: true,
     credentials: { accessKeyId: e.S3_ACCESS_KEY, secretAccessKey: e.S3_SECRET_KEY },
   });
@@ -95,4 +104,51 @@ export function renditionKeys(key: string): string[] {
     keys.push(`${base}-${width}.avif`, `${base}-${width}.webp`);
   }
   return keys;
+}
+
+/**
+ * A key that is not in the bucket.
+ *
+ * Its own type so the media proxy can tell «this photograph was deleted» from
+ * «the bucket is unreachable» — the first is a 404 and the second is a 502, and
+ * answering 404 to an outage makes a broken deployment look like an empty
+ * catalog.
+ */
+export class StorageMiss extends Error {
+  constructor(key: string) {
+    super(`Объект не найден: ${key}`);
+    this.name = "StorageMiss";
+  }
+}
+
+/**
+ * Reads one object.
+ *
+ * Only the media proxy uses this, and only when the bucket is private — a
+ * public bucket is read by the browser directly and these bytes never touch the
+ * application. Buffered rather than streamed: these are renditions capped at
+ * 1600px, tens of kilobytes each, and a buffer is what `NextResponse` wants
+ * anyway.
+ */
+export async function getObject(
+  key: string,
+): Promise<{ body: Uint8Array; contentType: string }> {
+  const e = env();
+  try {
+    const result = await client().send(
+      new GetObjectCommand({ Bucket: e.S3_BUCKET, Key: key }),
+    );
+    if (!result.Body) throw new StorageMiss(key);
+    return {
+      body: await result.Body.transformToByteArray(),
+      // Falls back rather than guessing from the extension: the object was
+      // written with its type and this is what came back with it.
+      contentType: result.ContentType ?? "application/octet-stream",
+    };
+  } catch (error) {
+    if (error instanceof StorageMiss) throw error;
+    const name = (error as { name?: string }).name;
+    if (name === "NoSuchKey" || name === "NotFound") throw new StorageMiss(key);
+    throw error;
+  }
 }

@@ -47,3 +47,22 @@ export function parsePhotoFilename(filename: string): PhotoFilename {
     order: Number(trailing[2]) || 1,
   };
 }
+
+/**
+ * The shape of a key this application writes.
+ *
+ * Used by the media proxy to decide what it will serve at all. The key arrives
+ * in a URL, so it is a request parameter: matched against what the uploader
+ * actually produces, and anything else refused without a lookup.
+ *
+ *   products/arm-1040/9f3a1c2b7d4e-800.webp
+ *   banner/9f3a1c2b7d4e-1600.avif
+ *
+ * The article number is lowercased and stripped to `[a-z0-9._-]` on upload, the
+ * random part is twelve hex characters, and the width is one of 400, 800 or
+ * 1600. Two things this closes, and the second is the one that is easy to miss:
+ * a traversal out of the prefix, and a survey of the bucket, which also holds
+ * the Excel exports and — on the VPS deployment — the nightly database dumps.
+ */
+export const MEDIA_KEY_PATTERN =
+  /^(?:products\/[a-z0-9._-]{1,64}\/|banner\/)[0-9a-f]{12}-(?:400|800|1600)\.(?:avif|webp)$/;

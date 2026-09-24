@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePhotoFilename } from "./images";
+import { MEDIA_KEY_PATTERN, parsePhotoFilename } from "./images";
 
 describe("parsePhotoFilename", () => {
   it("reads the article and the position", () => {
@@ -31,5 +31,41 @@ describe("parsePhotoFilename", () => {
     expect(parsePhotoFilename("ARM-1005-1.final.jpg").candidates).toContain(
       "ARM-1005-1.final",
     );
+  });
+});
+
+describe("MEDIA_KEY_PATTERN", () => {
+  it("accepts the keys the uploader writes", () => {
+    expect(MEDIA_KEY_PATTERN.test("products/arm-1040/9f3a1c2b7d4e-800.webp")).toBe(
+      true,
+    );
+    expect(MEDIA_KEY_PATTERN.test("products/arm-1040/9f3a1c2b7d4e-1600.avif")).toBe(
+      true,
+    );
+    expect(MEDIA_KEY_PATTERN.test("banner/9f3a1c2b7d4e-400.webp")).toBe(true);
+  });
+
+  it("refuses a traversal", () => {
+    expect(MEDIA_KEY_PATTERN.test("products/../../.env")).toBe(false);
+    expect(MEDIA_KEY_PATTERN.test("products/a/../../secret-800.webp")).toBe(false);
+  });
+
+  it("refuses everything else in the bucket", () => {
+    // The same bucket holds the Excel exports and, on the VPS deployment, the
+    // nightly database dumps. Neither is a photograph, and the proxy is the one
+    // thing that reads the bucket without a session.
+    expect(MEDIA_KEY_PATTERN.test("backups/arumi-2026-09-24T03-10-00Z.dump.gz")).toBe(
+      false,
+    );
+    expect(MEDIA_KEY_PATTERN.test("deploy-check/probe-1758700000000.txt")).toBe(false);
+  });
+
+  it("refuses a width nothing renders", () => {
+    expect(MEDIA_KEY_PATTERN.test("banner/9f3a1c2b7d4e-8000.webp")).toBe(false);
+  });
+
+  it("refuses a format nothing writes", () => {
+    expect(MEDIA_KEY_PATTERN.test("banner/9f3a1c2b7d4e-800.svg")).toBe(false);
+    expect(MEDIA_KEY_PATTERN.test("banner/9f3a1c2b7d4e-800.html")).toBe(false);
   });
 });

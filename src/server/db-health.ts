@@ -22,6 +22,8 @@ export interface SearchHealth {
   /** Number of trigrams pg_trgm produces for a Russian word. Must be > 0. */
   cyrillicTrigrams: number;
   hasRussianCollation: boolean;
+  /** Существование collation и её работоспособность — разные вещи. */
+  collationSorts: boolean;
   ctype: string;
   collate: string;
   problems: string[];
@@ -33,13 +35,20 @@ export async function checkSearchHealth(): Promise<SearchHealth> {
   // problem this check exists to report, so it is caught and described rather
   // than raised as an opaque Postgres error.
   let row:
-    | { trigrams: number; hasCollation: boolean; ctype: string; collate: string }
+    | {
+        trigrams: number;
+        hasCollation: boolean;
+        sorted: string[] | null;
+        ctype: string;
+        collate: string;
+      }
     | undefined;
   try {
     [row] = await prisma.$queryRaw<
       Array<{
         trigrams: number;
         hasCollation: boolean;
+        sorted: string[] | null;
         ctype: string;
         collate: string;
       }>
@@ -47,6 +56,12 @@ export async function checkSearchHealth(): Promise<SearchHealth> {
     SELECT
       coalesce(array_length(show_trgm('шанель'), 1), 0)::int AS "trigrams",
       EXISTS (SELECT 1 FROM pg_collation WHERE collname = 'ru-RU-x-icu') AS "hasCollation",
+      -- Наличия строки в pg_collation мало: сборка без ICU её показывает и
+      -- падает при использовании. Единственная честная проверка — отсортировать.
+      -- Побайтово «ёлка» уходит в конец, по-русски стоит между «апельсин» и
+      -- «яблоко», и разница видна на трёх словах.
+      (SELECT array_agg(w ORDER BY w COLLATE "ru-RU-x-icu")
+         FROM unnest(ARRAY['яблоко','ёлка','апельсин']) AS t(w)) AS "sorted",
       (SELECT datctype FROM pg_database WHERE datname = current_database()) AS "ctype",
       (SELECT datcollate FROM pg_database WHERE datname = current_database()) AS "collate"
   `;
@@ -62,6 +77,7 @@ export async function checkSearchHealth(): Promise<SearchHealth> {
       ok: false,
       cyrillicTrigrams: 0,
       hasRussianCollation: false,
+      collationSorts: false,
       ctype: "?",
       collate: "?",
       problems: [
@@ -78,6 +94,7 @@ export async function checkSearchHealth(): Promise<SearchHealth> {
       ok: false,
       cyrillicTrigrams: 0,
       hasRussianCollation: false,
+      collationSorts: false,
       ctype: "?",
       collate: "?",
       problems: ["не удалось опросить базу данных"],
@@ -98,10 +115,21 @@ export async function checkSearchHealth(): Promise<SearchHealth> {
     );
   }
 
+  const collationSorts =
+    Array.isArray(row.sorted) && row.sorted.join(",") === "апельсин,ёлка,яблоко";
+  if (row.hasCollation && !collationSorts) {
+    problems.push(
+      'collation "ru-RU-x-icu" есть, но сортирует неверно: получилось ' +
+        `[${(row.sorted ?? []).join(", ")}], ожидалось [апельсин, ёлка, яблоко] — ` +
+        "обычно это сборка PostgreSQL без ICU",
+    );
+  }
+
   return {
     ok: problems.length === 0,
     cyrillicTrigrams: row.trigrams,
     hasRussianCollation: row.hasCollation,
+    collationSorts,
     ctype: row.ctype,
     collate: row.collate,
     problems,
@@ -121,8 +149,16 @@ export function describeSearchHealth(health: SearchHealth): string {
     `  Сейчас: LC_CTYPE=${health.ctype}, LC_COLLATE=${health.collate}`,
     "  Нужно:  LC_CTYPE должен быть UTF-8 (например C.UTF-8).",
     "",
-    '  В docker-compose.yml: POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C.UTF-8".',
-    "  Локаль задаётся при initdb, поэтому том придётся пересоздать:",
+    "  На Railway initdb недоступен, но локаль задаётся отдельной базе —",
+    "  в том же кластере, без пересоздания сервиса:",
+    "",
+    "    pnpm db:create-ru        (см. scripts/create-search-db.ts)",
+    "",
+    "  затем в переменных сервисов подставить имя новой базы в DATABASE_URL",
+    "  и прогнать миграции: railway run pnpm prisma migrate deploy",
+    "",
+    '  В docker-compose: POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C.UTF-8".',
+    "  Там локаль задаётся при initdb, поэтому том придётся пересоздать:",
     "    docker compose down -v && docker compose up -d && pnpm db:deploy && pnpm seed",
   ].join("\n");
 }

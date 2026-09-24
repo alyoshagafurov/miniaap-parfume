@@ -51,3 +51,6 @@ Thumbs.db
 __tx_probe*
 tsconfig.tsbuildinfo
 relay-stub.log
+
+# Ручные дампы базы (scripts/dump.sh)
+/backups/

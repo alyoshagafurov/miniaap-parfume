@@ -41,6 +41,18 @@ loadDotEnv(process.env.ENV_FILE ?? ".env.production");
 // Запасной вариант, чтобы скрипт можно было прогнать и на машине разработчика.
 loadDotEnv(".env");
 
+/**
+ * Какая это площадка.
+ *
+ * Требования у них расходятся ровно в двух местах, и обе стороны стоит назвать,
+ * а не выбирать умолчание молча: на Railway домен и сертификат выдаёт сама
+ * платформа, а на своём сервере их задаёт Caddy и без них он не поднимется.
+ * По умолчанию railway — это основной вариант; `DEPLOY_TARGET=vps` включает
+ * проверки запасного.
+ */
+const TARGET = (process.env.DEPLOY_TARGET ?? "railway").toLowerCase();
+const IS_VPS = TARGET === "vps";
+
 type Level = "ok" | "warn" | "fail";
 
 interface Result {
@@ -83,14 +95,28 @@ function checkEnvironment(): void {
     );
   }
 
-  // Продакшен-специфичные: приложение их не читает, но без них не поднимется
-  // compose и не выпустится сертификат.
-  for (const [name, why] of [
-    ["DOMAIN", "Caddy не выпустит сертификат"],
-    ["ACME_EMAIL", "Let's Encrypt некуда писать о проблемах с продлением"],
-    ["MINI_APP_URL", "кнопке каталога в боте некуда вести"],
-  ] as const) {
-    if (!present(name)) fail(name, why, `Задайте ${name} в .env.production`);
+  // MINI_APP_URL нужен везде: это адрес, по которому бот открывает каталог, и
+  // он же основа для абсолютных ссылок на фотографии, когда бакет закрытый.
+  if (!present("MINI_APP_URL")) {
+    fail(
+      "MINI_APP_URL",
+      "кнопке каталога в боте некуда вести",
+      IS_VPS
+        ? "Задайте MINI_APP_URL в .env.production"
+        : "Задайте MINI_APP_URL в переменных сервисов web и bot: это адрес, " +
+            "который Railway выдал сервису web",
+    );
+  }
+
+  // Домен и почта для ACME — только на своём сервере. На Railway домен и
+  // сертификат выдаёт платформа, и требовать их там значило бы врать.
+  if (IS_VPS) {
+    for (const [name, why] of [
+      ["DOMAIN", "Caddy не выпустит сертификат"],
+      ["ACME_EMAIL", "Let's Encrypt некуда писать о проблемах с продлением"],
+    ] as const) {
+      if (!present(name)) fail(name, why, `Задайте ${name} в .env.production`);
+    }
   }
 
   if (!present("ADMIN_CHAT_ID")) {
@@ -101,15 +127,21 @@ function checkEnvironment(): void {
     );
   }
 
+  // Не отказ, а факт с последствием. На Railway бот ходит в Telegram напрямую,
+  // и это правильно; с российского хостинга api.telegram.org недоступен, и
+  // тогда нужен релей. Что из этого верно здесь, решает не переменная, а
+  // ответ самого Telegram — его и проверяет checkTelegram ниже. Раньше здесь
+  // стоял безусловный отказ, написанный под единственную площадку.
   if (apiRoot().includes("api.telegram.org")) {
-    fail(
+    ok(
       "TELEGRAM_API_ROOT",
-      "указывает на api.telegram.org напрямую",
-      "С российского хостинга он недоступен. Поднимите релей: relay/README.md",
+      "напрямую в api.telegram.org — годится везде, откуда он доступен",
     );
+  } else {
+    ok("TELEGRAM_API_ROOT", `через релей ${apiRoot()}`);
   }
 
-  if (!present("ENABLE_HSTS")) {
+  if (IS_VPS && !present("ENABLE_HSTS")) {
     warn(
       "ENABLE_HSTS",
       "выключен",
@@ -280,25 +312,28 @@ async function checkStorage(): Promise<void> {
     );
   }
 
+  // Пусто — это не «забыли», а вторая рабочая конфигурация: закрытый бакет и
+  // отдача через /api/media/…. Railway публичных бакетов не поддерживает, так
+  // что на нём пусто — норма.
   const publicUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL;
   if (!publicUrl) {
-    fail(
-      "Публичный адрес бакета",
-      "NEXT_PUBLIC_S3_PUBLIC_URL не задан",
-      "Без него на витрине не покажется ни одна фотография",
+    ok(
+      "Отдача фотографий",
+      "бакет закрытый, фотографии идут через /api/media/… (прокси витрины)",
     );
     return;
   }
   try {
     ok(
-      "Публичный адрес бакета",
-      `${new URL(publicUrl).origin} (вшит в сборку и в CSP)`,
+      "Отдача фотографий",
+      `публичный бакет ${new URL(publicUrl).origin} — браузер ходит в него напрямую`,
     );
   } catch {
     fail(
-      "Публичный адрес бакета",
-      `не разбирается как URL: ${publicUrl}`,
-      "CSP не сможет разрешить origin картинок, и браузер заблокирует их все",
+      "Отдача фотографий",
+      `NEXT_PUBLIC_S3_PUBLIC_URL не разбирается как URL: ${publicUrl}`,
+      "Либо задайте корректный адрес, либо оставьте пустым — тогда фотографии " +
+        "пойдут через /api/media/…",
     );
   }
 }
@@ -323,10 +358,10 @@ async function checkTelegram(): Promise<void> {
       description?: string;
     };
     if (body.ok && body.result?.username) {
-      ok("Telegram через релей", `@${body.result.username}`);
+      ok("Telegram", `@${body.result.username} через ${root}`);
     } else {
       fail(
-        "Telegram через релей",
+        "Telegram",
         body.description ?? `ответ ${response.status}`,
         "Проверьте BOT_TOKEN и что этот сервер в ALLOWED_IP релея",
       );
@@ -334,10 +369,11 @@ async function checkTelegram(): Promise<void> {
     }
   } catch (error) {
     fail(
-      "Telegram через релей",
+      "Telegram",
       message(error),
-      `Релей ${root} не отвечает. Без него не работают ни приветствие, ни ` +
-        "уведомления о заявках, ни код входа в админку. См. relay/README.md",
+      `${root} не отвечает. Без Telegram не работают ни приветствие, ни ` +
+        "уведомления о заявках, ни код входа в админку. Если сервер в России — " +
+        "нужен релей вне РФ, см. relay/README.md",
     );
     return;
   }
@@ -352,19 +388,19 @@ async function checkTelegram(): Promise<void> {
     // от релея (не пустил) или сетевая ошибка (не проксирует этот путь).
     if (response.status === 403) {
       fail(
-        "Скачивание файлов через релей",
+        "Скачивание файлов Telegram",
         "релей ответил 403 на /file/bot…",
         "Путь /file/bot* не разрешён. Обе формы обязаны проксироваться — см. relay/Caddyfile",
       );
     } else {
       ok(
-        "Скачивание файлов через релей",
+        "Скачивание файлов Telegram",
         `путь /file/bot* проксируется (${response.status})`,
       );
     }
   } catch (error) {
     fail(
-      "Скачивание файлов через релей",
+      "Скачивание файлов Telegram",
       message(error),
       "Путь /file/bot* не проксируется. apiRoot покрывает только вызовы " +
         "методов — файлы идут другим путём. См. relay/Caddyfile",

@@ -3,7 +3,7 @@ import { InputFile, type Context } from "grammy";
 import { mainKeyboard } from "@/bot/keyboards/main";
 import { greeting } from "@/bot/texts/ru";
 import { readSettings, rememberBannerFileId } from "@/server/settings";
-import { objectUrl } from "@/lib/media";
+import { absoluteObjectUrl } from "@/lib/media";
 
 /**
  * /start.
@@ -56,8 +56,12 @@ export async function handleStart(ctx: Context, deps: StartDeps): Promise<void> 
 
   // First send: upload, then remember the id Telegram gives back. A fresh
   // InputFile per send — stream-backed ones are single-use.
+  // Absolute, because Telegram fetches this itself and a relative path means
+  // nothing to it. With a public bucket the object already has an absolute
+  // address; with a private one — a Railway Bucket — it is served by the
+  // storefront's own media proxy, and MINI_APP_URL is where that is.
   const message = await ctx.replyWithPhoto(
-    new InputFile(new URL(objectUrl(settings.bannerKey))),
+    new InputFile(new URL(absoluteObjectUrl(settings.bannerKey, deps.miniAppUrl))),
     {
       caption: text,
       reply_markup: keyboard,

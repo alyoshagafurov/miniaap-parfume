@@ -24,18 +24,14 @@ import { getSettings } from "@/server/settings.cached";
  *
  * ── Why the page function reads nothing ──
  *
- * It used to await all four queries in its own body, which made the whole route
- * prerender at build time — and therefore made `next build` require a reachable
- * database. On a laptop with `docker compose up` that is invisible. In a
- * container it is fatal: the image is built before Postgres exists, and
- * `docker compose up --build` on a fresh server died on this page with «Can't
- * reach database server at 127.0.0.1:5432». The deployment could not have
- * worked.
+ * It used to await all four queries in its own body, so nothing at all appeared
+ * until the slowest of them returned. Every other route in this application
+ * already reads inside a boundary; this one is now consistent with them, and
+ * the three blocks arrive top to bottom behind skeletons that hold their
+ * heights, so nothing below moves as each lands.
  *
- * Every other route in this application already reads its data inside a
- * boundary. This one is now consistent with them: the shell prerenders with no
- * data at all, and the three blocks stream in top to bottom. The skeletons hold
- * the heights of what replaces them, so nothing below moves as each lands.
+ * It does not make the build independent of the database — see the note on the
+ * shop layout for why that is not achievable under `cacheComponents`.
  */
 export default function HomePage() {
   return (

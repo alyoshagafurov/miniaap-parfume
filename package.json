@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "next dev --port 3100",
     "build": "next build",
-    "start": "next start --port 3100",
+    "start": "next start --port ${PORT:-3100}",
     "bot": "tsx src/bot/index.ts",
     "bot:dev": "tsx watch src/bot/index.ts",
     "typecheck": "tsc --noEmit",
@@ -41,7 +41,8 @@
     "check:catalog-writes": "node scripts/check-catalog-writes.mjs",
     "check:action-guards": "node scripts/check-action-guards.mjs",
     "brand:banner": "tsx scripts/make-bot-banner.ts",
-    "deploy:check": "tsx scripts/deploy-check.ts"
+    "deploy:check": "tsx scripts/deploy-check.ts",
+    "db:create-ru": "tsx scripts/create-search-db.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

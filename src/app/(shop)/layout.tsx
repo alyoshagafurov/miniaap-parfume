@@ -23,14 +23,20 @@ import { getSettings } from "@/server/settings.cached";
  * ── Why the layout itself reads nothing ──
  *
  * It used to await `getSettings()` in its own body for the footer. A layout
- * wraps every route under it, so that one call made the prerendered shell of
- * every storefront screen depend on the database — and therefore made
- * `next build` require one. In a container the build happens before Postgres
- * exists, and `docker compose up --build` on a fresh server died here, once per
- * route, reporting whichever page it happened to reach first.
+ * wraps every route beneath it, so one call there put a database read in front
+ * of every storefront screen's shell — the whole page waited on the footer.
  *
  * The footer is the only thing that wanted the data, so the footer is what
- * streams.
+ * streams, behind a skeleton of its own height.
+ *
+ * This does NOT make `next build` independent of the database, and it was
+ * first written here as if it did. Under `cacheComponents` the build executes
+ * `'use cache'` functions to fill the cache while prerendering, and a Suspense
+ * boundary does not change that: the boundary decides where a result lands,
+ * not whether it is computed at build. A build therefore needs a reachable
+ * Postgres — `scripts/deploy.sh` sequences around it on a VPS, and on Railway
+ * the build uses `DATABASE_PUBLIC_URL`, because private networking is
+ * unavailable during the build phase.
  */
 export default function ShopLayout({ children }: { children: ReactNode }) {
   return (

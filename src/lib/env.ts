@@ -42,7 +42,18 @@ const serverSchema = z.object({
   S3_BUCKET: z.string().min(1),
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
-  NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url(),
+  /**
+   * Публичный адрес бакета — если он публичный.
+   *
+   * Необязателен, и пустое значение здесь не «забыли заполнить», а вторая
+   * рабочая конфигурация: Railway Bucket закрытый, публичных бакетов Railway
+   * не поддерживает, и тогда браузер забирает фотографии через /api/media/…
+   * Требовать адрес значило бы требовать того, чего у площадки нет.
+   *
+   * Заполнен — браузер ходит в бакет напрямую и байты не идут через
+   * приложение. Это путь Yandex Object Storage и MinIO в разработке.
+   */
+  NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url().or(z.literal("")).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

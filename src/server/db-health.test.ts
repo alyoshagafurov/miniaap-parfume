@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { checkSearchHealth, describeSearchHealth } from "./db-health";
+import { checkSearchHealth, describeSearchHealth, orderedByName } from "./db-health";
 
 /**
  * These run against the development database. If it is not reachable the suite
@@ -41,12 +41,30 @@ describe.skipIf(!reachable)(
         ok: false,
         cyrillicTrigrams: 0,
         hasRussianCollation: false,
+        collationSorts: false,
         ctype: "C",
         collate: "C",
         problems: ["pg_trgm не извлекает триграммы из кириллицы"],
       });
       expect(text).toContain("pg_trgm");
       expect(text).toContain("C.UTF-8");
+      // Лечение зависит от площадки, и обе названы: на Railway initdb
+      // недоступен, там базу с нужной локалью создают отдельно.
+      expect(text).toContain("db:create-ru");
+      expect(text).toContain("docker compose");
+    });
+
+    it("проверяет, что collation сортирует, а не только числится", async () => {
+      // Сборка PostgreSQL без ICU показывает строку в pg_collation и падает
+      // при использовании. Существование и работоспособность — разные факты,
+      // и раньше проверялся только первый.
+      const health = await checkSearchHealth();
+      expect(health.collationSorts).toBe(true);
+      expect(await orderedByName(["яблоко", "ёлка", "апельсин"])).toEqual([
+        "апельсин",
+        "ёлка",
+        "яблоко",
+      ]);
     });
   },
 );
