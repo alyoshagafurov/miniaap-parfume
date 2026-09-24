@@ -52,16 +52,16 @@ export default defineRailway(() => {
   // ── Витрина ───────────────────────────────────────────────────────────────
 
   const web = service("web", {
-    // Не `pnpm build`: сборке нужен публичный адрес базы, потому что приватная
-    // сеть при сборке недоступна, а `next build` под cacheComponents в базу
-    // ходит. Всё объяснение — в самом скрипте.
-    build: "./scripts/railway-build.sh",
-    start: "pnpm start",
-
-    // Между сборкой и запуском, когда приватная сеть уже есть. Здесь, а не в
-    // start: миграции должны выполниться один раз и остановить выкладку, если
-    // не прошли, а не выполняться в каждой реплике при каждом перезапуске.
-    preDeploy: "pnpm prisma migrate deploy",
+    // Ни build, ни start здесь нет намеренно.
+    //
+    // В репозитории лежит Dockerfile, и Railway собирает им, а не Railpack.
+    // Значит сборку описывает Dockerfile, а запуск — его CMD (`node server.js`).
+    // Указывать здесь `start: "pnpm start"` было ошибкой: образ собран с
+    // output: "standalone", в нём нет ни next, ни полного node_modules, и
+    // `pnpm start` внутри него падает — проверено запуском образа.
+    //
+    // preDeploy с миграциями по той же причине переехал к боту: в standalone
+    // нет ни prisma CLI, ни каталога миграций.
 
     // Трогает PostgreSQL. «/» отдаётся из кэша и отвечает 200 при мёртвой базе
     // — то есть ровно в том случае, ради которого проверка и существует.
@@ -69,9 +69,15 @@ export default defineRailway(() => {
     healthcheckTimeout: 120,
 
     env: {
+      // Какой Dockerfile собирать. Без этого оба сервиса берут корневой, и бот
+      // получил бы образ витрины — со стартовой командой, которой в нём нет.
+      RAILWAY_DOCKERFILE_PATH: "Dockerfile",
+
       NODE_ENV: "production",
       DATABASE_URL: db.env.DATABASE_URL,
-      // Только для сборки. В рантайме используется приватный адрес выше.
+      // Только для сборки: приватная сеть при сборке недоступна, а `next build`
+      // под cacheComponents в базу ходит. Dockerfile объявляет её через ARG и
+      // предпочитает, когда она есть. В рантайме работает приватный адрес выше.
       DATABASE_PUBLIC_URL: db.env.DATABASE_PUBLIC_URL,
       REDIS_URL: cache.env.REDIS_URL,
 
@@ -121,12 +127,25 @@ export default defineRailway(() => {
     // Порта нет и healthcheck не объявлен: это воркер на long polling. Живость
     // он подтверждает сам — раз в минуту спрашивает у Telegram, кто он, и пишет
     // время в BOT_HEARTBEAT_FILE.
-    build: "pnpm prisma generate",
-    start: "pnpm bot",
+    //
+    // build и start задаёт Dockerfile.bot; его CMD — `pnpm bot`.
+
+    // Миграции здесь, а не у витрины, по одной практической причине: этот образ
+    // собран с полными зависимостями и исходниками, в нём есть prisma CLI и
+    // каталог миграций, а standalone-образ витрины не содержит ни того, ни
+    // другого. preDeploy выполняется один раз между сборкой и запуском, когда
+    // приватная сеть уже доступна, и неудачная миграция останавливает выкладку.
+    preDeploy: "pnpm prisma migrate deploy",
 
     env: {
+      RAILWAY_DOCKERFILE_PATH: "Dockerfile.bot",
+
       NODE_ENV: "production",
       DATABASE_URL: db.env.DATABASE_URL,
+      // Не для рантайма — чтобы `railway run --service bot` с машины
+      // разработчика мог достучаться до базы: приватный адрес снаружи кластера
+      // не резолвится.
+      DATABASE_PUBLIC_URL: db.env.DATABASE_PUBLIC_URL,
       REDIS_URL: cache.env.REDIS_URL,
 
       S3_ENDPOINT: photos.env.ENDPOINT,

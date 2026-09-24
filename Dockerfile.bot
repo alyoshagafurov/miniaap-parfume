@@ -20,7 +20,18 @@ WORKDIR /app
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Без --mount=type=cache. Он здесь был и убран намеренно — не возвращайте.
+#
+# Railway проверяет Dockerfile перед сборкой и требует, чтобы у cache-mount был
+# id вида `s/<id сервиса>-<путь>`; переменных в нём он не принимает. То есть
+# рабочий mount пришлось бы прибить гвоздями к идентификатору одного конкретного
+# сервиса одного конкретного проекта Railway — и тот же файл перестал бы
+# собираться и локально, и на запасном VPS, и в любом втором окружении.
+#
+# Терять почти нечего: обычный слоевой кэш Docker продолжает работать, а этот
+# слой и так пересобирается только при изменении pnpm-lock.yaml. Разница
+# заметна лишь при первой сборке после смены lock-файла.
+RUN pnpm install --frozen-lockfile
 
 FROM base AS runner
 ENV NODE_ENV=production

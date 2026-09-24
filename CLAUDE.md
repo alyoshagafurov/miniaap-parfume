@@ -319,9 +319,19 @@ Presigned-ссылки не подошли: они истекают, а адре
 днями.
 
 **Приватная сеть Railway недоступна при сборке.** А `next build` под
-`cacheComponents` в базу ходит (см. ниже). Поэтому сборка витрины идёт через
-[scripts/railway-build.sh](scripts/railway-build.sh), который на время сборки
-подменяет `DATABASE_URL` на `DATABASE_PUBLIC_URL`.
+`cacheComponents` в базу ходит (см. ниже). Поэтому [Dockerfile](Dockerfile)
+объявляет `ARG DATABASE_PUBLIC_URL` — переменные Railway доходят до сборки
+только через `ARG` — и на время `prisma generate` и `next build` предпочитает
+его приватному адресу.
+
+**Какой Dockerfile собирать, решает `RAILWAY_DOCKERFILE_PATH`** в переменных
+сервиса: у web — `Dockerfile`, у bot — `Dockerfile.bot`. Без неё оба сервиса
+берут корневой.
+
+**`RUN --mount=type=cache` в Dockerfile не пройдёт.** Railway требует у
+cache-mount id вида `s/<id сервиса>-<путь>` и не принимает переменных — то есть
+файл пришлось бы прибить к идентификатору одного сервиса одного проекта.
+Mount'ы убраны, слоевой кэш Docker работает как работал.
 
 ### Продакшен: четыре ловушки, на которые уже наступили
 

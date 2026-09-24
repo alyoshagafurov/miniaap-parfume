@@ -21,7 +21,18 @@ WORKDIR /app
 # каждую правку в src/.
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Без --mount=type=cache. Он здесь был и убран намеренно — не возвращайте.
+#
+# Railway проверяет Dockerfile перед сборкой и требует, чтобы у cache-mount был
+# id вида `s/<id сервиса>-<путь>`; переменных в нём он не принимает. То есть
+# рабочий mount пришлось бы прибить гвоздями к идентификатору одного конкретного
+# сервиса одного конкретного проекта Railway — и тот же файл перестал бы
+# собираться и локально, и на запасном VPS, и в любом втором окружении.
+#
+# Терять почти нечего: обычный слоевой кэш Docker продолжает работать, а этот
+# слой и так пересобирается только при изменении pnpm-lock.yaml. Разница
+# заметна лишь при первой сборке после смены lock-файла.
+RUN pnpm install --frozen-lockfile
 
 # ── Сборка ───────────────────────────────────────────────────────────────────
 FROM base AS build
@@ -48,7 +59,23 @@ ENV NEXT_PUBLIC_S3_PUBLIC_URL=$NEXT_PUBLIC_S3_PUBLIC_URL \
 # стартовать и назвать переменную.
 ARG DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build?schema=public
 
-RUN pnpm prisma generate && pnpm build
+# И сверх того — база при сборке нужна по-настоящему.
+#
+# Под cacheComponents `next build` ВЫПОЛНЯЕТ функции с 'use cache', чтобы
+# наполнить кэш при пререндере, то есть ходит в PostgreSQL за настройками,
+# категориями и лентами. Границы Suspense этого не меняют.
+#
+# На Railway приватная сеть при сборке недоступна: `postgres.railway.internal`
+# из сборочного контейнера не резолвится. Публичный TCP-прокси той же базы
+# Railway отдаёт как DATABASE_PUBLIC_URL — его и берём, когда он есть.
+# Объявлен через ARG, потому что переменные Railway доходят до Dockerfile
+# только так, и потому что в готовый образ он попасть не должен.
+#
+# Локально и на VPS этой переменной нет, и всё работает по DATABASE_URL.
+ARG DATABASE_PUBLIC_URL=
+
+RUN DATABASE_URL="${DATABASE_PUBLIC_URL:-$DATABASE_URL}" pnpm prisma generate \
+ && DATABASE_URL="${DATABASE_PUBLIC_URL:-$DATABASE_URL}" pnpm build
 
 # ── Рантайм ──────────────────────────────────────────────────────────────────
 # output: "standalone" уже собрал в .next/standalone только те модули, которые
