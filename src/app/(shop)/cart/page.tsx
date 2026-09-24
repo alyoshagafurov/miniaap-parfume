@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { io } from "next/cache";
 import { Suspense } from "react";
 
 import { OrderScreen } from "@/components/shop/OrderScreen";
@@ -27,6 +28,12 @@ export default function CartPage() {
 }
 
 async function Screen() {
+  // `readSettings` is deliberately uncached, so unlike the storefront's other
+  // reads it carries no suspension point of its own — and an uncached query is
+  // still a query the prerender would issue. This screen has no searchParams
+  // and no cookie read to make it dynamic on its own, so without this the
+  // build opens a connection here. The skeleton below ships in the shell.
+  await io();
   const settings = await readSettings();
   return (
     <OrderScreen

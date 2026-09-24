@@ -16,7 +16,14 @@
 # машине, его конфиг — в relay/.
 # ─────────────────────────────────────────────────────────────────────────────
 
-name: arumi
+# Имя проекта — arumi-prod, и оно отличается от dev-овского `arumi` намеренно.
+#
+# Compose складывает имя проекта с именем сервиса и с именем тома. Пока оба
+# файла назывались `arumi`, `up -d postgres` отсюда пересоздавал контейнер
+# dev-овского postgres, останавливал рядом стоящие redis и minio и — хуже
+# всего — монтировал ТОТ ЖЕ том `arumi_postgres-data`. То есть «прод»-контейнер
+# открывал базу разработки: один раз это уже случилось.
+name: arumi-prod
 
 # Ротация логов задаётся один раз и подмешивается в каждый сервис. Без неё
 # json-file растёт без ограничений и однажды забивает диск VPS целиком —
@@ -84,7 +91,7 @@ services:
       # docker exec.
       - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-prod-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -231,6 +238,9 @@ services:
       - caddy-config:/config
 
 volumes:
-  postgres-data:
+  # Своё имя, а не `postgres-data`: см. комментарий к `name:` выше. Полное имя
+  # тома получается `arumi-prod_postgres-prod-data` и ни при каком имени
+  # проекта не совпадёт с dev-овским.
+  postgres-prod-data:
   caddy-data:
   caddy-config:

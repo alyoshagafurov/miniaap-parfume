@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 
 import { prisma } from "@/server/db";
 
@@ -21,6 +21,22 @@ import { prisma } from "@/server/db";
  * catalog out of rotation and restart it in a loop.
  */
 export async function GET() {
+  // Wait for a real request before doing anything.
+  //
+  // Without this the build runs this handler — `next build` exports route
+  // handlers to find out whether they can be static, and this one has no
+  // request-time API to stop it, so it opened a connection during the build
+  // and logged a Prisma error into an otherwise clean log. It was also one
+  // catch block away from something worse: the handler answers 503 rather
+  // than throwing when the database is unreachable, and a 503 baked into the
+  // build is a container that can never pass its own health check.
+  //
+  // `connection()` rather than `io()` because this is the one case the two
+  // differ on. `io()` leaves what follows cacheable and prefetchable, which is
+  // right for the catalog and wrong here: a liveness probe answered from a
+  // cache is not a liveness probe.
+  await connection();
+
   try {
     // The cheapest round trip that proves the connection is real. `SELECT 1`
     // rather than a table read: a health check must not depend on the schema

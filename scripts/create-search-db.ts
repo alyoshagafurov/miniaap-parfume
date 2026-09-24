@@ -102,8 +102,12 @@ async function main(): Promise<void> {
     console.log(
       `    1. В переменных web и bot заменить имя базы в DATABASE_URL на «${target}»`,
     );
-    console.log("    2. Прогнать миграции:  railway run pnpm prisma migrate deploy");
-    console.log("    3. Проверить:          railway run pnpm deploy:check\n");
+    console.log(
+      "    2. Прогнать миграции:  railway ssh --service bot pnpm prisma migrate deploy",
+    );
+    console.log(
+      "    3. Проверить:          railway ssh --service bot pnpm deploy:check\n",
+    );
   } finally {
     await client.end();
   }

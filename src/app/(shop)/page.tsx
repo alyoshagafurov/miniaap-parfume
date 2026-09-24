@@ -30,8 +30,9 @@ import { getSettings } from "@/server/settings.cached";
  * the three blocks arrive top to bottom behind skeletons that hold their
  * heights, so nothing below moves as each lands.
  *
- * It does not make the build independent of the database — see the note on the
- * shop layout for why that is not achievable under `cacheComponents`.
+ * The build does not read any of it. Each of the four reads awaits `io()`
+ * before touching PostgreSQL, so what `next build` emits for this route is the
+ * three skeletons below and nothing else — see src/server/catalog/queries.ts.
  */
 export default function HomePage() {
   return (

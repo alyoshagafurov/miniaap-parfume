@@ -74,11 +74,11 @@ export default defineRailway(() => {
       RAILWAY_DOCKERFILE_PATH: "Dockerfile",
 
       NODE_ENV: "production",
+      // Приватный адрес, и другого здесь нет. DATABASE_PUBLIC_URL был объявлен
+      // и убран: он нужен был только сборке, а сборка в базу больше не ходит —
+      // каждое чтение витрины начинается с `io()`, и пререндер выдаёт лишь
+      // статическую оболочку. Публичный доступ к Postgres включать не нужно.
       DATABASE_URL: db.env.DATABASE_URL,
-      // Только для сборки: приватная сеть при сборке недоступна, а `next build`
-      // под cacheComponents в базу ходит. Dockerfile объявляет её через ARG и
-      // предпочитает, когда она есть. В рантайме работает приватный адрес выше.
-      DATABASE_PUBLIC_URL: db.env.DATABASE_PUBLIC_URL,
       REDIS_URL: cache.env.REDIS_URL,
 
       S3_ENDPOINT: photos.env.ENDPOINT,
@@ -142,10 +142,6 @@ export default defineRailway(() => {
 
       NODE_ENV: "production",
       DATABASE_URL: db.env.DATABASE_URL,
-      // Не для рантайма — чтобы `railway run --service bot` с машины
-      // разработчика мог достучаться до базы: приватный адрес снаружи кластера
-      // не резолвится.
-      DATABASE_PUBLIC_URL: db.env.DATABASE_PUBLIC_URL,
       REDIS_URL: cache.env.REDIS_URL,
 
       S3_ENDPOINT: photos.env.ENDPOINT,

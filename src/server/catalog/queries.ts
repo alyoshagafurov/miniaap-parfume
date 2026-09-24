@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { cacheLife, cacheTag } from "next/cache";
+import { cacheLife, cacheTag, io } from "next/cache";
 
 import { prisma } from "@/server/db";
 import { brandTag, CATALOG_TAG, categoryTag, productTag } from "@/server/catalog/tags";
@@ -11,6 +11,29 @@ import { brandTag, CATALOG_TAG, categoryTag, productTag } from "@/server/catalog
  * a product row carries searchText and searchNotes, which are large and of no
  * use to a card, and a buyer-facing query should never be one schema change
  * away from serialising something it should not.
+ *
+ * ── Why every cached read here is two functions ──
+ *
+ * Each exported function awaits `io()` and then calls a private one that
+ * carries the `'use cache'` directive. The pairing is what keeps `next build`
+ * away from PostgreSQL.
+ *
+ * Under `cacheComponents` a prerender executes `'use cache'` functions to fill
+ * their entries, so a build with the directive on the exported function opens
+ * a real connection and fails without a reachable database — which is how this
+ * catalog used to be built, against the database's public address. `io()`
+ * suspends the prerender *before* the query is issued, so the boundary's
+ * skeleton ships in the static shell and the read happens on the first real
+ * request instead.
+ *
+ * It has to be two functions because `io()` is a no-op inside a cache scope,
+ * by design: awaited in there it would suspend nothing and the build would go
+ * back to querying. So it is awaited outside, and the directive stays inside.
+ *
+ * Nothing else changes. Entries are keyed by arguments, tagged and invalidated
+ * exactly as before; they are filled at request time rather than at build time
+ * and then shared by every request that follows. Unlike `connection()`, `io()`
+ * leaves what follows cacheable and prefetchable.
  */
 
 const CARD_SELECT = {
@@ -68,6 +91,11 @@ export interface CategoryRow {
  * becomes visible.
  */
 export async function getCategories(): Promise<CategoryRow[]> {
+  await io();
+  return categories();
+}
+
+async function categories(): Promise<CategoryRow[]> {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");
@@ -133,6 +161,11 @@ export function oneCardPerScent<
 const SCENT_SPREAD = 6;
 
 export async function getNewArrivals(limit = 12) {
+  await io();
+  return newArrivals(limit);
+}
+
+async function newArrivals(limit: number) {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");
@@ -146,6 +179,11 @@ export async function getNewArrivals(limit = 12) {
 }
 
 export async function getHits(limit = 12) {
+  await io();
+  return hits(limit);
+}
+
+async function hits(limit: number) {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");
@@ -214,6 +252,11 @@ export function orderByClause(sort: SortKey): Prisma.Sql {
 }
 
 export async function getCategoryBySlug(slug: string) {
+  await io();
+  return categoryBySlug(slug);
+}
+
+async function categoryBySlug(slug: string) {
   "use cache";
   cacheTag(CATALOG_TAG, categoryTag(slug));
   cacheLife("hours");
@@ -224,6 +267,11 @@ export async function getCategoryBySlug(slug: string) {
 }
 
 export async function getProductBySlug(slug: string) {
+  await io();
+  return productBySlug(slug);
+}
+
+async function productBySlug(slug: string) {
   "use cache";
   cacheTag(CATALOG_TAG, productTag(slug));
   cacheLife("hours");
@@ -282,6 +330,9 @@ export async function getProductBySlug(slug: string) {
 const MAX_OTHER_FORMATS = 12;
 
 export async function getOtherFormats(fragranceId: string, exceptProductId: string) {
+  // Uncached, so no second function — but still a database read during a
+  // render, and still has to stay out of the prerender.
+  await io();
   const rows = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
@@ -330,6 +381,7 @@ export async function getMoreFromBrand(
   except: { productId: string; scentSlugs: readonly string[] },
   limit = 8,
 ) {
+  await io();
   const rows = await prisma.product.findMany({
     where: {
       status: "PUBLISHED",
@@ -357,6 +409,11 @@ export async function getMoreFromBrand(
  * the format, which is the pivot the whole catalog turns on.
  */
 export async function getBrandBySlug(slug: string) {
+  await io();
+  return brandBySlug(slug);
+}
+
+async function brandBySlug(slug: string) {
   "use cache";
   cacheTag(CATALOG_TAG, brandTag(slug));
   cacheLife("hours");
@@ -367,6 +424,11 @@ export async function getBrandBySlug(slug: string) {
 }
 
 export async function getBrandProducts(brandId: string) {
+  await io();
+  return brandProducts(brandId);
+}
+
+async function brandProducts(brandId: string) {
   "use cache";
   cacheTag(CATALOG_TAG);
   cacheLife("hours");

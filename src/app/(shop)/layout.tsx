@@ -29,14 +29,16 @@ import { getSettings } from "@/server/settings.cached";
  * The footer is the only thing that wanted the data, so the footer is what
  * streams, behind a skeleton of its own height.
  *
- * This does NOT make `next build` independent of the database, and it was
- * first written here as if it did. Under `cacheComponents` the build executes
- * `'use cache'` functions to fill the cache while prerendering, and a Suspense
- * boundary does not change that: the boundary decides where a result lands,
- * not whether it is computed at build. A build therefore needs a reachable
- * Postgres — `scripts/deploy.sh` sequences around it on a VPS, and on Railway
- * the build uses `DATABASE_PUBLIC_URL`, because private networking is
- * unavailable during the build phase.
+ * The boundary alone did NOT make `next build` independent of the database,
+ * and this comment once claimed it did. Under `cacheComponents` a prerender
+ * executes `'use cache'` functions to fill their entries, and a boundary
+ * decides where a result lands, not whether it is computed at build.
+ *
+ * What does make the build independent of the database is the `io()` that
+ * `getSettings` now awaits before the cached read — a suspension point ahead
+ * of the query rather than around it. See src/server/catalog/queries.ts for
+ * the full reasoning; the effect here is that this skeleton is what the build
+ * emits, and the footer's text arrives on the first real request.
  */
 export default function ShopLayout({ children }: { children: ReactNode }) {
   return (

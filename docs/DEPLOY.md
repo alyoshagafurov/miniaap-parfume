@@ -100,17 +100,21 @@ railway config apply    # применит после подтверждения
 
 Миграции накатывает сервис **bot** в `preDeploy` — у него полный образ с
 исходниками и prisma CLI, а у витрины образ standalone, в котором ни того, ни
-другого нет. На самом первом развёртывании прогоните их руками, чтобы витрина
-не поднялась раньше схемы:
+другого нет. Отдельного первого запуска руками не требуется: сборка витрины в
+базу не ходит, так что порядок «сначала bot, потом web» достаточно соблюсти
+один раз, выложив бота первым.
+
+> **Все команды ниже — `railway ssh`, а не `railway run`, и всегда к сервису
+> `bot`.** Две причины, и обе неочевидны. `railway run` выполняет команду на
+> **вашей** машине, только подставив переменные сервиса, — а `DATABASE_URL`
+> указывает на приватный адрес вида `postgres.railway.internal`, который
+> снаружи кластера не резолвится; публичного адреса у базы намеренно нет.
+> `railway ssh` выполняет команду **внутри контейнера**, где приватная сеть
+> работает. И именно `bot`, потому что в образе витрины нет ни prisma CLI, ни
+> каталога `scripts/`.
 
 ```bash
-railway run --service bot sh -c 'DATABASE_URL=$DATABASE_PUBLIC_URL pnpm prisma migrate deploy'
-```
-
-Дальше они применяются сами при каждом деплое бота.
-
-```bash
-railway run --service web pnpm deploy:check
+railway ssh --service bot pnpm deploy:check
 ```
 
 Проверяет то, что ломается молча: переменные, локаль базы, миграции, Redis,
@@ -129,15 +133,15 @@ railway run --service web pnpm deploy:check
 не добраться, но можно создать **отдельную базу** в том же кластере:
 
 ```bash
-railway run --service web pnpm db:create-ru
+railway ssh --service bot pnpm db:create-ru
 ```
 
 Затем в переменных **web** и **bot** замените имя базы в `DATABASE_URL` на
 `arumi` и прогоните миграции:
 
 ```bash
-railway run --service web pnpm prisma migrate deploy
-railway run --service web pnpm deploy:check
+railway ssh --service bot pnpm prisma migrate deploy
+railway ssh --service bot pnpm deploy:check
 ```
 
 Проверка также убеждается, что collation `ru-RU-x-icu` не просто числится, а
@@ -149,7 +153,7 @@ railway run --service web pnpm deploy:check
 ## 4. Первый администратор
 
 ```bash
-railway run --service web pnpm admin:create \
+railway ssh --service bot pnpm admin:create \
   --login magomed --telegram 123456789 --name "Магомед" --role OWNER
 ```
 
@@ -202,10 +206,11 @@ git push        # Railway собирает и выкладывает сам
 **Ручная копия — перед рискованным:**
 
 ```bash
-railway run --service web ./scripts/dump.sh
+railway ssh --service bot ./scripts/dump.sh
 ```
 
-Кладёт файл в `./backups/`. Забирать копию стоит перед обновлением схемы,
+Кладёт файл в `./backups/` **внутри контейнера**, поэтому сразу заберите его
+к себе — контейнер переживёт не всякую выкладку. Забирать копию стоит перед обновлением схемы,
 массовым импортом и вообще перед всем, что страшно.
 
 Восстановить:
@@ -228,7 +233,7 @@ railway logs --service bot
 
 | Симптом                                                     | Обычная причина                                                                                                                                       |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Сборка web падает на «Can't reach database server»          | Не задан `DATABASE_PUBLIC_URL` у сервиса web. Приватная сеть при сборке недоступна, а `next build` в базу ходит — Dockerfile объявляет её через `ARG` |
+| Сборка web падает на «Can't reach database server»          | Не должна: сборка в базу не ходит. Значит, добавилось чтение без `io()` — см. раздел про `io()` в CLAUDE.md                                            |
 | Бот запускается и сразу падает                              | Неверный `BOT_TOKEN`, либо Telegram недоступен                                                                                                        |
 | Бот падает с «Command "bot" not found» или сразу после сборки | У сервиса bot не задан `RAILWAY_DOCKERFILE_PATH=Dockerfile.bot` — он собрал образ витрины                                                              |
 | Поиск не находит по-русски с опечаткой, по-латински находит | Локаль базы не UTF-8 — раздел 3                                                                                                                       |
