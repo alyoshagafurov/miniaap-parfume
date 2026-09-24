@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { AddToCart } from "@/components/shop/AddToCart";
@@ -32,6 +33,16 @@ const STOCK_LABEL: Record<string, string> = {
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  // Ничего не делает в рантайме и всё решает при сборке: во время
+  // пререндера этот промис не резолвится никогда, то есть метаданные
+  // помечаются динамическими и не выполняются на этапе `next build`.
+  //
+  // Без него сборка образа невозможна без живой базы. Поиск по slug идёт
+  // через функцию с 'use cache', и Next честно пытается наполнить этот кэш
+  // при пререндере оболочки динамического маршрута — то есть лезет в
+  // Postgres, которого в сборочном контейнере нет и быть не должно.
+  // `docker compose up --build` на чистом сервере падал именно здесь.
+  await connection();
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Товар не найден" };

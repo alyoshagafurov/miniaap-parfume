@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { ProductCard } from "@/components/shop/ProductCard";
 import { GoldRule, RuledHeading } from "@/components/ui/GoldRule";
@@ -20,39 +21,82 @@ import { getSettings } from "@/server/settings.cached";
  * this place is and on what terms, then the way in, then two short lanes of
  * merchandising. Everything that decides whether to keep scrolling is
  * answerable in one glance on a phone held in one hand on a market floor.
+ *
+ * ── Why the page function reads nothing ──
+ *
+ * It used to await all four queries in its own body, which made the whole route
+ * prerender at build time — and therefore made `next build` require a reachable
+ * database. On a laptop with `docker compose up` that is invisible. In a
+ * container it is fatal: the image is built before Postgres exists, and
+ * `docker compose up --build` on a fresh server died on this page with «Can't
+ * reach database server at 127.0.0.1:5432». The deployment could not have
+ * worked.
+ *
+ * Every other route in this application already reads its data inside a
+ * boundary. This one is now consistent with them: the shell prerenders with no
+ * data at all, and the three blocks stream in top to bottom. The skeletons hold
+ * the heights of what replaces them, so nothing below moves as each lands.
  */
-export default async function HomePage() {
-  const [settings, categories, newArrivals, hits] = await Promise.all([
+export default function HomePage() {
+  return (
+    <main className="mx-auto w-full max-w-3xl px-4 pb-20">
+      <Suspense fallback={<HeroSkeleton />}>
+        <HeroBlock />
+      </Suspense>
+
+      <Suspense fallback={<CategoriesSkeleton />}>
+        <Categories />
+      </Suspense>
+
+      <Suspense fallback={<LanesSkeleton />}>
+        <Lanes />
+      </Suspense>
+    </main>
+  );
+}
+
+async function HeroBlock() {
+  const settings = await getSettings();
+  return (
+    <Hero
+      minOrderKop={settings.minOrderKop}
+      address={settings.address}
+      phone={settings.phone}
+      whatsappPhone={settings.whatsappPhone}
+    />
+  );
+}
+
+async function Categories() {
+  const categories = await getCategories();
+  return (
+    <section aria-labelledby="categories" className="mt-12">
+      <RuledHeading>
+        <span id="categories">Категории</span>
+      </RuledHeading>
+
+      <ul className="border-rule mt-5 flex flex-col border-t">
+        {categories.map((category) => (
+          <CategoryRow key={category.id} category={category} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+async function Lanes() {
+  // One boundary for both, because they arrive from the same round trip and
+  // revealing «Хиты» before «Новинки» would be motion for its own sake.
+  const [settings, newArrivals, hits] = await Promise.all([
     getSettings(),
-    getCategories(),
     getNewArrivals(8),
     getHits(8),
   ]);
-
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 pb-20">
-      <Hero
-        minOrderKop={settings.minOrderKop}
-        address={settings.address}
-        phone={settings.phone}
-        whatsappPhone={settings.whatsappPhone}
-      />
-
-      <section aria-labelledby="categories" className="mt-12">
-        <RuledHeading>
-          <span id="categories">Категории</span>
-        </RuledHeading>
-
-        <ul className="border-rule mt-5 flex flex-col border-t">
-          {categories.map((category) => (
-            <CategoryRow key={category.id} category={category} />
-          ))}
-        </ul>
-      </section>
-
+    <>
       <Lane title="Новинки" products={newArrivals} showPrices={settings.showPrices} />
       <Lane title="Хиты" products={hits} showPrices={settings.showPrices} />
-    </main>
+    </>
   );
 }
 
@@ -279,5 +323,68 @@ function Lane({
         ))}
       </ul>
     </section>
+  );
+}
+
+/**
+ * The loading states.
+ *
+ * Each one holds the height of the block it stands in for, because a skeleton
+ * that lays out differently is not a placeholder — it is a guaranteed reflow of
+ * everything below it the moment the real content lands.
+ */
+function HeroSkeleton() {
+  return (
+    <section aria-hidden className="pt-10 pb-2">
+      <div className="bg-surface mx-auto h-10 w-3/4 rounded-md" />
+      <GoldRule className="mx-auto mt-5 w-40" />
+      <div className="bg-surface mx-auto mt-6 h-4 w-2/3 rounded-md" />
+      <div className="bg-surface mx-auto mt-3 h-4 w-1/2 rounded-md" />
+      <div className="bg-surface border-rule mt-8 h-24 rounded-md border" />
+    </section>
+  );
+}
+
+function CategoriesSkeleton() {
+  return (
+    <section aria-hidden className="mt-12">
+      <RuledHeading>Категории</RuledHeading>
+      <ul className="border-rule mt-5 flex flex-col border-t">
+        {Array.from({ length: 4 }, (_, i) => (
+          <li
+            key={i}
+            className="border-rule flex items-center gap-4 border-b px-2 py-3"
+          >
+            <span className="bg-surface border-rule h-20 w-16 shrink-0 rounded-md border" />
+            <span className="min-w-0 flex-1">
+              <span className="bg-surface block h-5 w-2/3 rounded-md" />
+              <span className="bg-surface mt-2 block h-4 w-1/2 rounded-md" />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function LanesSkeleton() {
+  return (
+    <div aria-hidden>
+      {["Новинки", "Хиты"].map((title) => (
+        <section key={title} className="mt-14">
+          <RuledHeading>{title}</RuledHeading>
+          <div className="-mx-4 mt-5 flex gap-4 overflow-hidden px-4 pb-2">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="w-5/12 shrink-0 sm:w-48">
+                <div className="bg-surface border-rule aspect-[4/5] w-full rounded-md border" />
+                <div className="bg-surface mt-3 h-3 w-1/2 rounded-md" />
+                <div className="bg-surface mt-2 h-4 w-3/4 rounded-md" />
+                <div className="bg-surface mt-2 h-4 w-1/3 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }

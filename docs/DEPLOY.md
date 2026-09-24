@@ -125,21 +125,38 @@ origin не доходят, а браузер иначе может угадат
 ## 4. Первый запуск
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+./scripts/deploy.sh
 ```
 
-Что происходит по порядку: поднимаются postgres и redis, дожидаются
-healthcheck; одноразовый сервис `migrate` накатывает схему и завершается;
-только после него стартуют web и bot; затем Caddy получает сертификат.
+Одна команда, но порядок внутри неё вынужденный, и его стоит понимать.
+
+**Сборка витрины обращается к базе по-настоящему.** Под `cacheComponents`
+`next build` выполняет функции с `'use cache'`, чтобы наполнить кэш при
+пререндере, — то есть идёт в PostgreSQL за настройками, категориями и лентами.
+Без живой базы сборка падает с «Can't reach database server», и Suspense-границы
+этого не меняют: граница решает, где окажется результат, а не будет ли он
+вычислен при сборке.
+
+Поэтому скрипт делает так: поднимает postgres и redis → ждёт healthcheck →
+накатывает схему → собирает витрину (`docker build --network=host`, чтобы
+сборочный контейнер увидел базу на `127.0.0.1:{POSTGRES_HOST_PORT}`) → собирает
+образ бота → поднимает всё остальное.
 
 Первая сборка занимает несколько минут.
 
 ### Проверка
 
 ```bash
-docker compose -f docker-compose.prod.yml ps        # все healthy
-pnpm deploy:check                                   # что именно не так, если не так
+docker compose -f docker-compose.prod.yml ps
+# все пять — healthy
+
+docker compose -f docker-compose.prod.yml --env-file .env.production \
+  run --rm --entrypoint "" migrate pnpm deploy:check
 ```
+
+Проверка запускается **внутри** сети docker, а не с хоста: в `DATABASE_URL`
+стоит имя сервиса `postgres`, которое снаружи сети не резолвится. Образ
+`migrate` — то же, что у бота: в нём исходники, tsx и `scripts/`.
 
 `deploy:check` проверяет то, что ломается молча: локаль базы (под неправильной
 поиск по-русски не работает, а по-латински работает — и этого не видно),
@@ -149,11 +166,12 @@ pnpm deploy:check                                   # что именно не �
 
 ### Первый администратор
 
+Образ витрины — standalone-сборка, в нём нет ни исходников, ни CLI. Все
+админские команды запускаются из образа `migrate`:
+
 ```bash
-docker compose -f docker-compose.prod.yml exec web \
-  node -e "" 2>/dev/null   # web-образ standalone, без CLI
-# создавать администратора нужно из образа с исходниками:
-docker compose -f docker-compose.prod.yml run --rm migrate \
+docker compose -f docker-compose.prod.yml --env-file .env.production \
+  run --rm --entrypoint "" migrate \
   pnpm admin:create --login magomed --telegram 123456789 \
   --name "Магомед" --role OWNER
 ```
@@ -187,8 +205,7 @@ pnpm brand:banner          # создаст brand/bot-banner.png, 1280×640
 ```bash
 cd /opt/arumi
 git pull
-docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
-pnpm deploy:check
+./scripts/deploy.sh
 ```
 
 Миграции накатываются автоматически перед стартом приложения. Простоя почти

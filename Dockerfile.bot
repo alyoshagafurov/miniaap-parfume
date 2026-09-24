@@ -11,12 +11,11 @@
 # как и локально. Собирать его отдельным бандлом значило бы завести второй
 # способ его запустить — и второй способ ошибиться.
 # ─────────────────────────────────────────────────────────────────────────────
-FROM node:22-alpine AS base
+FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-# openssl — для Prisma; libc6-compat — для пакетов, собранных под glibc-ABI.
-RUN apk add --no-cache openssl libc6-compat && corepack enable
+RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
@@ -31,6 +30,22 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY prisma ./prisma
 COPY prisma.config.ts tsconfig.json ./
 COPY src ./src
+# Эксплуатационные скрипты: этот образ — единственное место на сервере, где
+# есть исходники и tsx, поэтому именно через него запускаются `deploy:check`,
+# `admin:create`, `search:reindex` и миграции. Без этой строки DEPLOY.md
+# советовал команды, которых в образе нет.
+COPY scripts ./scripts
+
+# prisma generate требует DATABASE_URL, хотя базы ему не нужно: он только
+# читает схему. Причина — env("DATABASE_URL") в prisma.config.ts, который
+# вычисляется при загрузке конфига и бросает, если переменной нет.
+#
+# Значит, при сборке образа нужен какой-то адрес — и это ARG, а не ENV,
+# намеренно: ARG не попадает в окружение готового образа. Иначе забытый в
+# compose DATABASE_URL молча подменился бы этой заглушкой, и приложение
+# попыталось бы работать с несуществующей базой вместо того, чтобы отказаться
+# стартовать и назвать переменную.
+ARG DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build?schema=public
 
 RUN pnpm prisma generate
 

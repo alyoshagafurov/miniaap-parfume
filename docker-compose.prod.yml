@@ -27,6 +27,36 @@ x-logging: &logging
     max-size: "10m"
     max-file: "5"
 
+# Окружение приложения — одним блоком на три сервиса.
+#
+# Не только ради краткости. `docker compose run --rm migrate pnpm deploy:check`
+# получает переменные ТОЛЬКО из блока своего сервиса, и пока у migrate был один
+# DATABASE_URL, проверка рапортовала о семи несуществующих отказах: ни токена,
+# ни бакета, ни Redis — потому что их ей не передали, а не потому, что их нет.
+# Образ migrate — это то место на сервере, откуда запускают проверки и
+# админские команды, значит он обязан видеть то же, что видит приложение.
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: ${DATABASE_URL:?нужен DATABASE_URL}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+  AUTH_SECRET: ${AUTH_SECRET:?нужен AUTH_SECRET}
+  BOT_TOKEN: ${BOT_TOKEN:?нужен BOT_TOKEN}
+  BOT_USERNAME: ${BOT_USERNAME:?нужен BOT_USERNAME}
+  ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
+  MINI_APP_URL: ${MINI_APP_URL:?нужен MINI_APP_URL}
+  TELEGRAM_API_ROOT: ${TELEGRAM_API_ROOT:?нужен TELEGRAM_API_ROOT}
+  S3_ENDPOINT: ${S3_ENDPOINT:?нужен S3_ENDPOINT}
+  S3_REGION: ${S3_REGION:-ru-central1}
+  S3_BUCKET: ${S3_BUCKET:?нужен S3_BUCKET}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:?нужен S3_ACCESS_KEY}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:?нужен S3_SECRET_KEY}
+  NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL}
+  DOMAIN: ${DOMAIN:?нужен DOMAIN}
+  ACME_EMAIL: ${ACME_EMAIL:?нужен ACME_EMAIL}
+  TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+  ENABLE_HSTS: ${ENABLE_HSTS:-}
+  CSP_REPORT_ONLY: ${CSP_REPORT_ONLY:-}
+
 services:
   # ── Хранилище ──────────────────────────────────────────────────────────────
   postgres:
@@ -47,6 +77,12 @@ services:
       # в запросах через COLLATE "ru-RU-x-icu", а не локалью всей базы.
       LANG: C.UTF-8
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+    ports:
+      # Только на петлю, наружу не смотрит. Нужен по двум причинам: сборка
+      # витрины обязана достучаться до базы (см. scripts/deploy.sh и
+      # docs/DEPLOY.md), и psql с pg_dump с самого сервера так работают без
+      # docker exec.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -87,6 +123,10 @@ services:
   # останавливает развёртывание вместо того, чтобы поднять приложение на
   # половине схемы.
   migrate:
+    # Тот же образ, что и у бота: в нём исходники, tsx и scripts/, то есть всё,
+    # чем на сервере запускают миграции, `deploy:check`, `admin:create` и
+    # переиндексацию. Один тег на два сервиса — одна сборка вместо двух.
+    image: arumi-bot:latest
     build:
       context: .
       dockerfile: Dockerfile.bot
@@ -96,11 +136,16 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: ${DATABASE_URL:?нужен DATABASE_URL}
+      <<: *app-env
     command: ["pnpm", "prisma", "migrate", "deploy"]
 
   # ── Приложение ─────────────────────────────────────────────────────────────
   web:
+    # Собирается через scripts/deploy.sh, а не этим файлом: сборке нужен
+    # --network=host, чтобы достучаться до базы — под cacheComponents
+    # `next build` выполняет кэшируемые чтения и обращается к Postgres
+    # по-настоящему. Ключа network в спецификации compose нет.
+    image: arumi-web:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -118,27 +163,7 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
-      NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      AUTH_SECRET: ${AUTH_SECRET:?нужен AUTH_SECRET}
-      BOT_TOKEN: ${BOT_TOKEN:?нужен BOT_TOKEN}
-      BOT_USERNAME: ${BOT_USERNAME:?нужен BOT_USERNAME}
-      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
-      MINI_APP_URL: ${MINI_APP_URL:?нужен MINI_APP_URL}
-      TELEGRAM_API_ROOT: ${TELEGRAM_API_ROOT:?нужен TELEGRAM_API_ROOT}
-      S3_ENDPOINT: ${S3_ENDPOINT:?нужен S3_ENDPOINT}
-      S3_REGION: ${S3_REGION:-ru-central1}
-      S3_BUCKET: ${S3_BUCKET:?нужен S3_BUCKET}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?нужен S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:?нужен S3_SECRET_KEY}
-      NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL}
-      # Caddy — единственный прокси перед приложением, поэтому доверенный
-      # переход ровно один. Next не санитизирует x-forwarded-for, и без этого
-      # числа лимит по IP обходится подделкой заголовка.
-      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
-      ENABLE_HSTS: ${ENABLE_HSTS:-}
-      CSP_REPORT_ONLY: ${CSP_REPORT_ONLY:-}
+      <<: *app-env
     healthcheck:
       # Именно /api/health, а не «/»: главная отдаётся из кэша и отвечает 200
       # при недоступной базе — то есть ровно в том случае, ради которого
@@ -154,6 +179,7 @@ services:
       start_period: 40s
 
   bot:
+    image: arumi-bot:latest
     build:
       context: .
       dockerfile: Dockerfile.bot
@@ -165,21 +191,7 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
-      NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      AUTH_SECRET: ${AUTH_SECRET}
-      BOT_TOKEN: ${BOT_TOKEN}
-      BOT_USERNAME: ${BOT_USERNAME}
-      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
-      MINI_APP_URL: ${MINI_APP_URL}
-      TELEGRAM_API_ROOT: ${TELEGRAM_API_ROOT}
-      S3_ENDPOINT: ${S3_ENDPOINT}
-      S3_REGION: ${S3_REGION:-ru-central1}
-      S3_BUCKET: ${S3_BUCKET}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY}
-      NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL}
+      <<: *app-env
       BOT_HEARTBEAT_FILE: /run/arumi/bot-alive
     healthcheck:
       # У long polling нет порта, который можно опросить, а живой процесс — не

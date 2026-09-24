@@ -1,28 +1,19 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Витрина и админка ÁRUMI.
 #
-# Alpine, и это выбор, а не умолчание.
-#
-# Оба тяжёлых нативных модуля проекта поставляют сборки под musl: sharp —
-# @img/sharp-linuxmusl-*, Prisma 7 работает через драйвер-адаптер @prisma/adapter-pg,
-# то есть говорит с Postgres обычной библиотекой pg, а не нативным движком.
-# Единственное, чего musl-сборке Prisma не хватает из коробки, — openssl, он
-# ставится ниже явно.
-#
-# Проверено, а не предположено: образ собран, поднят и прогнан через
-# `pnpm deploy:check` (Prisma, Redis, S3, релей) и `pnpm brand:banner` (sharp)
-# внутри контейнера. Ровно эти две библиотеки и ломаются на musl, и обе здесь
-# выполняются по-настоящему.
+# Debian slim, не Alpine. Prisma и sharp поставляют бинарники под конкретный
+# libc, и musl-сборки у обоих — отдельная история с отдельными сюрпризами.
+# Разница в размере образа здесь — десятки мегабайт, а цена ошибки — каталог,
+# который не стартует на сервере в Хасавюрте в субботу.
 #
 # Node 22 LTS: package.json требует >=22, а LTS — то, что будет получать
 # security-патчи весь срок жизни этого развёртывания.
-# ─────────────────────────────────────────────────────────────────────────────
-FROM node:22-alpine AS base
+
+FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-# openssl — для Prisma; libc6-compat — для пакетов, собранных под glibc-ABI.
-RUN apk add --no-cache openssl libc6-compat && corepack enable
+RUN corepack enable
 WORKDIR /app
 
 # ── Зависимости ──────────────────────────────────────────────────────────────
@@ -45,6 +36,17 @@ ARG NEXT_PUBLIC_YANDEX_METRICA_ID
 ENV NEXT_PUBLIC_S3_PUBLIC_URL=$NEXT_PUBLIC_S3_PUBLIC_URL \
     NEXT_PUBLIC_YANDEX_METRICA_ID=$NEXT_PUBLIC_YANDEX_METRICA_ID \
     NEXT_TELEMETRY_DISABLED=1
+
+# prisma generate требует DATABASE_URL, хотя базы ему не нужно: он только
+# читает схему. Причина — env("DATABASE_URL") в prisma.config.ts, который
+# вычисляется при загрузке конфига и бросает, если переменной нет.
+#
+# Значит, при сборке образа нужен какой-то адрес — и это ARG, а не ENV,
+# намеренно: ARG не попадает в окружение готового образа. Иначе забытый в
+# compose DATABASE_URL молча подменился бы этой заглушкой, и приложение
+# попыталось бы работать с несуществующей базой вместо того, чтобы отказаться
+# стартовать и назвать переменную.
+ARG DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build?schema=public
 
 RUN pnpm prisma generate && pnpm build
 

@@ -53,6 +53,21 @@ createServer((req, res) => {
     // сломанный релей. Заглушка обязана быть отличима от неработающего релея
     // тем же способом, каким от него отличим настоящий.
     res.writeHead(200, { "content-type": "application/json" });
+
+    // getUpdates обязан вернуть массив. Заглушка, отвечавшая на него той же
+    // формой, что и sendMessage, роняла бота через секунду после старта —
+    // «updates is not iterable», — и это выглядело как сломанный бот, хотя
+    // сломана была заглушка. Пустой массив после паузы — ровно то, что
+    // возвращает настоящий long polling, когда никто ничего не написал.
+    if (req.url?.includes("/getUpdates")) {
+      const wait = Number(/timeout=(\d+)/.exec(body ?? "")?.[1] ?? 0);
+      setTimeout(
+        () => res.end(JSON.stringify({ ok: true, result: [] })),
+        Math.min(wait, 30) * 1000 || 1000,
+      );
+      return;
+    }
+
     if (req.url?.includes("/getMe")) {
       res.end(
         JSON.stringify({

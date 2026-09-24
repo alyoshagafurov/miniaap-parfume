@@ -65,7 +65,7 @@ export function ProductImage({
       >
         <span
           aria-hidden
-          className={`font-display text-olive leading-tight ${prominent ? "text-4xl sm:text-6xl" : "text-4xl"}`}
+          className={`font-display text-olive leading-tight ${prominent ? "text-5xl sm:text-6xl" : "text-4xl"}`}
         >
           Á
         </span>
