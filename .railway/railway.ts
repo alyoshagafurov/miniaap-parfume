@@ -1,6 +1,7 @@
 import {
   bucket,
   defineRailway,
+  github,
   postgres,
   preserve,
   project,
@@ -57,9 +58,22 @@ export default defineRailway(() => {
    */
   const photos = bucket("photos", { region: "ams" });
 
+  /**
+   * Откуда собираются оба сервиса.
+   *
+   * Объявлено явно, потому что IaC описывает сервис целиком: чего в файле нет,
+   * то будет снято. Первый же план, показавший `web` как существующий сервис,
+   * предлагал `source.repo ("alyoshagafurov/miniaap-parfume" → null)` — то есть
+   * отвязать репозиторий и выключить выкладку по push. Один репозиторий на оба
+   * сервиса: они различаются не кодом, а `RAILWAY_DOCKERFILE_PATH`.
+   */
+  const repo = github("alyoshagafurov/miniaap-parfume", { branch: "main" });
+
   // ── Витрина ───────────────────────────────────────────────────────────────
 
   const web = service("web", {
+    source: repo,
+
     // Ни build, ни start здесь нет намеренно.
     //
     // В репозитории лежит Dockerfile, и Railway собирает им, а не Railpack.
@@ -136,6 +150,8 @@ export default defineRailway(() => {
   // ── Бот ───────────────────────────────────────────────────────────────────
 
   const bot = service("bot", {
+    source: repo,
+
     // Порта нет и healthcheck не объявлен: это воркер на long polling. Живость
     // он подтверждает сам — раз в минуту спрашивает у Telegram, кто он, и пишет
     // время в BOT_HEARTBEAT_FILE.
