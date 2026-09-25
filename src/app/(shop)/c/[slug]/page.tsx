@@ -72,9 +72,10 @@ async function CategoryHeader({ params }: { params: PageProps["params"] }) {
       <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
         {category.name}
       </h1>
-      {category.subtitle ? (
-        <p className="text-muted mt-2 text-sm">{category.subtitle}</p>
-      ) : null}
+      {/* The subtitle is deliberately not here. It said the same thing as the
+          row the buyer just tapped, one screen earlier, and on a listing the
+          first screen belongs to the goods. It is still on the row, and still
+          editable in the panel. */}
       <GoldRule className="mt-4 w-24" />
     </header>
   );

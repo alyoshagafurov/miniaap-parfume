@@ -3,10 +3,12 @@ import { Suspense, type ReactNode } from "react";
 
 import { CartProvider } from "@/components/shop/CartProvider";
 import { CartLink } from "@/components/shop/CartLink";
+import { MainMenu } from "@/components/shop/MainMenu";
 import { SearchField } from "@/components/shop/SearchField";
 import { TelegramProvider } from "@/components/telegram/provider";
 import { GoldRule } from "@/components/ui/GoldRule";
 import { formatRub } from "@/lib/money";
+import { getCategories } from "@/server/catalog/queries";
 import { getSettings } from "@/server/settings.cached";
 
 /**
@@ -51,25 +53,40 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
             paddingBottom: "var(--tg-safe-bottom)",
           }}
         >
+          {/*
+            Two rows, not one.
+
+            Wordmark, search and basket shared a single row, and on a 390px
+            screen the field that everything else was competing with ended up
+            about half the width — too narrow to read a typed article number
+            back. Adding a menu button to that row would have taken another
+            44px from it. So the controls keep the top row and the field gets
+            one of its own, full width, which is also where a thumb reaches it.
+          */}
           <header className="bg-canvas sticky top-0 z-20">
-            <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
+            <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 pt-3">
+              <Suspense
+                fallback={<span aria-hidden className="h-11 w-11 shrink-0" />}
+              >
+                <Menu />
+              </Suspense>
               <Link
                 href="/"
-                className="font-display text-olive inline-flex min-h-11 items-center shrink-0 text-2xl leading-none font-semibold"
+                className="font-display text-olive inline-flex min-h-11 flex-1 items-center text-2xl leading-none font-semibold"
               >
                 ÁRUMI
               </Link>
-              <div className="min-w-0 flex-1">
-                <Suspense
-                  fallback={
-                    <div className="bg-surface border-control h-12 rounded-md border" />
-                  }
-                >
-                  <SearchField />
-                </Suspense>
-              </div>
               <Suspense fallback={null}>
                 <CartLink />
+              </Suspense>
+            </div>
+            <div className="mx-auto w-full max-w-3xl px-4 pt-2 pb-3">
+              <Suspense
+                fallback={
+                  <div className="bg-surface border-control h-12 rounded-md border" />
+                }
+              >
+                <SearchField />
               </Suspense>
             </div>
             <GoldRule />
@@ -83,6 +100,26 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
         </div>
       </CartProvider>
     </TelegramProvider>
+  );
+}
+
+/**
+ * The categories the menu lists.
+ *
+ * Its own boundary in the header, so the shell — wordmark, basket, search —
+ * ships without waiting on a database read. The button holds its 44px while
+ * the list arrives, so nothing beside it moves when it does.
+ */
+async function Menu() {
+  const categories = await getCategories();
+  return (
+    <MainMenu
+      categories={categories.map((c) => ({
+        name: c.name,
+        slug: c.slug,
+        productCount: c.productCount,
+      }))}
+    />
   );
 }
 

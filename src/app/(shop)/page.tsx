@@ -240,14 +240,16 @@ function CategoryRow({ category }: { category: CategoryRowData }) {
           <span className="text-ink block text-base leading-snug font-medium sm:text-lg">
             {category.name}
           </span>
-          {/* Count first, then the description, clamped to one line: how deep a
-              category is decides whether a wholesaler opens it, and the
-              description is the same sentence for everyone who already knows.
-              The count lived on the right until it turned out to be eating the
-              forty pixels the longest name needed. */}
+          {/* The count, and nothing else.
+              
+              The category's own sentence used to follow it — «Компактный
+              формат, удобно носить с собой» — and it is the same sentence for
+              everyone who already knows what a 35 ml pencil is, which on a
+              wholesale catalog is everyone. Four of them wrapped every row to
+              three lines and pushed the fourth category off a 390px screen.
+              How deep a category is decides whether it is opened; that stays. */}
           <span className="text-muted mt-0.5 block text-sm leading-snug">
             {category.productCount} {plural(category.productCount, GOODS)}
-            {category.subtitle ? ` · ${category.subtitle}` : ""}
           </span>
         </span>
 
