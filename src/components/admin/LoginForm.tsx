@@ -24,7 +24,7 @@ import { Field, TextInput } from "@/components/ui/Field";
  * Like the request form, this is react-hook-form through a transition. A
  * refused password must not clear the login field.
  */
-export function LoginForm() {
+export function LoginForm({ requireCode = true }: { requireCode?: boolean }) {
   const router = useRouter();
   const { ready, isTelegram, rawInitData } = useTelegram();
   const [pending, startTransition] = useTransition();
@@ -138,10 +138,13 @@ export function LoginForm() {
           </Field>
 
           <Button type="submit" fullWidth loading={pending} disabled={!ready}>
-            {ready && isTelegram ? "Войти" : "Получить код"}
+            {/* «Получить код» only when one is actually coming. Inside Telegram
+                it never was; with the second factor switched off it is not
+                coming in a browser either. */}
+            {(ready && isTelegram) || !requireCode ? "Войти" : "Получить код"}
           </Button>
 
-          {ready && !isTelegram ? (
+          {requireCode && ready && !isTelegram ? (
             <p className="text-muted text-sm">
               Код придёт в Telegram от бота. Если он ещё не писал вам — отправьте ему
               /start.

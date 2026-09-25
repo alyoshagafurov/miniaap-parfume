@@ -29,7 +29,16 @@ export default function AdminLoginPage() {
         </h1>
         <p className="caps text-muted mt-2 text-center">Админ-панель</p>
         <GoldRule className="mx-auto mt-4 mb-8 w-24" />
-        <LoginForm />
+        {/*
+          Whether a code follows the password is a deployment's setting, and the
+          form has no way to know it — so the screen promised one regardless.
+          With ADMIN_LOGIN_REQUIRE_CODE=0 the button still read «Получить код»
+          and the line under it still said the bot would write, while the
+          password alone signed you straight in. Read here and passed down.
+        */}
+        <LoginForm
+          requireCode={(process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0"}
+        />
       </main>
     </TelegramProvider>
   );
