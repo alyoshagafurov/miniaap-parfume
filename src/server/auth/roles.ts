@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -76,6 +77,27 @@ export class NotAuthorisedError extends Error {
  * cookie for exactly that reason.
  */
 export async function currentSession(): Promise<SessionPayload | null> {
+  /**
+   * Wait for a real request before deciding who is signed in.
+   *
+   * Without this the panel was unreachable in production, and the reason was
+   * invisible from the outside: under `cacheComponents` the build prerenders
+   * each page, the guard ran there with no cookie to read, `redirect()` was
+   * captured into the prerendered shell, and every visitor afterwards was
+   * served the same baked answer — `<meta http-equiv="refresh"
+   * content="1;url=/admin/login">` inside a 200. Correct credentials, a valid
+   * signed cookie and an active administrator made no difference at all.
+   *
+   * Route handlers were unaffected, which is what made it confusing to chase:
+   * `/api/admin/export` answered 200 with a real spreadsheet using the very
+   * same session while every page bounced to the login screen.
+   *
+   * `connection()` and not `io()` here. This is the one place that must wait
+   * for an actual request rather than merely stay out of the prerender: a
+   * permission decision answered from a cache is not a permission decision.
+   */
+  await connection();
+
   const secret = process.env.AUTH_SECRET;
   if (!secret) return null;
 
