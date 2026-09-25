@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
 import type { CategoryRow } from "@/server/admin/dictionaries";
 import { GOODS, plural } from "@/lib/format";
+import { objectUrl } from "@/lib/media";
 
 /**
  * Categories — the formats.
@@ -172,6 +173,17 @@ function CategoryForm({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const key = category?.id ?? "new";
 
+  /**
+   * The id to hang a photograph on.
+   *
+   * A new category has none until it is saved, and the upload route needs one —
+   * so creating used to close the form and leave the owner to find the row
+   * again to add a picture. Saving now keeps the form open and fills this in,
+   * which is the same shape as products: create, then add photographs.
+   */
+  const [savedId, setSavedId] = useState<string | null>(category?.id ?? null);
+  const [coverKey, setCoverKey] = useState<string | null>(category?.coverKey ?? null);
+
   const save = () => {
     setError(null);
     startTransition(async () => {
@@ -188,8 +200,11 @@ function CategoryForm({
         setError(result.message);
         return;
       }
-      onDone();
       router.refresh();
+      // Editing an existing one is finished business; a new one has just
+      // acquired an id and no picture, so it stays open for the next step.
+      if (category) onDone();
+      else setSavedId(result.data.id);
     });
   };
 
@@ -221,6 +236,15 @@ function CategoryForm({
           />
         </Field>
       </div>
+
+      <CategoryCover
+        categoryId={savedId}
+        coverKey={coverKey}
+        onChange={(next) => {
+          setCoverKey(next);
+          router.refresh();
+        }}
+      />
 
       <label className="flex min-h-11 items-center gap-2">
         <input
@@ -272,6 +296,145 @@ function CategoryForm({
           )
         ) : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The category's photograph — the one thing the panel could not do.
+ *
+ * `setCategoryCover` has been in the mutations layer all along, described as
+ * "set by the upload route after the file is stored", with no upload route to
+ * do it. The home screen reads `coverKey` and falls back to the monogram, so
+ * every category showed a monogram and nothing in the panel could change that.
+ *
+ * Direct to the Route Handler rather than through a Server Action, for the
+ * reason the product uploader gives: an action's body is capped at 1 MB and a
+ * photograph off a phone is several times that.
+ *
+ * Absent until the category has an id. A new one acquires it on save, and the
+ * form stays open at that point precisely so this appears without hunting for
+ * the row again.
+ */
+function CategoryCover({
+  categoryId,
+  coverKey,
+  onChange,
+}: {
+  categoryId: string | null;
+  coverKey: string | null;
+  onChange: (key: string | null) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!categoryId) {
+    return (
+      <p className="text-muted text-sm">
+        Фото можно добавить сразу после сохранения — форма останется открытой.
+      </p>
+    );
+  }
+
+  const upload = async (file: File) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.append("categoryId", categoryId);
+      body.append("file", file);
+      const response = await fetch("/api/admin/category-cover", { method: "POST", body });
+      const payload: unknown = await response.json();
+      if (!response.ok) {
+        const message =
+          payload && typeof payload === "object" && "error" in payload
+            ? String((payload as { error: unknown }).error)
+            : "Не удалось загрузить фото";
+        setError(message);
+        return;
+      }
+      onChange((payload as { key: string }).key);
+    } catch {
+      setError("Не удалось загрузить фото");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const clear = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/admin/category-cover?categoryId=${encodeURIComponent(categoryId)}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        setError("Не удалось удалить фото");
+        return;
+      }
+      onChange(null);
+    } catch {
+      setError("Не удалось удалить фото");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="caps text-muted">Фото категории</span>
+
+      <div className="flex items-center gap-4">
+        {coverKey ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={objectUrl(coverKey)}
+            alt=""
+            width={64}
+            height={80}
+            className="bg-surface border-rule h-20 w-16 shrink-0 rounded-md border object-cover"
+          />
+        ) : (
+          <span
+            aria-hidden
+            className="bg-surface border-rule flex h-20 w-16 shrink-0 items-center justify-center rounded-md border"
+          >
+            <span className="font-display text-olive/45 text-2xl leading-none">Á</span>
+          </span>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 cursor-pointer items-center rounded-md border px-4 text-sm font-medium transition-colors">
+            {coverKey ? "Заменить" : "Загрузить фото"}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={busy}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                // Cleared so choosing the same file twice fires change again.
+                e.target.value = "";
+                if (file) void upload(file);
+              }}
+            />
+          </label>
+
+          {coverKey ? (
+            <Button variant="quiet" onClick={() => void clear()} loading={busy}>
+              Убрать
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      {busy ? <p className="text-muted text-sm">Загружается…</p> : null}
+      {error ? (
+        <p role="alert" className="text-danger text-sm">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

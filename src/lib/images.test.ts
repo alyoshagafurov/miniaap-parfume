@@ -43,6 +43,23 @@ describe("MEDIA_KEY_PATTERN", () => {
       true,
     );
     expect(MEDIA_KEY_PATTERN.test("banner/9f3a1c2b7d4e-400.webp")).toBe(true);
+    // Category covers are flat rather than nested under the category: a
+    // category is renamed and re-slugged freely, and a key carrying the slug
+    // would go stale. Without this prefix the proxy answers 404 and every
+    // cover the panel uploads is invisible.
+    expect(MEDIA_KEY_PATTERN.test("categories/9f3a1c2b7d4e-800.webp")).toBe(true);
+    expect(MEDIA_KEY_PATTERN.test("categories/9f3a1c2b7d4e-1600.avif")).toBe(true);
+  });
+
+  it("refuses a category key that is nested or misshapen", () => {
+    // The prefix is a folder, not a free path: `categories/<hex12>-<w>.<fmt>`.
+    expect(MEDIA_KEY_PATTERN.test("categories/parfyum/9f3a1c2b7d4e-800.webp")).toBe(
+      false,
+    );
+    expect(MEDIA_KEY_PATTERN.test("categories/../banner/9f3a1c2b7d4e-800.webp")).toBe(
+      false,
+    );
+    expect(MEDIA_KEY_PATTERN.test("categories/9f3a1c2b7d4-800.webp")).toBe(false);
   });
 
   it("refuses a traversal", () => {

@@ -56,6 +56,7 @@ export function parsePhotoFilename(filename: string): PhotoFilename {
  * actually produces, and anything else refused without a lookup.
  *
  *   products/arm-1040/9f3a1c2b7d4e-800.webp
+ *   categories/9f3a1c2b7d4e-800.webp
  *   banner/9f3a1c2b7d4e-1600.avif
  *
  * The article number is lowercased and stripped to `[a-z0-9._-]` on upload, the
@@ -65,4 +66,4 @@ export function parsePhotoFilename(filename: string): PhotoFilename {
  * the Excel exports and — on the VPS deployment — the nightly database dumps.
  */
 export const MEDIA_KEY_PATTERN =
-  /^(?:products\/[a-z0-9._-]{1,64}\/|banner\/)[0-9a-f]{12}-(?:400|800|1600)\.(?:avif|webp)$/;
+  /^(?:products\/[a-z0-9._-]{1,64}\/|categories\/|banner\/)[0-9a-f]{12}-(?:400|800|1600)\.(?:avif|webp)$/;

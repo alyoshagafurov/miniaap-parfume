@@ -183,8 +183,24 @@ const RULES = [
   },
   {
     id: "emoji",
-    why: "The direction bans emoji in the interface and in bot messages.",
+    why: "The direction bans emoji in the interface.",
     test: /\p{Extended_Pictographic}/gu,
+    /**
+     * The bot's own copy is the exception, and it is the client's call.
+     *
+     * This rule used to read "in the interface and in bot messages", because
+     * the brief banned both. The client has since written their own greeting
+     * and ordering steps with emoji in them and asked for those words exactly.
+     * They are the client's words to their own buyers in a messenger, which is
+     * a different register from a catalog screen — and they are data: the two
+     * texts live in Settings and are edited in the panel, so what sits in the
+     * seed is only their initial value.
+     *
+     * The interface is still covered. Nothing else in prisma/seed.ts should
+     * carry an emoji either, and if it ever does, this line is why it was not
+     * caught — narrow it rather than widening the habit.
+     */
+    skipFiles: ["prisma/seed.ts"],
   },
 ];
 
