@@ -80,11 +80,46 @@ describe("decideLogin — browser path", () => {
     admin,
     passwordMatches: true,
     rateLimited: false,
+    requireCode: true,
   };
 
   it("does not issue a session on the password alone", () => {
     // The password is only the first factor; the code is the second.
     expect(decideLogin(base).outcome).toBe("SEND_CODE");
+  });
+
+  it("issues the session on the password when the code is switched off", () => {
+    // What ADMIN_LOGIN_REQUIRE_CODE=0 buys, and what it costs: this single
+    // password is then the whole of the protection on prices, on published
+    // products, and on every request carrying a buyer's name and telephone.
+    const decision = decideLogin({ ...base, requireCode: false });
+    expect(decision.outcome).toBe("SESSION");
+    expect(decision.adminId).toBe(admin.id);
+    expect(decision.role).toBe(admin.role);
+  });
+
+  it("still refuses a wrong password with the code switched off", () => {
+    // The obvious way to get this wrong is to treat "no second factor" as
+    // "no first factor either".
+    expect(
+      decideLogin({ ...base, requireCode: false, passwordMatches: false }).outcome,
+    ).toBe("REJECT");
+  });
+
+  it("still refuses a disabled administrator with the code switched off", () => {
+    expect(
+      decideLogin({
+        ...base,
+        requireCode: false,
+        admin: { ...admin, isActive: false },
+      }).outcome,
+    ).toBe("REJECT");
+  });
+
+  it("still refuses while rate limited with the code switched off", () => {
+    expect(decideLogin({ ...base, requireCode: false, rateLimited: true }).outcome).toBe(
+      "RATE_LIMITED",
+    );
   });
 
   it("refuses a wrong password without sending a code", () => {

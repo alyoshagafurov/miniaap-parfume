@@ -156,11 +156,28 @@ export async function loginFromTelegram(input: {
 }
 
 /**
- * From a browser: the password, then a code the bot delivers.
+ * Whether a browser login needs the code as well as the password.
  *
- * The password alone never issues a session, because a browser carries no proof
- * of who is at it. The second factor is the Telegram account already on the
- * allow-list, which the administrator has by definition.
+ * Defaults to yes. A deployment turns it off with
+ * `ADMIN_LOGIN_REQUIRE_CODE=0`, which is what this catalog's own Railway
+ * services carry, because the client asked to sign in with a password alone.
+ *
+ * The default is the safe one on purpose: anyone who deploys this without
+ * thinking about it gets two factors, and losing one has to be typed out.
+ * Read per call rather than at module load, so flipping the variable takes a
+ * restart rather than a release.
+ */
+function requireLoginCode(): boolean {
+  return (process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0";
+}
+
+/**
+ * From a browser: the password, and a code the bot delivers when asked for.
+ *
+ * The password alone used to be refused a session, because a browser carries no
+ * proof of who is at it and the second factor was the Telegram account already
+ * on the allow-list. That is now a deployment's choice — see
+ * `requireLoginCode()` above and the note in decideLogin.
  */
 export async function loginFromBrowser(input: {
   login: string;
@@ -186,6 +203,7 @@ export async function loginFromBrowser(input: {
       : null,
     passwordMatches,
     rateLimited,
+    requireCode: requireLoginCode(),
   });
 
   if (decision.outcome === "REJECT") await chargeFailure(input.login);

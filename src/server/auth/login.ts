@@ -65,6 +65,15 @@ export type LoginInput =
       admin: AdminFacts | null;
       passwordMatches: boolean;
       rateLimited: boolean;
+      /**
+       * Whether the password alone is enough from a browser.
+       *
+       * False issues the session on the password; true keeps the code the bot
+       * delivers as a second factor. The caller reads it from the environment
+       * so the decision is a deployment's to make and can be reversed without
+       * a release — see `requireLoginCode()` in authenticate.ts.
+       */
+      requireCode: boolean;
     };
 
 export function decideLogin(input: LoginInput): LoginDecision {
@@ -100,10 +109,32 @@ export function decideLogin(input: LoginInput): LoginDecision {
     };
   }
 
-  // Browser: the password is only the first factor.
+  /**
+   * Browser: the password, and a code when the deployment asks for one.
+   *
+   * The code was unconditional, and the argument for it still holds: a browser
+   * carries no proof of who is at it, so the second factor was the Telegram
+   * account already on the allow-list. The client has asked for the password
+   * alone, and it is their panel — but the trade is real and is written down
+   * here rather than discovered later. What the password now protects on its
+   * own: every price, every published product, and every request with a
+   * buyer's name and telephone in it.
+   *
+   * The Telegram path above is unaffected and still proves identity by
+   * signature, so opening the panel from the bot remains the stronger door.
+   */
+  if (input.requireCode) {
+    return {
+      outcome: "SEND_CODE",
+      message: "Код отправлен в Telegram",
+      adminId: input.admin.id,
+      role: input.admin.role,
+    };
+  }
+
   return {
-    outcome: "SEND_CODE",
-    message: "Код отправлен в Telegram",
+    outcome: "SESSION",
+    message: "Вход выполнен",
     adminId: input.admin.id,
     role: input.admin.role,
   };
