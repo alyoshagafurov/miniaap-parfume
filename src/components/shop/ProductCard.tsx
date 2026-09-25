@@ -65,7 +65,7 @@ export function ProductCard({
         <Mark text={brandName} query={query} />
       </p>
 
-      <h3 className="text-ink mt-1 text-sm leading-snug font-medium">
+      <h3 className="text-ink mt-1 text-base leading-snug font-medium">
         <Link href={`/p/${product.slug}`} className="after:absolute after:inset-0">
           <Mark text={names.join(" + ") || product.title} query={query} />
         </Link>
@@ -76,11 +76,22 @@ export function ProductCard({
         {product.packSize > 1 ? ` · кратно ${product.packSize}` : ""}
       </p>
 
+      {/*
+        The price, a step larger than the name above it.
+        
+        On a wholesale card the price is not metadata — it is the reason the
+        card is being read, and it used to sit at the same size as the volume
+        and the pack multiple. The reference the client pointed at makes the
+        same call and goes further, setting prices in its accent colour; that
+        part is not borrowed, because this palette's gold is 2.14:1 on the
+        canvas and a price is the last text in the catalog that may be hard to
+        read. Size and weight carry it instead.
+      */}
       <Price
         kop={product.priceKop}
         oldKop={product.oldPriceKop}
         showPrices={showPrices}
-        className="mt-2"
+        className="mt-2 text-lg"
       />
 
       {stock ? (

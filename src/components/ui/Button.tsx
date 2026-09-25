@@ -40,7 +40,11 @@ export function Button({
   loading?: boolean;
   children: ReactNode;
 }) {
-  const shape = variant === "quiet" ? "" : "rounded-md px-5 py-3";
+  // A pill, not a rounded rectangle. Every other surface in this interface is
+  // square-cornered or hairlined, so the one shape that is fully round is the
+  // one thing you press — which is how the reference the client pointed at
+  // separates its action from its content, and it costs nothing to borrow.
+  const shape = variant === "quiet" ? "" : "rounded-full px-6 py-3";
   return (
     <button
       {...rest}

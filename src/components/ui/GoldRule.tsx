@@ -11,17 +11,28 @@ export function GoldRule({ className = "" }: { className?: string }) {
 }
 
 /**
- * A section heading flanked by the rule: "— Категории —".
+ * A section heading: the name, then the rule beneath it.
  *
- * Two solid rules rather than one fading line, because the direction bans
- * gradients and the logo's own flourish is solid.
+ * It used to be centred and flanked — "— КАТЕГОРИИ —", spaced caps at 12px
+ * between two rules. That reads as a caption for the block below it, and on a
+ * 390px screen four of them down one page gave the screen no skeleton at all:
+ * every heading weighed the same as the metadata under the cards.
+ *
+ * Now it is set in the display face at the size of a heading and aligned left,
+ * where the eye already is, with a single rule carrying the full width beneath.
+ * The rule stays gold and stays decoration — at 2.14:1 it could not be the
+ * thing that separates two sections, and now it does not have to be, because
+ * the heading does that.
+ *
+ * Still an h2 and still one per section, so the document outline is unchanged.
  */
 export function RuledHeading({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-4">
-      <GoldRule className="flex-1" />
-      <h2 className="caps text-muted whitespace-nowrap">{children}</h2>
-      <GoldRule className="flex-1" />
+    <div className="flex flex-col gap-3">
+      <h2 className="font-display text-ink text-2xl leading-tight font-semibold tracking-tight">
+        {children}
+      </h2>
+      <GoldRule />
     </div>
   );
 }

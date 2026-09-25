@@ -126,12 +126,12 @@ function Hero({
   const wa = whatsappPhone?.replace(/\D/g, "") ?? "";
 
   return (
-    <section className="pt-10 pb-2 text-center">
-      <h1 className="font-display text-ink text-h1 leading-tight font-semibold text-balance">
+    <section className="pt-10 pb-2">
+      <h1 className="font-display text-ink text-h1 leading-tight font-semibold tracking-tight text-balance">
         Оптовый склад парфюмерии
       </h1>
 
-      <GoldRule className="mx-auto mt-5 w-40" />
+      <GoldRule className="mt-5 w-40" />
 
       <p className="text-muted mt-5 text-sm">
         Известные бренды · Выгодные условия · Надёжные поставки
@@ -145,21 +145,30 @@ function Hero({
         Доставка по России
       </p>
 
+      {/*
+        The warehouse and the two ways to reach it.
+
+        A bordered, filled card stood here, and on a phone it read as a second
+        header competing with the headline directly above it. Hairlines and
+        space do the same separating for none of the weight — which is the whole
+        argument of this direction, and the reference the client pointed at
+        makes the same one: rules, not boxes.
+      */}
       {address || phone || whatsappPhone ? (
-        <div className="bg-surface border-rule mt-8 rounded-md border px-4 py-4 text-left sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="border-rule mt-8 border-t">
           {address ? (
-            <p className="text-ink text-sm leading-snug">
+            <p className="border-rule text-ink border-b py-4 text-sm leading-snug">
               <span className="caps text-muted mb-1 block">Склад</span>
               {address}
             </p>
           ) : null}
 
           {phone || whatsappPhone ? (
-            <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-0 sm:shrink-0">
+            <div className="flex flex-wrap items-center gap-3 py-4">
               {phone ? (
                 <a
                   href={`tel:${tel}`}
-                  className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm font-medium tabular-nums transition-colors"
+                  className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-medium tabular-nums transition-colors"
                 >
                   {phone}
                 </a>
@@ -169,7 +178,7 @@ function Hero({
                   href={`https://wa.me/${wa}`}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm font-medium transition-colors"
+                  className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-medium transition-colors"
                 >
                   WhatsApp
                 </a>
@@ -201,23 +210,23 @@ function CategoryRow({ category }: { category: CategoryRowData }) {
     <li className="border-rule border-b">
       <Link
         href={`/c/${category.slug}`}
-        className="group hover:bg-surface flex items-center gap-4 rounded-md px-2 py-3 transition-colors"
+        className="group hover:bg-surface flex items-center gap-4 rounded-md px-2 py-5 transition-colors"
       >
         {category.coverKey ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={objectUrl(category.coverKey)}
             alt=""
-            width={64}
-            height={80}
+            width={80}
+            height={96}
             loading="lazy"
             decoding="async"
-            className="bg-surface h-20 w-16 shrink-0 rounded-md object-cover"
+            className="bg-surface h-24 w-20 shrink-0 rounded-md object-cover"
           />
         ) : (
           <span
             aria-hidden
-            className="bg-surface border-rule flex h-20 w-16 shrink-0 items-center justify-center rounded-md border"
+            className="bg-surface border-rule flex h-24 w-20 shrink-0 items-center justify-center rounded-md border"
           >
             <span className="font-display text-olive/45 text-2xl leading-none">Á</span>
           </span>
@@ -333,11 +342,20 @@ function Lane({
 function HeroSkeleton() {
   return (
     <section aria-hidden className="pt-10 pb-2">
-      <div className="bg-surface mx-auto h-10 w-3/4 rounded-md" />
-      <GoldRule className="mx-auto mt-5 w-40" />
-      <div className="bg-surface mx-auto mt-6 h-4 w-2/3 rounded-md" />
-      <div className="bg-surface mx-auto mt-3 h-4 w-1/2 rounded-md" />
-      <div className="bg-surface border-rule mt-8 h-24 rounded-md border" />
+      <div className="bg-surface h-10 w-3/4 rounded-md" />
+      <GoldRule className="mt-5 w-40" />
+      <div className="bg-surface mt-6 h-4 w-2/3 rounded-md" />
+      <div className="bg-surface mt-3 h-4 w-1/2 rounded-md" />
+      <div className="border-rule mt-8 border-t">
+        <div className="border-rule border-b py-4">
+          <div className="bg-surface h-3 w-16 rounded-md" />
+          <div className="bg-surface mt-2 h-4 w-2/3 rounded-md" />
+        </div>
+        <div className="flex gap-3 py-4">
+          <div className="bg-surface h-11 w-40 rounded-full" />
+          <div className="bg-surface h-11 w-28 rounded-full" />
+        </div>
+      </div>
     </section>
   );
 }

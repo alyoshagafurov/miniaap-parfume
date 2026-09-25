@@ -95,7 +95,7 @@
   /* ── Form ─────────────────────────────────────────────────────────────── */
   --radius-*: initial;
   --radius-md: 10px; /* cards, inputs, sheets, buttons */
-  --radius-full: 999px; /* filter chips only */
+  --radius-full: 999px; /* buttons and filter chips */
 
   /* Warm shadows: neutral grey shadows read as dirt against a cream ground. */
   --shadow-*: initial;
