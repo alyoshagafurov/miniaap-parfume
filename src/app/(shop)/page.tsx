@@ -66,6 +66,34 @@ async function HeroBlock() {
 
 async function Categories() {
   const categories = await getCategories();
+
+  /**
+   * Nothing published yet.
+   *
+   * Not a case anyone designed for until the demo rows were cleared from the
+   * live catalog and the home screen was left with the word «Категории» over a
+   * blank gap — a heading promising a list that was not coming. An empty
+   * catalog is a real state twice over: on the day the client takes this over,
+   * and any time everything is unpublished at once.
+   *
+   * It says what is true and where the goods come from, and it is quiet:
+   * a buyer who lands here mid-import should see a shop between deliveries,
+   * not a broken page.
+   */
+  if (categories.length === 0) {
+    return (
+      <section aria-labelledby="categories" className="mt-12">
+        <RuledHeading>
+          <span id="categories">Категории</span>
+        </RuledHeading>
+        <p className="text-muted mt-5 text-sm leading-normal">
+          Каталог наполняется. Позвоните или напишите в WhatsApp — подскажем, что
+          есть в наличии сейчас.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section aria-labelledby="categories" className="mt-12">
       <RuledHeading>

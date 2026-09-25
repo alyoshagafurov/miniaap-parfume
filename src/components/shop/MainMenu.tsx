@@ -72,7 +72,10 @@ export function MainMenu({
             if ((event.target as HTMLElement).closest("a")) setOpen(false);
           }}
         >
-          <section>
+          {/* Hidden rather than shown empty: a heading over nothing is a
+              promise the menu cannot keep, and the sections below it are still
+              worth reaching. */}
+          <section hidden={categories.length === 0}>
             <h3 className="caps text-muted">Категории</h3>
             <ul className="border-rule mt-3 flex flex-col border-t">
               {categories.map((category) => (
