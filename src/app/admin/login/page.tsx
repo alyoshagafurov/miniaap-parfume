@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
+import { Suspense } from "react";
 
 import { LoginForm } from "@/components/admin/LoginForm";
 import { TelegramProvider } from "@/components/telegram/provider";
@@ -31,17 +33,10 @@ export default function AdminLoginPage() {
           ÁRUMI
         </p>
         <h1 className="display-caps text-ink mt-8 text-2xl">Вход в админку</h1>
-        {/*
-          Whether a code follows the password is a deployment's setting, and the
-          form has no way to know it — so the screen promised one regardless.
-          With ADMIN_LOGIN_REQUIRE_CODE=0 the button still read «Получить код»
-          and the line under it still said the bot would write, while the
-          password alone signed you straight in. Read here and passed down.
-        */}
         <div className="stage mt-5 p-5">
-          <LoginForm
-            requireCode={(process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0"}
-          />
+          <Suspense fallback={<FormSkeleton />}>
+            <Form />
+          </Suspense>
         </div>
         <Link
           href="/"
@@ -52,5 +47,38 @@ export default function AdminLoginPage() {
         </Link>
       </main>
     </TelegramProvider>
+  );
+}
+
+/**
+ * The form, told whether a code follows the password.
+ *
+ * Whether it does is a deployment's setting, and the form has no way to know
+ * it — so the screen once promised a code regardless. Reading the variable in
+ * the page fixed that locally and not in production, and the reason is the
+ * build: this page has nothing dynamic in it, so `next build` prerendered it
+ * and froze whatever the variable was at that moment. Railway hands service
+ * variables to the running container, not to the build, so production was
+ * built with the switch unset — the default, «code required» — and showed
+ * «Получить код» while the server signed people in on the password alone.
+ *
+ * `connection()` waits for a real request, so the switch is read where it is
+ * actually set.
+ */
+async function Form() {
+  await connection();
+  const requireCode = (process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0";
+  return <LoginForm requireCode={requireCode} />;
+}
+
+function FormSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-5">
+      <div className="bg-primary-wash h-3 w-16 rounded-md" />
+      <div className="bg-primary-wash h-12 rounded-md" />
+      <div className="bg-primary-wash h-3 w-16 rounded-md" />
+      <div className="bg-primary-wash h-12 rounded-md" />
+      <div className="bg-primary-wash h-12 rounded-full" />
+    </div>
   );
 }
