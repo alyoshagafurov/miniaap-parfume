@@ -133,7 +133,7 @@ export function ImageManager({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <span className="caps text-muted mb-2 block">Фотографии</span>
+        <span className="display-caps text-ink mb-4 block text-lg">Фотографии</span>
         <p className="text-muted text-xs">
           JPEG, PNG или WebP, до {MAX_UPLOAD_MB} МБ. Первая — обложка. Снимки с айфона в
           формате HEIC не подойдут: сохраните их как JPEG.
@@ -152,7 +152,7 @@ export function ImageManager({
       {images.length > 0 ? (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {images.map((image, index) => (
-            <li key={image.id} className="border-rule rounded-md border p-2">
+            <li key={image.id} className="bg-canvas rounded-md p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={objectUrl(image.key)}
@@ -264,7 +264,7 @@ function IconButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="border-control text-ink hover:bg-primary-wash disabled:text-muted h-11 w-11 rounded-md border transition-colors disabled:cursor-not-allowed"
+      className="bg-surface text-ink hover:bg-primary-wash disabled:text-muted h-11 w-11 rounded-full font-bold transition-colors disabled:cursor-not-allowed"
     >
       {children}
     </button>

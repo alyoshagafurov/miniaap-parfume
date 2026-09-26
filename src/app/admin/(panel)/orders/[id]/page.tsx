@@ -55,9 +55,7 @@ async function Card({ params }: PageProps) {
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
         {/* Body face: an order number is data, and Cormorant's subset has only
             old-style figures, which set «ARM-000144» with descenders. */}
-        <h1 className="text-ink text-h2 leading-tight font-semibold tabular-nums">
-          № {order.number}
-        </h1>
+        <h1 className="display-caps text-ink text-h2 tabular-nums">№ {order.number}</h1>
         <span className="text-ink text-h2 font-semibold tabular-nums">
           {formatRub(order.totalKop)}
         </span>

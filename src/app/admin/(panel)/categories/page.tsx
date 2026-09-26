@@ -8,12 +8,9 @@ export const metadata = { title: "Категории" };
 export default function CategoriesPage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-        Категории
-      </h1>
-      <p className="text-muted mt-2 text-sm">
-        Это форматы: 35 мл, 100 мл, двойняшки, дезодоранты. Порядок здесь — порядок на
-        главной.
+      <h1 className="display-caps text-ink text-h1">Категории</h1>
+      <p className="text-muted mt-3 text-sm leading-snug">
+        Порядок здесь — порядок на главной витрины.
       </p>
       <div className="mt-6">
         <Suspense fallback={<ListSkeleton />}>
@@ -31,8 +28,9 @@ async function List() {
 function ListSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-3">
+      <div className="bg-primary-wash h-11 w-48 rounded-full" />
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="bg-surface h-14 w-full rounded-md" />
+        <div key={i} className="stage h-28" />
       ))}
     </div>
   );

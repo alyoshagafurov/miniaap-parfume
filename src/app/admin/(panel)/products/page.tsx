@@ -29,12 +29,10 @@ export default function ProductsPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-          Товары
-        </h1>
+        <h1 className="display-caps text-ink text-h1">Товары</h1>
         <Link
           href="/admin/products/new"
-          className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-night text-on-night inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
         >
           Новый товар
         </Link>
@@ -75,6 +73,19 @@ async function Table({ searchParams }: { searchParams: Promise<SearchParams> }) 
       <ProductTable rows={page.rows} categories={categories} />
 
       <Pager query={query} page={page.page} pageCount={page.pageCount} />
+
+      {/* Import left the menu with the other sections the client did not ask
+          for, but a range of several hundred bottles is not entered one form
+          at a time — so the way to it stays, here, where the products are. */}
+      <p className="text-muted mt-10 text-sm">
+        Много товаров сразу?{" "}
+        <Link
+          href="/admin/import"
+          className="text-ink font-semibold underline decoration-rule underline-offset-4 hover:decoration-ink"
+        >
+          Загрузить из Excel
+        </Link>
+      </p>
     </>
   );
 }
@@ -87,9 +98,12 @@ function FilterBar({
   facets: Awaited<ReturnType<typeof getProductFacets>>;
 }) {
   const active = activeFilterCount(query);
+  // The search box is always in view, so it does not count towards opening
+  // the panel of the rest; everything else that narrows the list does.
+  const narrowed = active - (query.q ? 1 : 0);
 
   return (
-    <div className="mt-4 flex flex-col gap-3">
+    <div className="mt-6 flex flex-col gap-3">
       {/*
         A GET form, not a client component. The filter is a place in the panel:
         it has to be bookmarkable, survive a reload, and work before any
@@ -99,9 +113,9 @@ function FilterBar({
         `page` is deliberately absent: changing a filter must land on page one,
         not on page four of a different result set.
       */}
-      <form action="/admin/products" className="flex flex-wrap items-end gap-3">
-        <div className="min-w-48 flex-1">
-          <label htmlFor="q" className="caps text-muted mb-1 block">
+      <form action="/admin/products" className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          <label htmlFor="q" className="sr-only">
             Поиск
           </label>
           <input
@@ -110,80 +124,123 @@ function FilterBar({
             type="search"
             defaultValue={query.q}
             placeholder="Артикул, бренд, аромат"
-            className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full rounded-md border px-3 py-2 text-base"
+            className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary min-w-0 flex-1 rounded-full border px-5 py-3 text-base transition-colors duration-150 ease-out"
           />
+          <button
+            type="submit"
+            className="bg-night text-on-night inline-flex min-h-11 shrink-0 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
+          >
+            Найти
+          </button>
         </div>
 
-        <Select name="category" label="Категория" value={query.categorySlug ?? ""}>
-          <option value="">Все</option>
-          {facets.categories.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name} ({c.count})
-            </option>
-          ))}
-        </Select>
+        {/*
+          Five selects and a checkbox used to stand in a row above the table on
+          every visit, and on a phone they were two screens of controls before
+          the first product. Most visits are «find this one and change its
+          price», which the search box above answers; the rest fold away and
+          open by themselves when one of them is already in use.
+        */}
+        <details open={narrowed > 0} className="stage group">
+          <summary className="text-ink flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-5 text-base font-bold [&::-webkit-details-marker]:hidden">
+            <span>
+              Фильтры
+              {narrowed > 0 ? (
+                <span className="text-muted ml-2 text-sm font-semibold tabular-nums">
+                  {narrowed}
+                </span>
+              ) : null}
+            </span>
+            <svg
+              aria-hidden
+              viewBox="0 0 14 8"
+              className="text-ink h-2 w-3.5 shrink-0 transition-transform duration-150 ease-out group-open:rotate-180"
+            >
+              <path
+                d="M1 1l6 6 6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </summary>
 
-        <Select name="brand" label="Бренд" value={query.brandSlug ?? ""}>
-          <option value="">Все</option>
-          {facets.brands.map((b) => (
-            <option key={b.slug} value={b.slug}>
-              {b.name}
-            </option>
-          ))}
-        </Select>
+          <div className="grid grid-cols-1 gap-3 px-5 pb-5 sm:grid-cols-2">
+            <Select name="category" label="Категория" value={query.categorySlug ?? ""}>
+              <option value="">Все</option>
+              {facets.categories.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name} ({c.count})
+                </option>
+              ))}
+            </Select>
 
-        <Select name="status" label="Статус" value={query.status ?? ""}>
-          <option value="">Любой</option>
-          {PUBLISH_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {PUBLISH_STATUS_LABELS[s]}
-            </option>
-          ))}
-        </Select>
+            <Select name="brand" label="Бренд" value={query.brandSlug ?? ""}>
+              <option value="">Все</option>
+              {facets.brands.map((b) => (
+                <option key={b.slug} value={b.slug}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
 
-        <Select name="stock" label="Наличие" value={query.stock ?? ""}>
-          <option value="">Любое</option>
-          {STOCK_STATES.map((s) => (
-            <option key={s} value={s}>
-              {STOCK_LABELS[s]}
-            </option>
-          ))}
-        </Select>
+            <Select name="status" label="Статус" value={query.status ?? ""}>
+              <option value="">Любой</option>
+              {PUBLISH_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {PUBLISH_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </Select>
 
-        <Select name="sort" label="Сортировка" value={query.sort}>
-          {PRODUCT_SORTS.map((s) => (
-            <option key={s} value={s}>
-              {PRODUCT_SORT_LABELS[s]}
-            </option>
-          ))}
-        </Select>
+            <Select name="stock" label="Наличие" value={query.stock ?? ""}>
+              <option value="">Любое</option>
+              {STOCK_STATES.map((s) => (
+                <option key={s} value={s}>
+                  {STOCK_LABELS[s]}
+                </option>
+              ))}
+            </Select>
 
-        <label className="border-control bg-surface flex min-h-11 items-center gap-2 rounded-md border px-3">
-          <input
-            type="checkbox"
-            name="photo"
-            value="none"
-            defaultChecked={query.noPhoto}
-            className="accent-primary h-5 w-5"
-          />
-          <span className="text-ink text-sm">Без фото</span>
-        </label>
+            <Select name="sort" label="Сортировка" value={query.sort}>
+              {PRODUCT_SORTS.map((s) => (
+                <option key={s} value={s}>
+                  {PRODUCT_SORT_LABELS[s]}
+                </option>
+              ))}
+            </Select>
 
-        <button
-          type="submit"
-          className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
-        >
-          Применить
-        </button>
+            <label className="flex min-h-11 items-center gap-3 self-end">
+              <input
+                type="checkbox"
+                name="photo"
+                value="none"
+                defaultChecked={query.noPhoto}
+                className="accent-primary h-5 w-5"
+              />
+              <span className="text-ink text-sm font-semibold">Только без фото</span>
+            </label>
 
-        {active > 0 ? (
-          <Link
-            href="/admin/products"
-            className="text-primary inline-flex min-h-11 items-center underline underline-offset-4"
-          >
-            Сбросить
-          </Link>
-        ) : null}
+            <div className="flex items-center gap-4 sm:col-span-2">
+              <button
+                type="submit"
+                className="bg-night text-on-night inline-flex min-h-11 items-center rounded-full px-6 text-sm font-bold transition-opacity hover:opacity-90"
+              >
+                Применить
+              </button>
+              {active > 0 ? (
+                <Link
+                  href="/admin/products"
+                  className="text-ink inline-flex min-h-11 items-center text-sm font-semibold underline decoration-rule underline-offset-4 hover:decoration-ink"
+                >
+                  Сбросить всё
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </details>
       </form>
     </div>
   );
@@ -216,7 +273,7 @@ function Select({
         id={name}
         name={name}
         defaultValue={value}
-        className="bg-surface text-ink border-control w-full max-w-full rounded-md border px-3 py-2 text-base"
+        className="bg-surface text-ink border-control w-full max-w-full rounded-md border px-3 py-3 text-base"
       >
         {children}
       </select>
@@ -240,7 +297,7 @@ function Pager({
       {page > 1 ? (
         <Link
           href={buildProductHref({ ...query, page: page - 1 })}
-          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-bold transition-colors"
         >
           ← Назад
         </Link>
@@ -255,7 +312,7 @@ function Pager({
       {page < pageCount ? (
         <Link
           href={buildProductHref({ ...query, page: page + 1 })}
-          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-bold transition-colors"
         >
           Вперёд →
         </Link>
@@ -268,11 +325,10 @@ function Pager({
 
 function TableSkeleton() {
   return (
-    <div aria-hidden className="mt-4 flex flex-col gap-3">
-      <div className="bg-surface h-20 w-full rounded-md" />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <div key={i} className="border-rule bg-surface h-16 rounded-md border" />
-      ))}
+    <div aria-hidden className="mt-6 flex flex-col gap-3">
+      <div className="bg-primary-wash h-12 w-full rounded-full" />
+      <div className="stage h-12" />
+      <div className="stage mt-3 h-80" />
     </div>
   );
 }

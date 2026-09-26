@@ -9,17 +9,12 @@ export const metadata = { title: "Админы" };
 export default function AdminsPage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-        Админы
-      </h1>
-      <p className="text-muted mt-2 text-sm">
-        Присутствие здесь — это список допуска, но не пропуск: пароль нужен всегда, а из
-        браузера ещё и код из Telegram.
+      <h1 className="display-caps text-ink text-h1">Админы</h1>
+      <p className="text-muted mt-3 text-sm leading-snug">
+        Кто может входить в панель. Отключённый теряет доступ сразу.
       </p>
       <div className="mt-6">
-        <Suspense
-          fallback={<div aria-hidden className="bg-surface h-64 w-full rounded-md" />}
-        >
+        <Suspense fallback={<div aria-hidden className="stage h-64 w-full" />}>
           <List />
         </Suspense>
       </div>

@@ -121,12 +121,15 @@ export function ProductTable({
         grid at 390 is not a table, it is a horizontal scroll nobody uses — and
         this owner works from a phone as often as from a desk.
       */}
-      <div className="mt-4 md:overflow-x-auto">
+      <div
+        hidden={rows.length === 0}
+        className="stage mt-4 overflow-hidden px-4 md:overflow-x-auto md:px-5"
+      >
         <table className="block w-full border-collapse text-sm md:table">
           <caption className="sr-only">Товары каталога</caption>
           <thead className="hidden md:table-header-group">
             <tr className="border-rule border-b text-left">
-              <th scope="col" className="w-10 py-2">
+              <th scope="col" className="w-10 pt-3 pb-2">
                 <label className="flex min-h-11 items-center">
                   <input
                     type="checkbox"
@@ -137,22 +140,22 @@ export function ProductTable({
                   />
                 </label>
               </th>
-              <th scope="col" className="caps text-muted py-2">
+              <th scope="col" className="caps text-muted pt-3 pr-4 pb-2">
                 Товар
               </th>
-              <th scope="col" className="caps text-muted py-2">
+              <th scope="col" className="caps text-muted pt-3 pr-4 pb-2">
                 Артикул
               </th>
-              <th scope="col" className="caps text-muted py-2">
+              <th scope="col" className="caps text-muted pt-3 pr-4 pb-2">
                 Категория
               </th>
-              <th scope="col" className="caps text-muted py-2">
+              <th scope="col" className="caps text-muted pt-3 pr-4 pb-2">
                 Цена
               </th>
-              <th scope="col" className="caps text-muted py-2">
+              <th scope="col" className="caps text-muted pt-3 pr-4 pb-2">
                 Наличие
               </th>
-              <th scope="col" className="caps text-muted py-2">
+              <th scope="col" className="caps text-muted pt-3 pr-4 pb-2">
                 Статус
               </th>
             </tr>
@@ -162,7 +165,7 @@ export function ProductTable({
             {rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-rule block border-b py-3 md:table-row md:py-0"
+                className="border-rule block border-b py-3 last:border-b-0 md:table-row md:py-0"
               >
                 <td className="block md:table-cell md:w-10 md:py-3 md:align-top">
                   <div className="flex items-center justify-between gap-3">
@@ -184,14 +187,14 @@ export function ProductTable({
                   </div>
                 </td>
 
-                <td className="block md:table-cell md:py-3 md:align-top">
+                <td className="block md:table-cell md:py-3 md:pr-4 md:align-top">
                   {/* A 44px target on a phone, an ordinary inline link at the
                       desk. This is the row's primary action — opening the
                       product — and on the card layout it was a 16px line of
                       text with nothing around it to catch a thumb. */}
                   <Link
                     href={`/admin/products/${row.id}`}
-                    className="text-ink inline-flex min-h-11 items-center font-medium underline-offset-4 hover:underline md:min-h-0"
+                    className="text-ink inline-flex min-h-11 items-center text-base font-bold underline-offset-4 hover:underline md:min-h-0 md:text-sm"
                   >
                     {row.title}
                   </Link>
@@ -202,22 +205,22 @@ export function ProductTable({
                   </p>
                 </td>
 
-                <td className="text-muted hidden font-mono text-xs md:table-cell md:py-3 md:align-top">
+                <td className="text-muted hidden font-mono text-xs whitespace-nowrap md:table-cell md:py-3 md:pr-4 md:align-top">
                   {row.sku}
                 </td>
-                <td className="text-muted hidden md:table-cell md:py-3 md:align-top">
+                <td className="text-muted hidden md:table-cell md:py-3 md:pr-4 md:align-top">
                   {row.categoryName}
                 </td>
 
-                <td className="mt-2 mr-4 inline-block align-middle md:mt-0 md:mr-0 md:table-cell md:py-3 md:align-top">
+                <td className="mt-2 mr-4 inline-block align-middle whitespace-nowrap md:mt-0 md:table-cell md:py-3 md:align-top">
                   <PriceCell id={row.id} priceKop={row.priceKop} />
                 </td>
 
-                <td className="mt-2 inline-block align-middle md:mt-0 md:table-cell md:py-3 md:align-top">
+                <td className="mt-2 inline-block align-middle md:mt-0 md:table-cell md:py-3 md:pr-4 md:align-top">
                   <StockCell id={row.id} stock={row.stock} />
                 </td>
 
-                <td className="hidden md:table-cell md:py-3 md:align-top">
+                <td className="hidden whitespace-nowrap md:table-cell md:py-3 md:align-top">
                   <StatusBadge status={row.status} />
                 </td>
               </tr>
@@ -249,10 +252,8 @@ function BulkBar({
   onClear: () => void;
 }) {
   return (
-    <div className="border-primary bg-primary-wash sticky top-28 z-10 flex flex-wrap items-center gap-3 rounded-md border p-3">
-      <span className="text-ink text-sm font-medium tabular-nums">
-        Выбрано: {count}
-      </span>
+    <div className="bg-night text-on-night sticky top-2 z-10 flex flex-wrap items-center gap-3 rounded-lg p-3">
+      <span className="px-2 text-sm font-bold tabular-nums">Выбрано: {count}</span>
 
       <label className="sr-only" htmlFor="bulk-status">
         Статус
@@ -266,7 +267,7 @@ function BulkBar({
           if (value) onApply({ kind: "status", status: value });
           e.target.value = "";
         }}
-        className="bg-surface text-ink border-control max-w-full rounded-md border px-3 text-sm"
+        className="bg-surface text-ink max-w-full rounded-full px-4 text-sm"
       >
         <option value="">Статус…</option>
         {PUBLISH_STATUSES.map((s) => (
@@ -288,7 +289,7 @@ function BulkBar({
           if (value) onApply({ kind: "stock", stock: value });
           e.target.value = "";
         }}
-        className="bg-surface text-ink border-control max-w-full rounded-md border px-3 text-sm"
+        className="bg-surface text-ink max-w-full rounded-full px-4 text-sm"
       >
         <option value="">Наличие…</option>
         {STOCK_STATES.map((s) => (
@@ -309,7 +310,7 @@ function BulkBar({
           if (e.target.value) onApply({ kind: "category", categoryId: e.target.value });
           e.target.value = "";
         }}
-        className="bg-surface text-ink border-control max-w-full rounded-md border px-3 text-sm"
+        className="bg-surface text-ink max-w-full rounded-full px-4 text-sm"
       >
         <option value="">Категория…</option>
         {categories.map((c) => (
@@ -319,9 +320,14 @@ function BulkBar({
         ))}
       </select>
 
-      <Button variant="quiet" onClick={onClear} disabled={pending}>
+      <button
+        type="button"
+        onClick={onClear}
+        disabled={pending}
+        className="text-on-night inline-flex min-h-11 items-center px-2 text-sm font-semibold underline decoration-on-night-muted underline-offset-4"
+      >
         Снять выбор
-      </Button>
+      </button>
     </div>
   );
 }
@@ -348,7 +354,7 @@ function PriceCell({ id, priceKop }: { id: string; priceKop: number }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="text-ink hover:bg-primary-wash -mx-2 inline-flex min-h-11 items-center rounded-md px-2 font-semibold tabular-nums transition-colors"
+        className="text-price hover:bg-primary-wash -mx-2 inline-flex min-h-11 items-center rounded-full px-2 font-bold tabular-nums transition-colors"
         aria-label={`Изменить цену: ${formatRub(priceKop)}`}
       >
         {formatRub(priceKop)}
@@ -453,11 +459,14 @@ function StockCell({ id, stock }: { id: string; stock: StockStateName }) {
 }
 
 function StatusBadge({ status }: { status: PublishStatusName }) {
+  // The normal state is the quiet one. When every row on the page shouted
+  // «Опубликован» in a black capsule, the one draft among fifty was the row
+  // that looked calm — the reverse of what a scan down the list is for.
   const tone =
     status === "PUBLISHED"
-      ? "bg-primary text-surface border-primary"
+      ? "bg-canvas text-muted border-canvas"
       : status === "DRAFT"
-        ? "bg-surface text-muted border-control"
+        ? "bg-surface text-ink border-control font-bold"
         : "bg-surface text-muted border-rule";
   return (
     <span

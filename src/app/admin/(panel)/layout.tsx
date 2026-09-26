@@ -3,26 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 
-import { LogoutButton } from "@/components/admin/LogoutButton";
-import { GoldRule } from "@/components/ui/GoldRule";
+import { AdminMenu } from "@/components/admin/AdminMenu";
 import { currentSession } from "@/server/auth/roles";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
-
-const NAV = [
-  { href: "/admin", label: "Главная" },
-  { href: "/admin/orders", label: "Заявки" },
-  { href: "/admin/products", label: "Товары" },
-  { href: "/admin/fragrances", label: "Ароматы" },
-  { href: "/admin/brands", label: "Бренды" },
-  { href: "/admin/categories", label: "Категории" },
-  { href: "/admin/photos", label: "Фото" },
-  { href: "/admin/import", label: "Импорт" },
-  { href: "/admin/settings", label: "Настройки", owner: true },
-  { href: "/admin/admins", label: "Админы", owner: true },
-] as const;
 
 /**
  * The panel.
@@ -36,6 +22,16 @@ const NAV = [
  * and every admin read calls requireAdmin or requirePermission for itself. If
  * this layout were the only check, it would be a check in the one place that
  * can be skipped.
+ *
+ * ── Why there is no header ──
+ *
+ * There was one: the wordmark, the role, a logout button, and under them a
+ * scrolling row of ten sections. The client found the panel complicated, and
+ * that row was most of the reason — ten words competing on every screen for
+ * attention the task in front of the owner needed. What is left is the
+ * storefront's own top line, the menu button and the wordmark, and it scrolls
+ * away with the page instead of standing over it. Everything else lives in the
+ * menu.
  */
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
@@ -50,66 +46,29 @@ async function Guard({ children }: { children: ReactNode }) {
   if (!session) redirect("/admin/login");
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="bg-canvas sticky top-0 z-20">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link
-            href="/admin"
-            className="font-wordmark text-wordmark inline-flex min-h-11 shrink-0 items-center text-xl leading-none font-semibold"
-          >
-            ÁRUMI
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-muted hidden text-sm sm:inline">
-              {session.role === "OWNER" ? "Владелец" : "Редактор"}
-            </span>
-            <LogoutButton />
-          </div>
-        </div>
+    <div className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4">
+      <div className="flex items-center gap-2 pt-3">
+        <AdminMenu isOwner={session.role === "OWNER"} />
+        <Link
+          href="/admin"
+          className="font-wordmark text-wordmark inline-flex min-h-11 flex-1 items-center text-2xl leading-none font-semibold"
+        >
+          ÁRUMI
+        </Link>
+        <span className="caps text-muted">Админка</span>
+      </div>
 
-        {/*
-          Horizontally scrollable rather than collapsed behind a menu: nine
-          destinations is too few to hide and the client works on a 390 phone
-          as often as on a desktop, where a tap is cheaper than a tap that
-          opens a thing to tap.
-        */}
-        <nav aria-label="Разделы админки" className="border-rule border-b">
-          <ul className="mx-auto flex w-full max-w-6xl gap-1 overflow-x-auto px-2 pb-2">
-            {NAV.filter((item) => !("owner" in item) || session.role === "OWNER").map(
-              (item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-muted hover:bg-primary-wash hover:text-ink inline-flex min-h-11 items-center rounded-md px-3 text-sm whitespace-nowrap transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ),
-            )}
-          </ul>
-        </nav>
-      </header>
-
-      {/* A landmark, not a div: the panel has a header and a nav above it, and
-          without <main> there is no way to skip past them. */}
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-
-      <footer className="mx-auto w-full max-w-6xl px-4 pb-8">
-        <GoldRule />
-        <p className="text-muted mt-3 text-xs">
-          ÁRUMI Parfum &amp; Care — админ-панель
-        </p>
-      </footer>
+      <main className="flex-1 pt-6 pb-20">{children}</main>
     </div>
   );
 }
 
 function Booting() {
   return (
-    <div aria-hidden className="mx-auto w-full max-w-6xl px-4 py-6">
-      <div className="bg-surface h-11 w-full rounded-md" />
-      <div className="bg-surface mt-6 h-32 w-full rounded-md" />
+    <div aria-hidden className="mx-auto w-full max-w-5xl px-4 pt-3">
+      <div className="bg-primary-wash h-11 w-40 rounded-full" />
+      <div className="bg-primary-wash mt-8 h-10 w-56 rounded-md" />
+      <div className="stage mt-6 h-40 w-full" />
     </div>
   );
 }

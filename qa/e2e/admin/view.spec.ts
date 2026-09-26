@@ -33,7 +33,7 @@ test.describe("Админка — обзор", () => {
     // The real thing, password and code and all. Every other test borrows the
     // resulting cookie; this is the one that earns it.
     await signIn(page, OWNER);
-    await expect(page.getByRole("navigation").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Меню" })).toBeVisible();
     await shot(page, info, "31-admin-home");
   });
 
@@ -60,12 +60,15 @@ test.describe("Админка — обзор", () => {
   }, info) => {
     await useAdmin(page, EDITOR);
 
-    const nav = page.getByRole("navigation").first();
+    // The sections live in the menu now, not in a row under a header.
+    await page.getByRole("button", { name: "Меню" }).click();
+    const nav = page.getByRole("navigation", { name: "Разделы админки" });
     await expect(nav.getByRole("link", { name: "Товары" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Настройки" })).toBeHidden();
     await expect(nav.getByRole("link", { name: "Админы" })).toBeHidden();
 
     await shot(page, info, "33-admin-editor-nav");
+    await page.keyboard.press("Escape");
 
     // Hiding a link is decoration; the server has to refuse the address too.
     // Before this pass /admin/settings rendered in full for an editor and

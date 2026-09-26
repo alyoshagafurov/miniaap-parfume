@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { LoginForm } from "@/components/admin/LoginForm";
 import { TelegramProvider } from "@/components/telegram/provider";
-import { GoldRule } from "@/components/ui/GoldRule";
 
 export const metadata: Metadata = {
   title: "Вход",
@@ -24,11 +24,13 @@ export default function AdminLoginPage() {
   return (
     <TelegramProvider>
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-4 py-12">
-        <h1 className="font-wordmark text-wordmark text-h1 text-center leading-tight font-semibold">
+        <p
+          aria-hidden
+          className="font-wordmark text-wordmark text-3xl leading-none font-semibold"
+        >
           ÁRUMI
-        </h1>
-        <p className="caps text-muted mt-2 text-center">Админ-панель</p>
-        <GoldRule className="mx-auto mt-4 mb-8 w-24" />
+        </p>
+        <h1 className="display-caps text-ink mt-8 text-2xl">Вход в админку</h1>
         {/*
           Whether a code follows the password is a deployment's setting, and the
           form has no way to know it — so the screen promised one regardless.
@@ -36,9 +38,18 @@ export default function AdminLoginPage() {
           and the line under it still said the bot would write, while the
           password alone signed you straight in. Read here and passed down.
         */}
-        <LoginForm
-          requireCode={(process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0"}
-        />
+        <div className="stage mt-5 p-5">
+          <LoginForm
+            requireCode={(process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0"}
+          />
+        </div>
+        <Link
+          href="/"
+          prefetch={false}
+          className="text-ink mt-6 inline-flex min-h-11 items-center self-center text-sm font-semibold underline decoration-rule underline-offset-4 hover:decoration-ink"
+        >
+          На витрину
+        </Link>
       </main>
     </TelegramProvider>
   );

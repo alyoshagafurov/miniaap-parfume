@@ -62,27 +62,51 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
       ) : null}
 
       {creating ? (
-        <CategoryForm category={null} onDone={() => setCreating(false)} />
+        <div className="stage p-5">
+          <CategoryForm category={null} onDone={() => setCreating(false)} />
+        </div>
       ) : (
         <div>
-          <Button variant="secondary" onClick={() => setCreating(true)}>
-            Новая категория
-          </Button>
+          <Button onClick={() => setCreating(true)}>Новая категория</Button>
         </div>
       )}
 
-      <ul className="flex flex-col">
+      <ul className="flex flex-col gap-3">
         {categories.map((category, index) =>
           editing === category.id ? (
-            <li key={category.id} className="border-rule border-b py-4">
+            <li key={category.id} className="stage p-5">
               <CategoryForm category={category} onDone={() => setEditing(null)} />
             </li>
           ) : (
-            <li
-              key={category.id}
-              className="border-rule flex flex-wrap items-center justify-between gap-3 border-b py-3"
-            >
-              <div className="flex min-w-0 items-center gap-2">
+            <li key={category.id} className="stage flex items-center gap-4 p-3">
+              <Thumb coverKey={category.coverKey} />
+
+              <div className="min-w-0 flex-1">
+                <p className="text-ink text-base leading-snug font-bold sm:text-lg">
+                  {category.name}
+                </p>
+                <p className="text-muted mt-1 text-sm tabular-nums">
+                  {category.productCount} {plural(category.productCount, GOODS)}
+                  {category.isPublished ? null : " · скрыта"}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(category.id)}
+                    className="text-ink inline-flex min-h-11 items-center text-sm font-semibold underline decoration-rule underline-offset-4 hover:decoration-ink"
+                  >
+                    Править
+                  </button>
+                  <Link
+                    href={`/admin/products?category=${category.slug}`}
+                    className="text-ink inline-flex min-h-11 items-center text-sm font-semibold underline decoration-rule underline-offset-4 hover:decoration-ink"
+                  >
+                    Товары
+                  </Link>
+                </div>
+              </div>
+
+              <div className="flex shrink-0 flex-col gap-1">
                 <Arrow
                   label={`Поднять «${category.name}»`}
                   disabled={index === 0 || pending}
@@ -97,39 +121,33 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
                 >
                   ↓
                 </Arrow>
-                <div className="min-w-0">
-                  <p className="text-ink text-base font-medium">
-                    {category.name}
-                    {category.isPublished ? null : (
-                      <span className="text-muted ml-2 text-xs">скрыта</span>
-                    )}
-                  </p>
-                  <p className="text-muted mt-0.5 text-xs">
-                    /c/{category.slug}
-                    {category.subtitle ? ` · ${category.subtitle}` : ""}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-muted text-sm tabular-nums">
-                  {category.productCount} {plural(category.productCount, GOODS)}
-                </span>
-                <Link
-                  href={`/admin/products?category=${category.slug}`}
-                  className="text-primary text-sm underline underline-offset-4"
-                >
-                  Товары
-                </Link>
-                <Button variant="quiet" onClick={() => setEditing(category.id)}>
-                  Править
-                </Button>
               </div>
             </li>
           ),
         )}
       </ul>
     </div>
+  );
+}
+
+/** The storefront's category picture, or its monogram when there is none. */
+function Thumb({ coverKey }: { coverKey: string | null }) {
+  return coverKey ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={objectUrl(coverKey)}
+      alt=""
+      width={64}
+      height={80}
+      className="bg-canvas h-20 w-16 shrink-0 rounded-md object-cover"
+    />
+  ) : (
+    <span
+      aria-hidden
+      className="bg-canvas flex h-20 w-16 shrink-0 items-center justify-center rounded-md"
+    >
+      <span className="font-wordmark text-wordmark/45 text-2xl leading-none">Á</span>
+    </span>
   );
 }
 
@@ -150,7 +168,7 @@ function Arrow({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="border-control text-ink hover:bg-primary-wash disabled:text-muted h-11 w-9 shrink-0 rounded-md border transition-colors disabled:cursor-not-allowed"
+      className="bg-canvas text-ink hover:bg-primary-wash disabled:text-muted h-11 w-11 shrink-0 rounded-full text-base font-bold transition-colors disabled:cursor-not-allowed"
     >
       {children}
     </button>
@@ -209,7 +227,7 @@ function CategoryForm({
   };
 
   return (
-    <div className="border-control flex flex-col gap-4 rounded-md border p-4">
+    <div className="flex flex-col gap-4">
       {error ? (
         <p role="alert" className="text-danger text-sm">
           {error}
@@ -343,7 +361,10 @@ function CategoryCover({
       const body = new FormData();
       body.append("categoryId", categoryId);
       body.append("file", file);
-      const response = await fetch("/api/admin/category-cover", { method: "POST", body });
+      const response = await fetch("/api/admin/category-cover", {
+        method: "POST",
+        body,
+      });
       const payload: unknown = await response.json();
       if (!response.ok) {
         const message =
@@ -393,19 +414,21 @@ function CategoryCover({
             alt=""
             width={64}
             height={80}
-            className="bg-surface border-rule h-20 w-16 shrink-0 rounded-md border object-cover"
+            className="bg-canvas h-20 w-16 shrink-0 rounded-md object-cover"
           />
         ) : (
           <span
             aria-hidden
-            className="bg-surface border-rule flex h-20 w-16 shrink-0 items-center justify-center rounded-md border"
+            className="bg-canvas flex h-20 w-16 shrink-0 items-center justify-center rounded-md"
           >
-            <span className="font-wordmark text-wordmark/45 text-2xl leading-none">Á</span>
+            <span className="font-wordmark text-wordmark/45 text-2xl leading-none">
+              Á
+            </span>
           </span>
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          <label className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 cursor-pointer items-center rounded-md border px-4 text-sm font-medium transition-colors">
+          <label className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 cursor-pointer items-center rounded-full border px-5 text-sm font-bold transition-colors">
             {coverKey ? "Заменить" : "Загрузить фото"}
             <input
               type="file"

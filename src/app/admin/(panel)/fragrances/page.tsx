@@ -16,9 +16,7 @@ export default function FragrancesPage({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-          Ароматы
-        </h1>
+        <h1 className="display-caps text-ink text-h1">Ароматы</h1>
         <Link
           href="/admin/fragrances/new"
           className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"

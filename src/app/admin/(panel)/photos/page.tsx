@@ -11,9 +11,7 @@ export const metadata = { title: "Массовые фото" };
 export default function PhotosPage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-        Массовые фото
-      </h1>
+      <h1 className="display-caps text-ink text-h1">Массовые фото</h1>
       <p className="text-muted mt-2 text-sm">
         Назовите файлы артикулами — они сами привяжутся к товарам. Каждый файл идёт
         отдельно: один неудачный не отменяет остальные.

@@ -1,107 +1,176 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { SectionHeading } from "@/components/ui/GoldRule";
+import { GOODS, plural } from "@/lib/format";
 import { getDashboardCounts } from "@/server/admin/dashboard";
+import { currentSession } from "@/server/auth/roles";
 
 export const metadata = { title: "Админка" };
 
 /**
  * The admin home.
  *
- * Four numbers and the way to act on each of them. The counters are the ones
- * the brief names, and every one of them is a question the owner actually asks:
- * what is live, what is half-done, what cannot be sold well without a photo,
- * and what is waiting for a reply.
+ * Built like the storefront's first screen, because the client asked for the
+ * panel to look like it: heavy capitals, one dark block carrying the state of
+ * things and the one action that matters most, then white stages to press.
+ *
+ * What it answers is what the owner opens the panel to ask. How much of the
+ * catalog is live, what is half-done — drafts and products with no photograph,
+ * shown only when there are any, because a row saying «0» is a row asking to be
+ * read for nothing — and where everything else is.
  */
 export default function AdminHomePage() {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-        Главная
-      </h1>
-      <Suspense fallback={<CountersSkeleton />}>
-        <Counters />
+      <h1 className="display-caps text-ink text-h1">Главная</h1>
+      <Suspense fallback={<Skeleton />}>
+        <Overview />
       </Suspense>
     </>
   );
 }
 
-async function Counters() {
-  const counts = await getDashboardCounts();
+async function Overview() {
+  const [counts, session] = await Promise.all([getDashboardCounts(), currentSession()]);
+  const isOwner = session?.role === "OWNER";
 
-  const cards = [
+  const attention = [
+    { href: "/admin/products?status=DRAFT", label: "Черновики", count: counts.drafts },
     {
-      label: "Опубликовано",
-      value: counts.published,
-      href: "/admin/products?status=PUBLISHED",
-    },
-    { label: "Черновики", value: counts.drafts, href: "/admin/products?status=DRAFT" },
-    {
-      label: "Без фото",
-      value: counts.withoutPhoto,
       href: "/admin/products?photo=none",
+      label: "Без фото",
+      count: counts.withoutPhoto,
     },
-    {
-      label: "Новые заявки",
-      value: counts.newOrders,
-      href: "/admin/orders?status=NEW",
-    },
-  ];
+  ].filter((row) => row.count > 0);
 
   return (
     <>
-      <ul className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {cards.map((card) => (
-          <li key={card.label}>
-            <Link
-              href={card.href}
-              className="border-rule bg-surface hover:border-primary flex flex-col gap-1 rounded-md border p-4 transition-colors"
-            >
-              <span className="caps text-muted">{card.label}</span>
-              {/*
-                Not the display face. Cormorant's figures are old-style and the
-                subset carries no lining set, so "139" drops its 1 and 3 below
-                the baseline — lovely in a sentence, wrong for a number someone
-                is scanning. Numbers are set in the body face everywhere.
-              */}
-              <span className="text-ink text-h1 leading-none font-semibold tabular-nums">
-                {card.value}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="bg-night text-on-night mt-6 rounded-lg p-5">
+        <p className="display-caps text-2xl">
+          На витрине <span className="tabular-nums">{counts.published}</span>{" "}
+          {plural(counts.published, GOODS)}
+        </p>
+        <p className="text-on-night-muted mt-2 text-sm leading-snug">
+          Цена, наличие и фото меняются в разделе «Товары» — витрина обновляется сразу.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/products/new"
+            className="bg-on-night text-night focus-visible:outline-on-night inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
+          >
+            Новый товар
+          </Link>
+          <Link
+            href="/"
+            prefetch={false}
+            className="border-on-night-muted text-on-night focus-visible:outline-on-night inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-bold transition-opacity hover:opacity-80"
+          >
+            Открыть витрину
+          </Link>
+        </div>
+      </div>
 
-      <section className="mt-10">
-        <h2 className="caps text-muted">Быстрые действия</h2>
-        <ul className="mt-3 flex flex-wrap gap-3">
-          {[
-            { href: "/admin/products/new", label: "Новый товар" },
-            { href: "/admin/fragrances/new", label: "Новый аромат" },
-            { href: "/admin/import", label: "Импорт из Excel" },
-            { href: "/", label: "Открыть витрину" },
-          ].map((action) => (
-            <li key={action.href}>
-              <Link
-                href={action.href}
-                className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
-              >
-                {action.label}
-              </Link>
-            </li>
-          ))}
+      {attention.length > 0 ? (
+        <section className="mt-12">
+          <SectionHeading>Доделать</SectionHeading>
+          <ul className="mt-5 flex flex-col gap-3">
+            {attention.map((row) => (
+              <Row key={row.href} href={row.href} label={row.label} count={row.count} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-12">
+        <SectionHeading>Разделы</SectionHeading>
+        <ul className="mt-5 flex flex-col gap-3">
+          <Row
+            href="/admin/products"
+            label="Товары"
+            note={`${counts.published} на витрине`}
+          />
+          <Row href="/admin/categories" label="Категории" count={counts.categories} />
+          {isOwner ? (
+            <>
+              <Row
+                href="/admin/settings"
+                label="Настройки"
+                note="Минимальный заказ, контакты, тексты"
+              />
+              <Row
+                href="/admin/admins"
+                label="Админы"
+                note="Кто может входить в панель"
+              />
+            </>
+          ) : null}
         </ul>
       </section>
     </>
   );
 }
 
-function CountersSkeleton() {
+/** A stage you press — the storefront's category row, with a count or a line. */
+function Row({
+  href,
+  label,
+  count,
+  note,
+}: {
+  href: string;
+  label: string;
+  count?: number;
+  note?: string;
+}) {
   return (
-    <ul aria-hidden className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-      {[0, 1, 2, 3].map((i) => (
-        <li key={i} className="border-rule bg-surface h-24 rounded-md border" />
-      ))}
-    </ul>
+    <li>
+      <Link
+        href={href}
+        className="stage group flex min-h-16 items-center gap-4 px-5 py-4"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="text-ink block text-base leading-snug font-bold sm:text-lg">
+            {label}
+          </span>
+          {note ? (
+            <span className="text-muted mt-1 block text-sm leading-snug">{note}</span>
+          ) : null}
+        </span>
+        {count !== undefined ? (
+          <span className="text-ink shrink-0 text-lg font-bold tabular-nums">
+            {count}
+          </span>
+        ) : null}
+        <svg
+          aria-hidden
+          viewBox="0 0 8 14"
+          className="text-ink h-3.5 w-2 shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5"
+        >
+          <path
+            d="M1 1l6 6-6 6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </Link>
+    </li>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div aria-hidden>
+      <div className="bg-primary-wash mt-6 h-44 rounded-lg" />
+      <div className="bg-primary-wash mt-12 h-7 w-40 rounded-md" />
+      <div className="mt-5 flex flex-col gap-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="stage h-16" />
+        ))}
+      </div>
+    </div>
   );
 }

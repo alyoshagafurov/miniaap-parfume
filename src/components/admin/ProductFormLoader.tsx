@@ -41,11 +41,11 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
         <div>
           <Link
             href="/admin/products"
-            className="text-muted inline-flex min-h-11 items-center text-sm"
+            className="text-muted hover:text-ink inline-flex min-h-11 items-center text-sm font-semibold"
           >
             ← Все товары
           </Link>
-          <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+          <h1 className="display-caps text-ink text-h1">
             {product ? product.title : "Новый товар"}
           </h1>
           {product ? (

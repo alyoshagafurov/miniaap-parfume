@@ -94,10 +94,7 @@ export function LoginForm({ requireCode = true }: { requireCode?: boolean }) {
   return (
     <div className="flex flex-col gap-6">
       {notice ? (
-        <p
-          role="alert"
-          className="border-rule bg-surface text-ink rounded-md border p-3 text-sm"
-        >
+        <p role="alert" className="bg-canvas text-ink rounded-md p-3 text-sm">
           {notice}
         </p>
       ) : null}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import {
@@ -42,7 +43,7 @@ export function FragrancePicker({
   const [options, setOptions] = useState<PickedFragrance[]>([]);
   const [searching, startSearch] = useTransition();
   const [creating, setCreating] = useState(false);
-  const [newBrandId, setNewBrandId] = useState(brands[0]?.id ?? "");
+  const [newBrand, setNewBrand] = useState("");
   const [newName, setNewName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pendingCreate, startCreate] = useTransition();
@@ -75,24 +76,25 @@ export function FragrancePicker({
     setError(null);
     startCreate(async () => {
       const result = await createFragranceInline({
-        brandId: newBrandId,
+        brandName: newBrand,
         name: newName,
       });
       if (!result.ok) {
         setError(result.message);
         return;
       }
-      const brandName = brands.find((b) => b.id === newBrandId)?.name ?? "";
-      add({ id: result.id, name: result.name, brandName });
+      // The brand's name as stored, not as typed: «chanel» comes back «Chanel».
+      add({ id: result.id, name: result.name, brandName: result.brandName });
       setCreating(false);
       setNewName("");
+      setNewBrand("");
     });
   };
 
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <span className="caps text-muted mb-2 block">Ароматы</span>
+        <span className="display-caps text-ink mb-4 block text-lg">Аромат</span>
         {value.length === 0 ? (
           <p className="text-muted text-sm">Пока не выбран ни один.</p>
         ) : (
@@ -100,10 +102,10 @@ export function FragrancePicker({
             {value.map((fragrance, index) => (
               <li
                 key={fragrance.id}
-                className="border-rule bg-surface flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                className="bg-canvas flex items-center justify-between gap-3 rounded-md px-4 py-2"
               >
                 <span className="min-w-0">
-                  <span className="text-ink block text-sm">
+                  <span className="text-ink block text-sm font-bold">
                     {fragrance.brandName} {fragrance.name}
                   </span>
                   <span className="text-muted text-xs">
@@ -112,13 +114,22 @@ export function FragrancePicker({
                       : "второй аромат двойняшки"}
                   </span>
                 </span>
-                <Button
-                  variant="quiet"
-                  type="button"
-                  onClick={() => onChange(value.filter((f) => f.id !== fragrance.id))}
-                >
-                  Убрать
-                </Button>
+                <span className="flex shrink-0 items-center gap-4">
+                  <Link
+                    href={`/admin/fragrances/${fragrance.id}`}
+                    target="_blank"
+                    className="text-muted hover:text-ink text-sm underline underline-offset-4"
+                  >
+                    Ноты
+                  </Link>
+                  <Button
+                    variant="quiet"
+                    type="button"
+                    onClick={() => onChange(value.filter((f) => f.id !== fragrance.id))}
+                  >
+                    Убрать
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>
@@ -137,11 +148,14 @@ export function FragrancePicker({
             />
           </Field>
 
-          <ul className="border-rule mt-2 max-h-64 overflow-y-auto rounded-md border">
+          <ul className="bg-canvas mt-2 max-h-64 overflow-y-auto rounded-md">
             {options
               .filter((o) => !value.some((f) => f.id === o.id))
               .map((option) => (
-                <li key={option.id} className="border-rule border-b last:border-b-0">
+                <li
+                  key={option.id}
+                  className="border-surface border-b-2 last:border-b-0"
+                >
                   <button
                     type="button"
                     onClick={() => add(option)}
@@ -160,20 +174,25 @@ export function FragrancePicker({
           </ul>
 
           {creating ? (
-            <div className="border-control mt-3 flex flex-col gap-3 rounded-md border p-3">
-              <Field label="Бренд" htmlFor="new-fragrance-brand">
-                <select
+            <div className="bg-canvas mt-3 flex flex-col gap-3 rounded-md p-4">
+              <Field
+                label="Бренд"
+                htmlFor="new-fragrance-brand"
+                hint="Выберите из подсказок или впишите новый — он создастся."
+              >
+                <TextInput
                   id="new-fragrance-brand"
-                  value={newBrandId}
-                  onChange={(e) => setNewBrandId(e.target.value)}
-                  className="bg-surface text-ink border-control w-full rounded-md border px-3 py-3 text-base"
-                >
+                  list="new-fragrance-brands"
+                  value={newBrand}
+                  onChange={(e) => setNewBrand(e.target.value)}
+                  placeholder="Например, Chanel"
+                  autoComplete="off"
+                />
+                <datalist id="new-fragrance-brands">
                   {brands.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
+                    <option key={b.id} value={b.name} />
                   ))}
-                </select>
+                </datalist>
               </Field>
 
               <Field
@@ -189,17 +208,17 @@ export function FragrancePicker({
                 />
               </Field>
 
-              <div className="flex gap-3">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                 <Button
                   type="button"
                   onClick={create}
                   loading={pendingCreate}
-                  disabled={!newName.trim()}
+                  disabled={!newName.trim() || !newBrand.trim()}
                 >
                   Создать и выбрать
                 </Button>
                 <Button
-                  variant="secondary"
+                  variant="quiet"
                   type="button"
                   onClick={() => setCreating(false)}
                 >
@@ -207,8 +226,8 @@ export function FragrancePicker({
                 </Button>
               </div>
               <p className="text-muted text-xs">
-                Ноты, семейства и описание добавите на экране аромата — там их видно
-                целиком.
+                Ноты и описание — по ссылке «Ноты» у выбранного аромата, их можно
+                дописать и позже.
               </p>
             </div>
           ) : (

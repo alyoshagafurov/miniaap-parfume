@@ -15,13 +15,13 @@ export interface DashboardCounts {
   published: number;
   drafts: number;
   withoutPhoto: number;
-  newOrders: number;
+  categories: number;
 }
 
 export async function getDashboardCounts(): Promise<DashboardCounts> {
   await requireAdminPage();
 
-  const [published, drafts, withoutPhoto, newOrders] = await Promise.all([
+  const [published, drafts, withoutPhoto, categories] = await Promise.all([
     prisma.product.count({ where: { status: "PUBLISHED" } }),
     prisma.product.count({ where: { status: "DRAFT" } }),
     // Archived rows are out of the catalog by definition; counting their
@@ -29,8 +29,8 @@ export async function getDashboardCounts(): Promise<DashboardCounts> {
     prisma.product.count({
       where: { status: { not: "ARCHIVED" }, images: { none: {} } },
     }),
-    prisma.order.count({ where: { status: "NEW" } }),
+    prisma.category.count(),
   ]);
 
-  return { published, drafts, withoutPhoto, newOrders };
+  return { published, drafts, withoutPhoto, categories };
 }

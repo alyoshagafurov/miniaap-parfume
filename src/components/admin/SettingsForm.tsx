@@ -58,7 +58,7 @@ export function SettingsForm({
   });
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
       {notice ? (
         <p
           role="alert"
@@ -70,15 +70,15 @@ export function SettingsForm({
       {saved ? (
         <p
           role="status"
-          className="border-primary bg-primary-wash text-ink rounded-md border p-3 text-sm"
+          className="bg-night text-on-night rounded-md p-4 text-sm font-semibold"
         >
           Сохранено. Витрина и бот уже отвечают по-новому.
         </p>
       ) : null}
 
-      <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-6">
-        <section className="flex flex-col gap-5">
-          <h2 className="caps text-muted">Контакты</h2>
+      <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
+        <section className="stage flex flex-col gap-5 p-5">
+          <h2 className="display-caps text-ink text-lg">Контакты</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Название" htmlFor="companyName">
               <TextInput
@@ -110,8 +110,8 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="flex flex-col gap-5">
-          <h2 className="caps text-muted">Условия</h2>
+        <section className="stage flex flex-col gap-5 p-5">
+          <h2 className="display-caps text-ink text-lg">Условия</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
               label="Минимальный заказ, ₽"
@@ -149,8 +149,8 @@ export function SettingsForm({
           </Field>
         </section>
 
-        <section className="flex flex-col gap-5">
-          <h2 className="caps text-muted">Приветствие бота</h2>
+        <section className="stage flex flex-col gap-5 p-5">
+          <h2 className="display-caps text-ink text-lg">Приветствие бота</h2>
           <Field
             label="Текст"
             htmlFor="botGreeting"
@@ -160,14 +160,14 @@ export function SettingsForm({
           </Field>
         </section>
 
-        <div>
+        <div className="pt-2">
           <Button type="submit" loading={pending}>
             Сохранить
           </Button>
         </div>
       </form>
 
-      <section className="border-rule border-t pt-8">
+      <section className="stage p-5">
         <Banner bannerKey={bannerKey} />
       </section>
     </div>
@@ -220,7 +220,7 @@ function Banner({ bannerKey }: { bannerKey: string | null }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="caps text-muted">Баннер приветствия</h2>
+      <h2 className="display-caps text-ink text-lg">Баннер приветствия</h2>
 
       {error ? (
         <p role="alert" className="text-danger text-sm">
@@ -233,7 +233,7 @@ function Banner({ bannerKey }: { bannerKey: string | null }) {
         <img
           src={objectUrl(bannerKey)}
           alt="Текущий баннер приветствия"
-          className="bg-surface border-rule max-w-sm rounded-md border"
+          className="bg-canvas max-w-sm rounded-md"
         />
       ) : (
         <p className="text-muted text-sm">

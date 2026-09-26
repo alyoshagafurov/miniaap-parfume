@@ -6,7 +6,9 @@ import { PUBLISH_STATUSES, STOCK_STATES } from "@/lib/admin-products";
 import { searchFragrances, type FragranceOption } from "@/server/admin/product-form";
 import { requirePermission } from "@/server/auth/roles";
 import { fromAction } from "@/server/catalog/revalidate";
+import { createBrand } from "@/server/catalog/mutations/brands";
 import { createFragrance } from "@/server/catalog/mutations/fragrances";
+import { prisma } from "@/server/db";
 import {
   removeProductImage,
   reorderProductImages,
@@ -249,12 +251,13 @@ export async function removeImage(input: unknown): Promise<ActionResult> {
 // ── Fragrances, created without leaving the form ─────────────────────────────
 
 const InlineFragrance = z.object({
-  brandId: z.string().min(1).max(64),
+  brandName: z.string().trim().min(1).max(120),
   name: z.string().trim().min(1).max(200),
 });
 
 export type FragranceCreated =
-  { ok: true; id: string; name: string } | { ok: false; message: string };
+  | { ok: true; id: string; name: string; brandName: string }
+  | { ok: false; message: string };
 
 /**
  * A fragrance created from inside the product form.
@@ -263,6 +266,13 @@ export type FragranceCreated =
  * the fragrance screen's job, and asking for them here would turn adding a
  * product into filling in two forms. What it creates is complete enough to be
  * correct and obviously incomplete enough to be finished later.
+ *
+ * The brand is typed, not chosen from a list, and created if it is new. The
+ * brands screen left the panel's menu when the client asked for five sections,
+ * and a picker that could only choose an existing brand would then have been a
+ * dead end on an empty catalog — no brand, so no fragrance, so no product at
+ * all. An existing brand is matched regardless of case, so «chanel» finds
+ * «Chanel» rather than making a second one.
  */
 export async function createFragranceInline(input: unknown): Promise<FragranceCreated> {
   await requirePermission("catalog:write");
@@ -270,9 +280,28 @@ export async function createFragranceInline(input: unknown): Promise<FragranceCr
   if (!parsed.success) return { ok: false, message: "Укажите бренд и название" };
 
   try {
+    const existing = await prisma.brand.findFirst({
+      where: { name: { equals: parsed.data.brandName, mode: "insensitive" } },
+      select: { id: true, name: true },
+    });
+    let brand: { id: string; name: string };
+    if (existing) {
+      brand = existing;
+    } else {
+      const created = await fromAction(
+        createBrand({
+          name: parsed.data.brandName,
+          aliases: [],
+          sortOrder: 0,
+          isPublished: true,
+        }),
+      );
+      brand = { id: created.id, name: parsed.data.brandName };
+    }
+
     const created = await fromAction(
       createFragrance({
-        brandId: parsed.data.brandId,
+        brandId: brand.id,
         name: parsed.data.name,
         aliases: [],
         gender: "UNISEX",
@@ -283,7 +312,7 @@ export async function createFragranceInline(input: unknown): Promise<FragranceCr
         description: null,
       }),
     );
-    return { ok: true, id: created.id, name: created.name };
+    return { ok: true, id: created.id, name: created.name, brandName: brand.name };
   } catch (error) {
     if (error instanceof CatalogConflict) return { ok: false, message: error.message };
     return { ok: false, message: "Не удалось создать аромат" };

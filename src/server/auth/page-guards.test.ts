@@ -15,13 +15,14 @@ import { describe, expect, it } from "vitest";
  * appears in the menu, which is the only place anybody will remember to add it.
  */
 
-const LAYOUT = "src/app/admin/(panel)/layout.tsx";
+// The panel's menu. It moved here from the layout when the header went.
+const MENU = "src/components/admin/AdminMenu.tsx";
 
 /** Nav entries marked `owner: true`, as hrefs. */
 function ownerOnlyHrefs(): string[] {
-  const source = readFileSync(LAYOUT, "utf8");
-  const nav = /const NAV = \[(.*?)\n\] as const;/s.exec(source);
-  expect(nav, `не нашёл NAV в ${LAYOUT}`).not.toBeNull();
+  const source = readFileSync(MENU, "utf8");
+  const nav = /const SECTIONS = \[(.*?)\n\] as const;/s.exec(source);
+  expect(nav, `не нашёл SECTIONS в ${MENU}`).not.toBeNull();
 
   return [...nav![1]!.matchAll(/\{[^}]*href:\s*"([^"]+)"[^}]*\}/g)]
     .filter((m) => /owner:\s*true/.test(m[0]))

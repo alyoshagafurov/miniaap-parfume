@@ -18,9 +18,7 @@ export default function OrdersPage({
 }) {
   return (
     <>
-      <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
-        Заявки
-      </h1>
+      <h1 className="display-caps text-ink text-h1">Заявки</h1>
       <Suspense fallback={<ListSkeleton />}>
         <List searchParams={searchParams} />
       </Suspense>

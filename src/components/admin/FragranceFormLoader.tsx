@@ -32,7 +32,7 @@ export async function FragranceFormLoader({ id }: { id: string | null }) {
         >
           ← Все ароматы
         </Link>
-        <h1 className="font-display text-ink text-h2 leading-tight font-semibold">
+        <h1 className="display-caps text-ink text-h1">
           {fragrance ? fragrance.name : "Новый аромат"}
         </h1>
       </div>

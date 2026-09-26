@@ -140,7 +140,7 @@ export function ProductForm({
   });
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
       {notice ? (
         <p
           role="alert"
@@ -152,16 +152,22 @@ export function ProductForm({
       {saved ? (
         <p
           role="status"
-          className="border-primary bg-primary-wash text-ink rounded-md border p-3 text-sm"
+          className="bg-night text-on-night rounded-md p-4 text-sm font-semibold"
         >
           Сохранено. Витрина уже показывает новые данные.
         </p>
       ) : null}
 
-      <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-6">
-        <FragrancePicker value={fragrances} onChange={setFragrances} brands={brands} />
+      <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
+        <section className="stage p-5">
+          <FragrancePicker
+            value={fragrances}
+            onChange={setFragrances}
+            brands={brands}
+          />
+        </section>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <section className="stage grid gap-5 p-5 sm:grid-cols-2">
           <Field label="Категория" htmlFor="categoryId">
             <select
               id="categoryId"
@@ -235,18 +241,6 @@ export function ProductForm({
             />
           </Field>
 
-          <Field
-            label="Старая цена, ₽"
-            htmlFor="oldPrice"
-            hint="Необязательно. Показывается зачёркнутой и должна быть больше текущей"
-          >
-            <TextInput
-              id="oldPrice"
-              inputMode="decimal"
-              {...form.register("oldPrice")}
-            />
-          </Field>
-
           <Field label="Наличие" htmlFor="stock">
             <select
               id="stock"
@@ -274,43 +268,69 @@ export function ProductForm({
               ))}
             </select>
           </Field>
-        </div>
 
-        <div className="flex flex-wrap gap-6">
-          <label className="flex min-h-11 items-center gap-2">
-            <input
-              type="checkbox"
-              className="accent-primary h-5 w-5"
-              {...form.register("isNew")}
-            />
-            <span className="text-ink text-sm">Новинка</span>
-          </label>
-          <label className="flex min-h-11 items-center gap-2">
-            <input
-              type="checkbox"
-              className="accent-primary h-5 w-5"
-              {...form.register("isHit")}
-            />
-            <span className="text-ink text-sm">Хит</span>
-          </label>
-          <Field
-            label="Популярность"
-            htmlFor="popularity"
-            hint="Чем больше, тем выше в списках"
-          >
-            <TextInput
-              id="popularity"
-              inputMode="numeric"
-              {...form.register("popularity")}
-            />
-          </Field>
-        </div>
+          <div className="flex flex-wrap gap-6 sm:col-span-2">
+            <label className="flex min-h-11 items-center gap-2">
+              <input
+                type="checkbox"
+                className="accent-primary h-5 w-5"
+                {...form.register("isNew")}
+              />
+              <span className="text-ink text-sm font-semibold">Новинка</span>
+            </label>
+            <label className="flex min-h-11 items-center gap-2">
+              <input
+                type="checkbox"
+                className="accent-primary h-5 w-5"
+                {...form.register("isHit")}
+              />
+              <span className="text-ink text-sm font-semibold">Хит</span>
+            </label>
+          </div>
+        </section>
 
-        <details className="border-rule rounded-md border p-4">
-          <summary className="text-ink cursor-pointer text-sm font-medium">
-            Название и адрес — задаются сами
+        <details className="stage group">
+          <summary className="text-ink flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-5 text-base font-bold [&::-webkit-details-marker]:hidden">
+            Дополнительно
+            <svg
+              aria-hidden
+              viewBox="0 0 14 8"
+              className="text-ink h-2 w-3.5 shrink-0 transition-transform duration-150 ease-out group-open:rotate-180"
+            >
+              <path
+                d="M1 1l6 6 6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </summary>
-          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 px-5 pb-5 sm:grid-cols-2">
+            <Field
+              label="Старая цена, ₽"
+              htmlFor="oldPrice"
+              hint="Необязательно. Показывается зачёркнутой и должна быть больше текущей"
+            >
+              <TextInput
+                id="oldPrice"
+                inputMode="decimal"
+                {...form.register("oldPrice")}
+              />
+            </Field>
+
+            <Field
+              label="Популярность"
+              htmlFor="popularity"
+              hint="Чем больше, тем выше в списках"
+            >
+              <TextInput
+                id="popularity"
+                inputMode="numeric"
+                {...form.register("popularity")}
+              />
+            </Field>
             <Field
               label="Название"
               htmlFor="title"
@@ -336,7 +356,7 @@ export function ProductForm({
           </div>
         </details>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 pt-2">
           <Button type="submit" loading={pending}>
             Сохранить
           </Button>
@@ -351,10 +371,10 @@ export function ProductForm({
 
       {productId ? (
         <>
-          <div className="border-rule border-t pt-8">
+          <div className="stage p-5">
             <ImageManager productId={productId} images={images} />
           </div>
-          <div className="border-rule border-t pt-8">
+          <div className="stage p-5">
             <CopyToFormat
               productId={productId}
               categories={categories}
@@ -409,7 +429,7 @@ function CopyToFormat({
   if (!open) {
     return (
       <div>
-        <span className="caps text-muted mb-2 block">Другой формат</span>
+        <span className="display-caps text-ink mb-2 block text-lg">Другой формат</span>
         <p className="text-muted mb-3 text-sm">
           Создать такой же товар в другом объёме — аромат, ноты и описание общие.
         </p>
@@ -450,7 +470,7 @@ function CopyToFormat({
 
   return (
     <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
-      <span className="caps text-muted">Копия в другом формате</span>
+      <span className="display-caps text-ink text-lg">Копия в другом формате</span>
       {error ? (
         <p role="alert" className="text-danger text-sm">
           {error}

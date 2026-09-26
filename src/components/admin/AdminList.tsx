@@ -39,30 +39,32 @@ export function AdminList({
   return (
     <div className="flex flex-col gap-4">
       {creating ? (
-        <AdminForm admin={null} onDone={() => setCreating(false)} />
+        <div className="stage p-5">
+          <AdminForm admin={null} onDone={() => setCreating(false)} />
+        </div>
       ) : (
         <div>
-          <Button variant="secondary" onClick={() => setCreating(true)}>
-            Добавить администратора
-          </Button>
+          <Button onClick={() => setCreating(true)}>Добавить администратора</Button>
         </div>
       )}
 
-      <ul className="flex flex-col">
+      <ul className="stage divide-rule flex flex-col divide-y overflow-hidden">
         {admins.map((admin) =>
           editing === admin.id ? (
-            <li key={admin.id} className="border-rule border-b py-4">
+            <li key={admin.id} className="p-5">
               <AdminForm admin={admin} onDone={() => setEditing(null)} />
             </li>
           ) : (
             <li
               key={admin.id}
-              className="border-rule flex flex-wrap items-center justify-between gap-3 border-b py-3"
+              className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
             >
               <div className="min-w-0">
-                <p className="text-ink text-base font-medium">
+                <p className="text-ink text-base font-bold">
                   {admin.name}
-                  <span className="text-muted ml-2 text-sm">{admin.login}</span>
+                  <span className="text-muted ml-2 text-sm font-normal">
+                    {admin.login}
+                  </span>
                   {admin.id === currentId ? (
                     <span className="text-muted ml-2 text-xs">это вы</span>
                   ) : null}
@@ -155,7 +157,7 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
   };
 
   return (
-    <div className="border-control flex flex-col gap-4 rounded-md border p-4">
+    <div className="flex flex-col gap-4">
       {error ? (
         <p role="alert" className="text-danger text-sm">
           {error}
