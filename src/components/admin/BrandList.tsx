@@ -68,7 +68,7 @@ export function BrandList({ brands }: { brands: readonly BrandRow[] }) {
                 </span>
                 <Link
                   href={`/admin/fragrances?brand=${brand.slug}`}
-                  className="text-olive text-sm underline underline-offset-4"
+                  className="text-primary text-sm underline underline-offset-4"
                 >
                   Ароматы
                 </Link>
@@ -154,7 +154,7 @@ function BrandForm({ brand, onDone }: { brand: BrandRow | null; onDone: () => vo
         <label className="flex min-h-11 items-center gap-2 self-end">
           <input
             type="checkbox"
-            className="accent-olive h-5 w-5"
+            className="accent-primary h-5 w-5"
             checked={isPublished}
             onChange={(e) => setPublished(e.target.checked)}
           />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateRu, formatDateTimeRu, plural, productName } from "./format";
+import { formatDateRu, formatDateTimeRu, keepUnits, plural, productName } from "./format";
 
 describe("formatDateRu", () => {
   it("renders a Russian date", () => {
@@ -125,5 +125,29 @@ describe("plural", () => {
   it("ignores a sign and a fraction rather than inventing a form", () => {
     expect(plural(-1, forms)).toBe("товар");
     expect(plural(1.7, forms)).toBe("товар");
+  });
+});
+
+describe("keepUnits", () => {
+  const NBSP = "\u00a0";
+
+  it("binds a volume to its unit", () => {
+    expect(keepUnits("Парфюм 35 мл «карандаши»")).toBe(`Парфюм 35${NBSP}мл «карандаши»`);
+    expect(keepUnits("Дезодоранты 200 мл")).toBe(`Дезодоранты 200${NBSP}мл`);
+  });
+
+  it("binds «2 в 1» as one unit", () => {
+    expect(keepUnits("Парфюм 2 в 1 «двойняшки» 100 мл")).toBe(
+      `Парфюм 2${NBSP}в${NBSP}1 «двойняшки» 100${NBSP}мл`,
+    );
+  });
+
+  it("does not catch a unit that is the start of a longer word", () => {
+    // Why the boundary is spelled out: `\b` would treat «млн» as «мл» + «н».
+    expect(keepUnits("5 млн")).toBe("5 млн");
+  });
+
+  it("leaves a name without numbers alone", () => {
+    expect(keepUnits("Хиты сезона")).toBe("Хиты сезона");
   });
 });

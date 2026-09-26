@@ -12,20 +12,20 @@ const STOCK_LABEL: Record<string, string> = {
 };
 
 /**
- * A product in a list.
+ * A product in a list: one object on a white stage.
  *
- * Brand in spaced caps, then the fragrance, then the format — the order a buyer
- * scans in. The price is the largest thing after the image, because it is what
- * they came to check.
+ * What a wholesaler came to read comes first and large — the name, then the
+ * price in amber. Brand, format and pack multiple follow small, underneath. The
+ * old card led with the brand in spaced caps and gave every line a similar
+ * weight, which on a screen of sixteen cards read as a column of fields rather
+ * than as sixteen products.
  *
- * A twin shows both of its fragrances; that is the whole point of the format
- * and hiding the second one would make the card a lie.
+ * A twin shows both of its fragrances; that is the whole point of the format,
+ * and clamping the second one away would make the card a lie. So the name gets
+ * three lines, not two.
  *
- * The spacing is deliberately uneven. Brand, name and format are one thought
- * and sit tight together; the price is a second thought and is given air. An
- * even gap between all five lines — which is what this had — reads as a list of
- * fields rather than as a card, and on a screen showing sixteen of them at once
- * that is the difference between a catalog and a spreadsheet.
+ * The stage is lifted by a soft shadow, not outlined — the hairline box around
+ * every card was the grid this replaces.
  */
 export function ProductCard({
   product,
@@ -52,7 +52,7 @@ export function ProductCard({
   const stock = STOCK_LABEL[product.stock];
 
   return (
-    <article className="group relative flex flex-col">
+    <article className="stage group relative flex h-full w-full flex-col p-2">
       <ProductImage
         image={product.images[0]}
         title={product.title}
@@ -61,46 +61,43 @@ export function ProductCard({
         {...(sizes ? { sizes } : {})}
       />
 
-      <p className="caps text-muted mt-3">
-        <Mark text={brandName} query={query} />
-      </p>
+      <div className="flex flex-1 flex-col px-1.5 pt-3 pb-1.5">
+        {/* Two lines reserved whether used or not: a row's names differ in
+            length, and without the reservation each price landed at its own
+            height and the row read as ragged. Two, not three — three left a
+            one-word name like «H24» floating over a gap wider than itself. A
+            twin that needs the third line still gets it. */}
+        <h3 className="display-caps text-ink line-clamp-3 min-h-8 text-sm leading-tight">
+          <Link
+            href={`/p/${product.slug}`}
+            className="rounded-sm after:absolute after:inset-0 after:rounded-lg"
+          >
+            <Mark text={names.join(" + ") || product.title} query={query} />
+          </Link>
+        </h3>
 
-      <h3 className="text-ink mt-1 text-base leading-snug font-medium">
-        <Link href={`/p/${product.slug}`} className="after:absolute after:inset-0">
-          <Mark text={names.join(" + ") || product.title} query={query} />
-        </Link>
-      </h3>
+        <Price
+          kop={product.priceKop}
+          oldKop={product.oldPriceKop}
+          showPrices={showPrices}
+          className="mt-2 text-xl"
+        />
 
-      <p className="text-muted mt-0.5 text-xs">
-        {product.volumeMl} мл
-        {product.packSize > 1 ? ` · кратно ${product.packSize}` : ""}
-      </p>
-
-      {/*
-        The price, a step larger than the name above it.
-        
-        On a wholesale card the price is not metadata — it is the reason the
-        card is being read, and it used to sit at the same size as the volume
-        and the pack multiple. The reference the client pointed at makes the
-        same call and goes further, setting prices in its accent colour; that
-        part is not borrowed, because this palette's gold is 2.14:1 on the
-        canvas and a price is the last text in the catalog that may be hard to
-        read. Size and weight carry it instead.
-      */}
-      <Price
-        kop={product.priceKop}
-        oldKop={product.oldPriceKop}
-        showPrices={showPrices}
-        className="mt-2 text-lg"
-      />
-
-      {stock ? (
-        <p
-          className={`mt-1 text-xs ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}
-        >
-          {stock}
+        {/* The rest, small and last, at the foot of the stage. */}
+        <p className="text-muted mt-auto pt-2 text-xs leading-snug">
+          <Mark text={brandName} query={query} />
+          {` · ${product.volumeMl} мл`}
+          {product.packSize > 1 ? ` · кратно ${product.packSize}` : ""}
         </p>
-      ) : null}
+
+        {stock ? (
+          <p
+            className={`mt-0.5 text-xs font-semibold ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}
+          >
+            {stock}
+          </p>
+        ) : null}
+      </div>
     </article>
   );
 }

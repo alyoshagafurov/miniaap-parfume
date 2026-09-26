@@ -153,7 +153,7 @@ export function BulkPhotos() {
                   ) : row.state === "uploading" ? (
                     <span className="text-muted">загружается…</span>
                   ) : row.state === "done" ? (
-                    <span className="text-olive">→ {row.sku}</span>
+                    <span className="text-primary">→ {row.sku}</span>
                   ) : (
                     <span className="text-danger" role="alert">
                       {row.error}

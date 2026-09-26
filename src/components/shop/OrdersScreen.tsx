@@ -87,7 +87,7 @@ export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
             Здесь появятся ваши заявки — с номером, датой и статусом.
           </p>
           <div className="mt-6">
-            <Link href="/" className="text-olive underline underline-offset-4">
+            <Link href="/" className="text-primary underline underline-offset-4">
               В каталог
             </Link>
           </div>
@@ -209,7 +209,7 @@ function NotInTelegram() {
         Откройте каталог через бота — и все заявки будут здесь.
       </p>
       <div className="mt-6">
-        <Link href="/" className="text-olive underline underline-offset-4">
+        <Link href="/" className="text-primary underline underline-offset-4">
           В каталог
         </Link>
       </div>

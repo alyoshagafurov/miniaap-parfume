@@ -72,7 +72,7 @@ export default function ShopLayout({ children }: { children: ReactNode }) {
               </Suspense>
               <Link
                 href="/"
-                className="font-display text-olive inline-flex min-h-11 flex-1 items-center text-2xl leading-none font-semibold"
+                className="font-wordmark text-wordmark inline-flex min-h-11 flex-1 items-center text-2xl leading-none font-semibold"
               >
                 ÁRUMI
               </Link>
@@ -129,25 +129,36 @@ async function Menu() {
  * Streamed rather than prerendered — see the note on the layout. Its skeleton
  * holds the same height so the page does not grow a footer's worth of pixels
  * under the buyer's thumb as it arrives.
+ *
+ * It closes the page in the same voice as the rest: the name in heavy capitals,
+ * the minimum in amber because it is money, the telephone as a capsule because
+ * it is the thing to press. It used to be a hairline and a column of plain
+ * lines with an underlined number — the one part of the storefront still
+ * speaking the direction this replaced.
  */
 async function Footer() {
   const settings = await getSettings();
 
   return (
-    <footer className="border-rule mt-16 border-t">
-      <div className="text-muted mx-auto w-full max-w-3xl px-4 py-8 text-sm">
-        <p className="text-ink">{settings.companyName}</p>
-        {settings.address ? <p className="mt-1">{settings.address}</p> : null}
-        <p className="mt-1">Минимальный заказ {formatRub(settings.minOrderKop)}</p>
+    <footer className="mt-16">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-8 pb-10">
+        <p className="display-caps text-ink text-lg">{settings.companyName}</p>
+        {settings.address ? (
+          <p className="text-muted mt-3 text-sm leading-snug">{settings.address}</p>
+        ) : null}
+        <p className="text-muted mt-1 text-sm">
+          Минимальный заказ{" "}
+          <span className="text-price font-bold tabular-nums">
+            {formatRub(settings.minOrderKop)}
+          </span>
+        </p>
         {settings.phone ? (
-          <p className="mt-3">
-            <a
-              href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`}
-              className="text-olive inline-flex min-h-11 items-center underline underline-offset-4"
-            >
-              {settings.phone}
-            </a>
-          </p>
+          <a
+            href={`tel:${settings.phone.replace(/[^\d+]/g, "")}`}
+            className="border-control text-ink hover:bg-primary-wash mt-5 inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-bold tabular-nums transition-colors"
+          >
+            {settings.phone}
+          </a>
         ) : null}
       </div>
     </footer>
@@ -156,12 +167,12 @@ async function Footer() {
 
 function FooterSkeleton() {
   return (
-    <footer aria-hidden className="border-rule mt-16 border-t">
-      <div className="mx-auto w-full max-w-3xl px-4 py-8">
-        <div className="bg-surface h-4 w-48 rounded-md" />
-        <div className="bg-surface mt-2 h-4 w-64 rounded-md" />
-        <div className="bg-surface mt-2 h-4 w-40 rounded-md" />
-        <div className="bg-surface mt-4 h-5 w-36 rounded-md" />
+    <footer aria-hidden className="mt-16">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-8 pb-10">
+        <div className="bg-primary-wash h-5 w-48 rounded-md" />
+        <div className="bg-primary-wash mt-3 h-4 w-64 rounded-md" />
+        <div className="bg-primary-wash mt-2 h-4 w-44 rounded-md" />
+        <div className="bg-primary-wash mt-5 h-11 w-40 rounded-full" />
       </div>
     </footer>
   );

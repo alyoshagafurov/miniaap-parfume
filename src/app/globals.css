@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ÁRUMI — design tokens, direction "Оливковый шёлк"
+   ÁRUMI — design tokens: graphite, white stage, two ambers
    ───────────────────────────────────────────────────────────────────────────
    Every namespace below is reset with `initial` before being redefined, which
    deletes Tailwind's default palette, type scale, radii and font stacks.
 
    What that buys, precisely: Tailwind 4.2 added an `olive` palette to its own
-   default theme, so without the reset `bg-olive-600` would silently resolve to
+   default theme, so without the reset `bg-primary-600` would silently resolve to
    Tailwind's oklch olive instead of the ÁRUMI brand colour. The reset removes
    that shadowing, and the ordering matters — a token declared before its
    namespace reset is wiped by it, so every `*: initial` comes first.
@@ -30,78 +30,130 @@
   /* ── Colour ───────────────────────────────────────────────────────────── */
   --color-*: initial;
 
+  /* ── The palette, and where it came from ─────────────────────────────
+     The client pinned a fashion-app reference: white screens, near-black
+     blocks and buttons, amber prices. Their own logo already carries that
+     palette — the "PARFUM & CARE" subtitle is graphite and the flourish is
+     gold — so the reference is met from the brand's own colours rather than
+     borrowed. Olive, the wordmark's colour, survives in the wordmark alone.
+     Every ratio below is measured, not estimated. */
+
   /* Grounds */
-  --color-canvas: #f8f5ee; /* page background */
-  --color-surface: #fffdf8; /* raised: cards, sheets, inputs */
+  /* Neutral, not cream. The first build kept a warm #F5F2EC — the discarded
+     direction's ground nudged, and the warm-cream default a model reaches for
+     unasked. The reference sets everything on clean white; this is the nearest
+     ground white stages can still stand on (1.12:1 lift) while every text
+     ratio below it holds. */
+  --color-canvas: #f2f2f0; /* page background */
+  --color-surface: #ffffff; /* the stage: cards, sheets, inputs */
 
   /* Ink */
-  --color-ink: #23241e; /* body text — 14.4:1 on canvas */
-  --color-muted: #6b6a5e; /* secondary text — 5.0:1 on canvas */
+  --color-ink: #1b1b1a; /* body text — 15.4:1 on canvas, 17.2:1 on surface */
+  --color-muted: #6d6d68; /* secondary text — 4.6:1 on canvas, 5.2:1 on surface */
 
-  /* Brand. Olive is sampled from the ÁRUMI wordmark (#4D522C); the direction
-     specified #4D5527, a difference of 5.8/255 — below the perceptual
-     threshold, so the logo's value is the one that ships. */
-  --color-olive: #4d522c; /* brand, CTA, active — 7.5:1 on canvas */
-  --color-olive-hover: #3f4620;
-  /* Tint for selected chips and subtle brand washes. */
-  --color-olive-wash: #eceade;
+  /* Action. Buttons, active states, links: graphite, as the reference's
+     black buttons are. */
+  --color-primary: #1e1e1c; /* 14.9:1 on canvas */
+  --color-primary-hover: #33322f;
+  /* Hover and selection wash under a quiet control. Background only. */
+  --color-primary-wash: #e8e8e5;
 
-  /* Gold is a rule, never a voice. At 2.14:1 on canvas it cannot legibly
-     carry text or signal state, which is why no text token maps to it. */
-  --color-gold: #c9a646;
+  /* Night: the dark blocks inside light screens — the terms panel, the
+     request bar. Never a dark theme; always a block on a light page. Text on
+     it is warm-tinted rather than grey, from the ground's own hue. */
+  --color-night: #1e1e1c;
+  --color-on-night: #f2f2f0; /* 14.9:1 on night */
+  --color-on-night-muted: #a6a6a1; /* 6.8:1 on night */
 
-  /* Lines. Two tokens because they answer to different rules: `rule` is
-     decorative (dividers, card edges) and exempt from contrast minimums;
+  /* Money. Two ambers, one job each, because no single amber reads on both
+     grounds: the reference's own #C8955F is 2.65:1 on white — it washes out
+     on a phone in daylight — and 6.3:1 on the dark blocks, which is exactly
+     where the reference shows it best. So each ground gets the amber that
+     reads on it, and amber is spent on money and nothing else. */
+  --color-price: #96622a; /* on canvas 4.6:1, on surface 5.2:1 */
+  --color-price-bright: #c8955f; /* on night 6.3:1 — never on a light ground */
+
+  /* Gold is a rule, never a voice. The logo's flourish, 2.1:1 on canvas:
+     no text token maps to it. */
+  --color-gold: #c9a34c;
+
+  /* The wordmark's olive, sampled from the logo. The ÁRUMI mark only. */
+  --color-wordmark: #4d522c; /* 7.3:1 on canvas */
+
+  /* Lines. `rule` is decorative and exempt from contrast minimums;
      `control` bounds a form field and must clear WCAG 1.4.11's 3:1. */
-  --color-rule: #e7e0cf;
-  --color-control: #858277; /* 3.53:1 on canvas, 3.79:1 on surface */
+  --color-rule: #e2e2de;
+  --color-control: #858580; /* 3.3:1 on canvas, 3.7:1 on surface */
 
-  /* State. Success is the brand olive — this palette has no second green. */
-  --color-danger: #a33a2b; /* 6.0:1 on canvas */
+  /* State */
+  --color-danger: #a33a2b; /* 5.9:1 on canvas, 6.6:1 on surface */
   --color-danger-wash: #f7ebe8;
 }
 
 @theme {
   /* ── Type ─────────────────────────────────────────────────────────────── */
   --font-*: initial;
-  /* Display is reserved for 24px and up; below that its low x-height and thin
-     strokes fail on a market-stall phone in daylight. */
-  --font-display: var(--font-cormorant), "Playfair Display", Georgia, serif;
+  /* Display is the grotesque, set heavy and in capitals — the reference's
+     «NEW ARRIVALS», «DETAILS», «SWEATER». Manrope is already self-hosted as a
+     variable 200–800, so this costs no new file. It also retires a standing
+     problem: Cormorant's old-style figures dropped article numbers below the
+     baseline in any heading that carried one. */
+  --font-display: var(--font-manrope), system-ui, -apple-system, sans-serif;
   --font-sans: var(--font-manrope), system-ui, -apple-system, sans-serif;
+  /* The serif stays, for the one thing that is drawn in it: the ÁRUMI mark and
+     its monogram, which have to match the logo. */
+  --font-wordmark: var(--font-cormorant), Georgia, serif;
 
   --text-*: initial;
   --text-xs: 0.75rem; /* 12 — captions, spaced caps */
   --text-sm: 0.875rem; /* 14 — secondary, metadata */
   --text-base: 1rem; /* 16 — body, never smaller for prices */
   --text-lg: 1.25rem; /* 20 — card titles, section heads */
-  --text-2xl: 1.75rem; /* 28 — display floor */
+  --text-xl: 1.5rem; /* 24 — card price, product title on a phone */
+  --text-2xl: 1.75rem; /* 28 — section heads */
+  --text-3xl: 2rem; /* 32 — product price */
   --text-4xl: 2.5rem; /* 40 — display ceiling */
+  /* The placeholder monogram alone, where it stands in a product page's well.
+     It asked for these sizes and they did not exist — so the Á rendered at the
+     inherited size, a speck adrift in a 425-pixel box. */
+  --text-5xl: 3.5rem;
+  --text-6xl: 4.5rem;
   /* The one fluid step: an H1 that fits a 390px phone and still carries a
      1440px desktop. Declared here so it cannot be re-improvised per page. */
   --text-h1: clamp(1.75rem, 7vw, 2.5rem);
+  /* Used fifteen times — every admin page title and the request total — and
+     never defined. In Tailwind 4 an unknown utility emits no rule at all, so
+     all fifteen rendered at the size they inherited. Defined now. */
+  --text-h2: clamp(1.5rem, 5.5vw, 2rem);
 
   --tracking-*: initial;
   --tracking-normal: 0;
   --tracking-tight: -0.01em;
+  /* Heavy capitals set tight, as the reference sets them. Above the floor of
+     -0.04em that keeps two capitals from touching. */
+  --tracking-display: -0.03em;
   /* The direction's "разреженный капс". Only ever on 12–14px caps. */
   --tracking-caps: 0.18em;
   --tracking-caps-wide: 0.22em;
 
   --leading-*: initial;
+  --leading-none: 1; /* heavy display caps */
   --leading-tight: 1.15; /* display */
   --leading-snug: 1.35; /* titles */
   --leading-normal: 1.55; /* body */
 
   /* ── Form ─────────────────────────────────────────────────────────────── */
   --radius-*: initial;
-  --radius-md: 10px; /* cards, inputs, sheets, buttons */
-  --radius-full: 999px; /* buttons and filter chips */
+  --radius-md: 14px; /* inputs, small blocks, thumbnails */
+  --radius-lg: 28px; /* the stage: product cards, dark blocks, sheets */
+  --radius-full: 999px; /* everything pressed — buttons, chips, search */
 
-  /* Warm shadows: neutral grey shadows read as dirt against a cream ground. */
+  /* Warm graphite shadows with a real offset: a white stage on a warm ground
+     is lifted by depth, not outlined. */
   --shadow-*: initial;
-  --shadow-sm: 0 1px 2px rgb(77 82 44 / 0.06);
-  --shadow-md: 0 4px 16px rgb(77 82 44 / 0.08);
-  --shadow-lg: 0 12px 32px rgb(77 82 44 / 0.1);
+  --shadow-sm: 0 1px 2px rgb(30 30 28 / 0.05);
+  --shadow-md: 0 6px 20px rgb(30 30 28 / 0.07);
+  --shadow-lg: 0 14px 36px rgb(30 30 28 / 0.12);
 
   /* ── Motion ───────────────────────────────────────────────────────────── */
   /* Stage 1 animates sheets and modals only. Nothing exceeds 250ms and
@@ -123,7 +175,7 @@
 /* Bridge to next/font/local, which sets --font-cormorant and --font-manrope on
    <html>. Declared inline so Tailwind resolves them at build time. */
 @theme inline {
-  --color-focus: var(--color-olive);
+  --color-focus: var(--color-primary);
 }
 
 @layer base {
@@ -152,9 +204,27 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* The parts of the page no component draws: selection, the caret, the
+     scrollbar and underlines. Left to the browser they ship in its blue and
+     its grey, which belong to no palette — the cheapest tell that a page was
+     assembled rather than built. */
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-on-night);
+  }
+  html {
+    caret-color: var(--color-primary);
+    scrollbar-color: var(--color-control) transparent;
+    scrollbar-width: thin;
+  }
+  a {
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+  }
+
   /* A single, consistent focus ring. Never removed — only restyled. */
   :focus-visible {
-    outline: 2px solid var(--color-olive);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
     border-radius: 2px;
   }
@@ -196,9 +266,25 @@
   border: 0;
 }
 
-/* The flanked section heading "— Категории —" is built from two of these
-   either side of the label, not from a fading line: the direction bans
-   gradients, and the logo's own flourish is a solid braided rule. */
+/* Heavy capitals — the reference's headline voice. Section heads, the product
+   name, the home title. Numbers inside them are Manrope's lining figures, so an
+   article number sits on the baseline where the old serif dropped it below. */
+@utility display-caps {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-none);
+}
+
+/* The white stage a product stands on: the reference's card, lifted by a soft
+   offset shadow rather than outlined, because a hairline around every card is
+   the grid this direction replaces. */
+@utility stage {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
 
 /* Spaced caps used for brand names and section labels. */
 /* A bottom sheet never covers the whole screen: what is behind it has to stay

@@ -17,7 +17,6 @@ import {
 } from "@/components/telegram/provider";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
-import { GoldRule } from "@/components/ui/GoldRule";
 import { applyCorrections, toOrderItems } from "@/lib/cart";
 import { formatRub } from "@/lib/money";
 import type { CreateOrderResult } from "@/server/orders/create";
@@ -193,23 +192,30 @@ export function OrderScreen({
 
   if (done) {
     return (
-      <section className="py-8 text-center">
-        <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
-          Заявка принята
-        </h1>
-        <GoldRule className="mx-auto mt-4 w-24" />
-        <p className="text-ink mt-6 text-lg tabular-nums">№ {done.number}</p>
-        {showPrices ? (
-          <p className="text-muted mt-1 tabular-nums">{formatRub(done.totalKop)}</p>
-        ) : null}
-        <p className="text-muted mt-6 text-sm">
-          Менеджер свяжется с вами. Заявка сохранена в разделе «Мои заявки».
-        </p>
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <Link href="/orders" className="text-olive underline underline-offset-4">
+      <section className="py-6">
+        <h1 className="display-caps text-ink text-h1">Заявка принята</h1>
+        <div className="bg-night text-on-night mt-6 rounded-lg p-5">
+          <p className="display-caps text-2xl tabular-nums">№ {done.number}</p>
+          {showPrices ? (
+            <p className="text-price-bright mt-2 text-xl font-extrabold tabular-nums">
+              {formatRub(done.totalKop)}
+            </p>
+          ) : null}
+          <p className="text-on-night-muted mt-4 text-sm leading-snug">
+            Менеджер свяжется с вами. Заявка сохранена в разделе «Мои заявки».
+          </p>
+        </div>
+        <div className="mt-6 flex flex-col gap-3">
+          <Link
+            href="/orders"
+            className="bg-primary text-on-night hover:bg-primary-hover inline-flex min-h-12 items-center justify-center rounded-full px-6 text-base font-bold transition-colors"
+          >
             Мои заявки
           </Link>
-          <Link href="/" className="text-olive underline underline-offset-4">
+          <Link
+            href="/"
+            className="border-control text-ink hover:bg-primary-wash inline-flex min-h-12 items-center justify-center rounded-full border px-6 text-base font-bold transition-colors"
+          >
             Вернуться в каталог
           </Link>
         </div>
@@ -219,15 +225,19 @@ export function OrderScreen({
 
   if (count === 0) {
     return (
-      <section className="py-12 text-center">
+      <section className="py-6">
         {/* Every state of this screen needs its heading, not only the one that
             happens to have items in it. */}
-        <h1 className="text-ink text-lg">В заявке пока пусто</h1>
-        <p className="text-muted mt-2 text-sm">
-          Добавьте товары из каталога — минимальный заказ {formatRub(minOrderKop)}.
+        <h1 className="display-caps text-ink text-h1">В заявке пока пусто</h1>
+        <p className="text-muted mt-4 text-sm leading-snug">
+          Добавьте товары из каталога — минимальный заказ{" "}
+          <span className="text-price font-bold tabular-nums">{formatRub(minOrderKop)}</span>.
         </p>
-        <div className="mt-8 flex justify-center">
-          <Link href="/" className="text-olive underline underline-offset-4">
+        <div className="mt-6">
+          <Link
+            href="/"
+            className="bg-primary text-on-night hover:bg-primary-hover inline-flex min-h-12 items-center justify-center rounded-full px-6 text-base font-bold transition-colors"
+          >
             В каталог
           </Link>
         </div>
@@ -239,20 +249,22 @@ export function OrderScreen({
 
   return (
     <>
-      <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
-        Заявка
-      </h1>
-      <GoldRule className="mt-4 w-24" />
+      <h1 className="display-caps text-ink text-h1">Заявка</h1>
 
       <div className="mt-6">
         <CartLines showPrices={showPrices} />
       </div>
 
+      {/* The total, and how far it is from the minimum, in the one dark block on
+          this screen — the reference's dark panel under its white stage. It is
+          the part of the page that decides whether the request can go, so it
+          is the part set apart. The figure is money on a dark ground: the
+          bright amber, at 6.3:1. */}
       {showPrices ? (
-        <div className="mt-6">
+        <div className="bg-night text-on-night mt-6 rounded-lg p-5">
           <div className="flex items-baseline justify-between gap-4">
-            <span className="text-ink text-base">Итого</span>
-            <span className="text-ink text-h2 font-semibold tabular-nums">
+            <span className="display-caps text-lg">Итого</span>
+            <span className="text-price-bright text-h2 font-extrabold tracking-tight tabular-nums">
               {formatRub(totalKop)}
             </span>
           </div>
@@ -371,7 +383,7 @@ export function OrderScreen({
                 <input
                   type="radio"
                   value={option.value}
-                  className="accent-olive h-5 w-5"
+                  className="accent-primary h-5 w-5"
                   {...form.register("delivery")}
                 />
                 <span className="text-ink text-base">{option.label}</span>
@@ -412,7 +424,7 @@ export function OrderScreen({
           <label className="flex min-h-11 items-start gap-3">
             <input
               type="checkbox"
-              className="accent-olive mt-0.5 h-5 w-5 shrink-0"
+              className="accent-primary mt-0.5 h-5 w-5 shrink-0"
               {...form.register("consent", {
                 required: "Нужно согласие на обработку данных",
               })}
@@ -462,7 +474,7 @@ function MinimumProgress({
   return (
     <div className="mt-3">
       <div
-        className="bg-rule h-1 w-full overflow-hidden rounded-full"
+        className="bg-on-night-muted/25 h-1.5 w-full overflow-hidden rounded-full"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
@@ -473,9 +485,9 @@ function MinimumProgress({
             so the class did nothing — and had it worked it would have animated
             a layout property, which the direction does not allow. Motion in
             this interface is sheets and modals; a progress bar snaps. */}
-        <div className="bg-olive h-full" style={{ width: `${pct}%` }} />
+        <div className="bg-price-bright h-full rounded-full" style={{ width: `${pct}%` }} />
       </div>
-      <p className="text-muted mt-2 text-sm">
+      <p className="text-on-night-muted mt-3 text-sm leading-snug">
         {short === 0
           ? `Минимальный заказ ${formatRub(minOrderKop)} — набран`
           : `До минимального заказа ${formatRub(minOrderKop)} не хватает ${formatRub(short)}`}

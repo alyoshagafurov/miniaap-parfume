@@ -4,7 +4,17 @@
     {
       "name": "arumi-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
+      "runtimeArgs": [
+        "dev"
+      ],
+      "port": 3100
+    },
+    {
+      "name": "arumi-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "start"
+      ],
       "port": 3100
     }
   ]

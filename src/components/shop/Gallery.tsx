@@ -68,7 +68,7 @@ export function Gallery({
         sizes="(max-width: 767px) 100vw, 640px"
         fetchPriority="high"
         decoding="async"
-        className="bg-surface aspect-[4/5] w-full rounded-md object-cover"
+        className="bg-canvas aspect-[4/5] w-full rounded-md object-cover"
         style={{
           backgroundImage: `url(${first.blurDataUrl})`,
           backgroundSize: "cover",
@@ -101,7 +101,7 @@ export function Gallery({
             loading={i === 0 ? "eager" : "lazy"}
             fetchPriority={i === 0 ? "high" : "auto"}
             decoding="async"
-            className="bg-surface aspect-[4/5] w-full shrink-0 snap-center object-cover"
+            className="bg-canvas aspect-[4/5] w-full shrink-0 snap-center object-cover"
             style={{
               backgroundImage: `url(${image.blurDataUrl})`,
               backgroundSize: "cover",
@@ -125,7 +125,7 @@ export function Gallery({
             <span
               aria-hidden
               className={`h-1.5 w-1.5 rounded-full transition-colors duration-150 ease-out ${
-                i === index ? "bg-olive" : "bg-rule"
+                i === index ? "bg-primary" : "bg-rule"
               }`}
             />
           </button>

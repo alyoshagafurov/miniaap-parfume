@@ -10,8 +10,13 @@ export default defineConfig([
     "out/**",
     "build/**",
     "coverage/**",
-    "playwright-report/**",
-    "test-results/**",
+    // Any depth, not the root: the Playwright config writes its report and
+    // results under qa/final/, and a flat-config glob is anchored to this
+    // directory, so the root-only form matched nothing. It surfaced only when
+    // a run failed — the HTML report is written then, and eslint read its
+    // minified trace-viewer bundles as 668 errors of source.
+    "**/playwright-report/**",
+    "**/test-results/**",
     "next-env.d.ts",
   ]),
   {

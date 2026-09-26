@@ -182,6 +182,13 @@ const RULES = [
     test: /\btransition-all\b|transition\s*:\s*all\b/g,
   },
   {
+    id: "undefined-text-size",
+    why:
+      "That size is not in the type scale, so in Tailwind 4 the class emits no rule and the text renders at whatever it inherits. It happened twice: text-h2 on every admin title and the request total, and text-5xl on the placeholder monogram.",
+    // Built from globals.css at start-up below; a placeholder until then.
+    test: /$^/g,
+  },
+  {
     id: "emoji",
     why: "The direction bans emoji in the interface.",
     test: /\p{Extended_Pictographic}/gu,
@@ -213,6 +220,18 @@ function walk(dir, out = []) {
     else if (SCAN_EXT.has(entry.slice(entry.lastIndexOf(".")))) out.push(full);
   }
   return out;
+}
+
+{
+  const css = readFileSync(join(ROOT, TOKEN_SOURCE), "utf8");
+  const scale = css.slice(css.indexOf("--text-*: initial"), css.indexOf("--tracking-*: initial"));
+  const defined = new Set([...scale.matchAll(/--text-([a-z0-9]+):/g)].map((m) => m[1]));
+  const sizes = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl", "h1", "h2", "h3", "h4", "h5", "h6"];
+  const missing = sizes.filter((s) => !defined.has(s));
+  const rule = RULES.find((r) => r.id === "undefined-text-size");
+  if (rule && missing.length > 0) {
+    rule.test = new RegExp(`(?<![\\w-])(?:[a-z]+:)*text-(?:${missing.join("|")})(?![\\w-])`, "g");
+  }
 }
 
 const findings = [];

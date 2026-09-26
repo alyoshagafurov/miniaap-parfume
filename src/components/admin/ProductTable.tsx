@@ -130,7 +130,7 @@ export function ProductTable({
                 <label className="flex min-h-11 items-center">
                   <input
                     type="checkbox"
-                    className="accent-olive h-5 w-5"
+                    className="accent-primary h-5 w-5"
                     checked={allSelected}
                     onChange={toggleAll}
                     aria-label="Выбрать все на странице"
@@ -169,7 +169,7 @@ export function ProductTable({
                     <label className="flex min-h-11 items-center gap-3 md:min-h-0">
                       <input
                         type="checkbox"
-                        className="accent-olive h-5 w-5 shrink-0"
+                        className="accent-primary h-5 w-5 shrink-0"
                         checked={selected.has(row.id)}
                         onChange={() => toggle(row.id)}
                         aria-label={`Выбрать ${row.sku}`}
@@ -249,7 +249,7 @@ function BulkBar({
   onClear: () => void;
 }) {
   return (
-    <div className="border-olive bg-olive-wash sticky top-28 z-10 flex flex-wrap items-center gap-3 rounded-md border p-3">
+    <div className="border-primary bg-primary-wash sticky top-28 z-10 flex flex-wrap items-center gap-3 rounded-md border p-3">
       <span className="text-ink text-sm font-medium tabular-nums">
         Выбрано: {count}
       </span>
@@ -348,7 +348,7 @@ function PriceCell({ id, priceKop }: { id: string; priceKop: number }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="text-ink hover:bg-olive-wash -mx-2 inline-flex min-h-11 items-center rounded-md px-2 font-semibold tabular-nums transition-colors"
+        className="text-ink hover:bg-primary-wash -mx-2 inline-flex min-h-11 items-center rounded-md px-2 font-semibold tabular-nums transition-colors"
         aria-label={`Изменить цену: ${formatRub(priceKop)}`}
       >
         {formatRub(priceKop)}
@@ -455,7 +455,7 @@ function StockCell({ id, stock }: { id: string; stock: StockStateName }) {
 function StatusBadge({ status }: { status: PublishStatusName }) {
   const tone =
     status === "PUBLISHED"
-      ? "bg-olive text-surface border-olive"
+      ? "bg-primary text-surface border-primary"
       : status === "DRAFT"
         ? "bg-surface text-muted border-control"
         : "bg-surface text-muted border-rule";

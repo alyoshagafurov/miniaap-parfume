@@ -23,6 +23,12 @@ import { objectUrl } from "@/lib/media";
  *
  * Always 4:5, always with width and height, so a card reserves its space and
  * the list never shifts as images arrive.
+ *
+ * It sits in a well of the canvas colour inside the card's white stage, not on
+ * the white itself. The reference stands its garment on pure white, and a
+ * perfume bottle is glass: on white it dissolves at the edges, and the client's
+ * photographs arrive from a Telegram channel on whatever background each was
+ * shot against. The well gives every one of them the same ground.
  */
 export function ProductImage({
   image,
@@ -59,13 +65,13 @@ export function ProductImage({
   if (!image) {
     return (
       <div
-        className="bg-surface border-rule flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 rounded-md border px-4 text-center"
+        className="bg-canvas flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 rounded-md px-4 text-center"
         role="img"
         aria-label={`${productName(brandName, title)} — фотография готовится`}
       >
         <span
           aria-hidden
-          className={`font-display text-olive leading-tight ${prominent ? "text-5xl sm:text-6xl" : "text-4xl"}`}
+          className={`font-wordmark text-wordmark leading-tight ${prominent ? "text-5xl sm:text-6xl" : "text-4xl"}`}
         >
           Á
         </span>
@@ -94,7 +100,7 @@ export function ProductImage({
       decoding="async"
       fetchPriority={priority ? "high" : "auto"}
       onError={onError}
-      className="bg-surface aspect-[4/5] w-full rounded-md object-cover"
+      className="bg-canvas aspect-[4/5] w-full rounded-md object-cover"
       style={{ backgroundImage: `url(${image.blurDataUrl})`, backgroundSize: "cover" }}
     />
   );

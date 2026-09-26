@@ -39,9 +39,9 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
 
   return (
-    <ul className="flex flex-col">
+    <ul className="flex flex-col gap-3">
       {lines.map((line) => (
-        <li key={line.productId} className="border-rule border-b py-4 first:pt-0">
+        <li key={line.productId} className="stage p-3">
           <div className="flex gap-3">
             <Link href={`/p/${line.slug}`} className="w-20 shrink-0">
               <ProductImage
@@ -57,20 +57,22 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
               />
             </Link>
 
+            {/* The name first and in weight, the rest small beneath it — the
+                brand used to sit above the name in spaced caps, a caption over
+                the thing it names. */}
             <div className="min-w-0 flex-1">
-              <p className="caps text-muted">{line.brandName}</p>
-              <p className="text-ink text-sm leading-snug font-medium">
+              <p className="display-caps text-ink text-sm leading-tight">
                 <Link href={`/p/${line.slug}`}>{line.title}</Link>
               </p>
-              <p className="text-muted mt-0.5 text-xs">
-                {line.format}
+              <p className="text-muted mt-1.5 text-xs leading-snug">
+                {line.brandName} · {line.format}
                 {line.seenPackSize > 1 ? ` · кратно ${line.seenPackSize}` : ""}
               </p>
-              <div className="mt-1">
+              <div className="mt-1.5">
                 <Price
                   kop={line.seenPriceKop}
                   showPrices={showPrices}
-                  className="text-sm"
+                  className="text-base"
                 />
               </div>
             </div>
@@ -88,9 +90,7 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
             />
             <div className="flex items-center gap-4">
               {showPrices ? (
-                <span className="text-ink text-base font-semibold tabular-nums">
-                  <Price kop={line.seenPriceKop * line.qty} showPrices />
-                </span>
+                <Price kop={line.seenPriceKop * line.qty} showPrices className="text-lg" />
               ) : null}
               <Button
                 variant="quiet"

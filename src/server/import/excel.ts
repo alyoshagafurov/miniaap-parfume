@@ -1,6 +1,6 @@
 import writeXlsxFile from "write-excel-file/node";
 
-import { OLIVE_WASH } from "@/lib/tokens";
+import { PRIMARY_WASH } from "@/lib/tokens";
 
 import { COLUMNS, type ImportField } from "./columns";
 
@@ -36,7 +36,7 @@ const HEADER = {
   fontWeight: "bold" as const,
   // From the token file, like every other colour in this project: a cell
   // fill is a literal hex inside the .xlsx and cannot be a CSS variable.
-  backgroundColor: OLIVE_WASH,
+  backgroundColor: PRIMARY_WASH,
   align: "left" as const,
 };
 

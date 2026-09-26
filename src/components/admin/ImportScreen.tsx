@@ -102,13 +102,13 @@ export function ImportScreen() {
       <div className="flex flex-wrap items-center gap-3">
         <a
           href="/api/admin/import/template"
-          className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
         >
           Скачать шаблон .xlsx
         </a>
         <a
           href="/api/admin/export"
-          className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
         >
           Выгрузить каталог .xlsx
         </a>
@@ -282,7 +282,7 @@ export function ImportScreen() {
       ) : null}
 
       {outcome ? (
-        <div className="border-olive bg-olive-wash flex flex-col gap-3 rounded-md border p-4">
+        <div className="border-primary bg-primary-wash flex flex-col gap-3 rounded-md border p-4">
           <h2 className="text-ink text-base font-semibold">Импорт завершён</h2>
           <p className="text-ink text-sm tabular-nums">
             Создано: {outcome.created} · обновлено: {outcome.updated} · пропущено:{" "}

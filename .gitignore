@@ -54,3 +54,11 @@ relay-stub.log
 
 # Ручные дампы базы (scripts/dump.sh)
 /backups/
+
+# Impeccable design-skill working files. The surface brief and config.json
+# are durable decisions and stay in git; review captures and build state are
+# regenerated on every run and, like the Playwright screenshots above, would
+# outweigh the source they document.
+/.impeccable/review/
+/.impeccable/build/
+/.impeccable/config.local.json

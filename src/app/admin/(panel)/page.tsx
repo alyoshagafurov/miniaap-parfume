@@ -55,7 +55,7 @@ async function Counters() {
           <li key={card.label}>
             <Link
               href={card.href}
-              className="border-rule bg-surface hover:border-olive flex flex-col gap-1 rounded-md border p-4 transition-colors"
+              className="border-rule bg-surface hover:border-primary flex flex-col gap-1 rounded-md border p-4 transition-colors"
             >
               <span className="caps text-muted">{card.label}</span>
               {/*
@@ -84,7 +84,7 @@ async function Counters() {
             <li key={action.href}>
               <Link
                 href={action.href}
-                className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+                className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
               >
                 {action.label}
               </Link>

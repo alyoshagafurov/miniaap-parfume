@@ -34,7 +34,7 @@ export default function ProductsPage({
         </h1>
         <Link
           href="/admin/products/new"
-          className="bg-olive text-surface hover:bg-olive-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
         >
           Новый товар
         </Link>
@@ -110,7 +110,7 @@ function FilterBar({
             type="search"
             defaultValue={query.q}
             placeholder="Артикул, бренд, аромат"
-            className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full rounded-md border px-3 py-2 text-base"
+            className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full rounded-md border px-3 py-2 text-base"
           />
         </div>
 
@@ -164,14 +164,14 @@ function FilterBar({
             name="photo"
             value="none"
             defaultChecked={query.noPhoto}
-            className="accent-olive h-5 w-5"
+            className="accent-primary h-5 w-5"
           />
           <span className="text-ink text-sm">Без фото</span>
         </label>
 
         <button
           type="submit"
-          className="bg-olive text-surface hover:bg-olive-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
         >
           Применить
         </button>
@@ -179,7 +179,7 @@ function FilterBar({
         {active > 0 ? (
           <Link
             href="/admin/products"
-            className="text-olive inline-flex min-h-11 items-center underline underline-offset-4"
+            className="text-primary inline-flex min-h-11 items-center underline underline-offset-4"
           >
             Сбросить
           </Link>
@@ -240,7 +240,7 @@ function Pager({
       {page > 1 ? (
         <Link
           href={buildProductHref({ ...query, page: page - 1 })}
-          className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
         >
           ← Назад
         </Link>
@@ -255,7 +255,7 @@ function Pager({
       {page < pageCount ? (
         <Link
           href={buildProductHref({ ...query, page: page + 1 })}
-          className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+          className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
         >
           Вперёд →
         </Link>

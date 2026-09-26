@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { CategoryList } from "@/components/shop/CategoryList";
 import { ProductGridSkeleton } from "@/components/shop/ProductGrid";
-import { GoldRule } from "@/components/ui/GoldRule";
 import { parseListFilters, parseSort } from "@/lib/list-url";
 import { getFacets, listProducts } from "@/server/catalog/list";
-import { getCategoryBySlug } from "@/server/catalog/queries";
+import { getCategories, getCategoryBySlug } from "@/server/catalog/queries";
 import { getSettings } from "@/server/settings.cached";
+import { keepUnits } from "@/lib/format";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -61,23 +62,72 @@ export default function CategoryPage({ params, searchParams }: PageProps) {
 
 async function CategoryHeader({ params }: { params: PageProps["params"] }) {
   const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
+  const [category, all] = await Promise.all([getCategoryBySlug(slug), getCategories()]);
   // Also the route's 404: an unpublished or unknown slug has no heading, and
   // notFound() from here replaces the page rather than leaving a listing under
   // a missing title.
   if (!category) notFound();
 
   return (
-    <header className="pt-6 pb-6">
-      <h1 className="font-display text-ink text-h1 leading-tight font-semibold">
-        {category.name}
-      </h1>
+    <header className="pt-4 pb-6">
+      <h1 className="display-caps text-ink text-h1 text-balance">{keepUnits(category.name)}</h1>
       {/* The subtitle is deliberately not here. It said the same thing as the
           row the buyer just tapped, one screen earlier, and on a listing the
           first screen belongs to the goods. It is still on the row, and still
           editable in the panel. */}
-      <GoldRule className="mt-4 w-24" />
+      {all.length > 1 ? <CategoryTabs current={slug} categories={all} /> : null}
     </header>
+  );
+}
+
+/**
+ * Every category, one tap away — the reference's «Underground · Casual ·
+ * Formal» row.
+ *
+ * Categories here are formats, and comparing formats is most of what a
+ * wholesaler does on this screen: without this row, going from 35 ml to 100 ml
+ * meant back to the home page and down again. The current one is in ink with
+ * the gold rule under it; the reference marks it in its accent, but amber here
+ * means money, and a tab coloured like a price reads as one.
+ *
+ * It scrolls sideways rather than wrapping, because a category name in this
+ * catalog runs to five words and four of them wrapped would be a paragraph.
+ */
+function CategoryTabs({
+  current,
+  categories,
+}: {
+  current: string;
+  categories: ReadonlyArray<{ slug: string; name: string }>;
+}) {
+  return (
+    <nav aria-label="Категории" className="-mx-4 mt-5 overflow-x-auto px-4">
+      <ul className="flex gap-6">
+        {categories.map((c) =>
+          c.slug === current ? (
+            <li key={c.slug} className="shrink-0">
+              <span
+                aria-current="page"
+                className="text-ink block py-2 text-sm font-extrabold whitespace-nowrap"
+              >
+                {keepUnits(c.name)}
+                <span aria-hidden className="bg-gold mt-1.5 block h-0.5 rounded-full" />
+              </span>
+            </li>
+          ) : (
+            <li key={c.slug} className="shrink-0">
+              <Link
+                href={`/c/${c.slug}`}
+                className="text-muted hover:text-ink block py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+              >
+                {keepUnits(c.name)}
+                <span aria-hidden className="mt-1.5 block h-0.5" />
+              </Link>
+            </li>
+          ),
+        )}
+      </ul>
+    </nav>
   );
 }
 
@@ -122,10 +172,13 @@ async function CategorySection({ params, searchParams }: PageProps) {
  */
 function HeaderSkeleton() {
   return (
-    <div className="pt-6 pb-6" aria-hidden>
-      <div className="bg-surface h-8 w-3/5 rounded-md" />
-      <div className="bg-surface mt-2 h-5 w-4/5 rounded-md" />
-      <div className="mt-4 h-px w-24" />
+    <div className="pt-4 pb-6" aria-hidden>
+      <div className="bg-primary-wash h-8 w-3/5 rounded-md" />
+      <div className="mt-5 flex gap-6">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="bg-primary-wash h-5 w-24 rounded-md" />
+        ))}
+      </div>
     </div>
   );
 }

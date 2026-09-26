@@ -74,11 +74,11 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
           type="search"
           defaultValue={query ?? ""}
           placeholder="Номер, имя, телефон, город"
-          className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full max-w-md rounded-md border px-3 py-3 text-base"
+          className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full max-w-md rounded-md border px-3 py-3 text-base"
         />
         <button
           type="submit"
-          className="bg-olive text-surface hover:bg-olive-hover inline-flex items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-primary text-surface hover:bg-primary-hover inline-flex items-center rounded-md px-5 text-base font-medium transition-colors"
         >
           Найти
         </button>
@@ -142,8 +142,8 @@ function FilterTab({
       aria-current={active ? "page" : undefined}
       className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm transition-colors ${
         active
-          ? "bg-olive text-surface border-olive"
-          : "bg-surface text-ink border-control hover:bg-olive-wash"
+          ? "bg-primary text-surface border-primary"
+          : "bg-surface text-ink border-control hover:bg-primary-wash"
       }`}
     >
       {children}

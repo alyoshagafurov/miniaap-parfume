@@ -39,7 +39,7 @@ export default function AdminError({
 
       <div className="mt-8 flex flex-col items-center gap-4">
         <Button onClick={reset}>Повторить</Button>
-        <Link href="/admin" className="text-olive underline underline-offset-4">
+        <Link href="/admin" className="text-primary underline underline-offset-4">
           На главную панели
         </Link>
       </div>

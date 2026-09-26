@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
   return (
     <TelegramProvider>
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-4 py-12">
-        <h1 className="font-display text-ink text-h1 text-center leading-tight font-semibold">
+        <h1 className="font-wordmark text-wordmark text-h1 text-center leading-tight font-semibold">
           ÁRUMI
         </h1>
         <p className="caps text-muted mt-2 text-center">Админ-панель</p>

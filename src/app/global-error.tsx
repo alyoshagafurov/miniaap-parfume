@@ -35,7 +35,7 @@ export default function GlobalError({
         style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
       >
         <div className="max-w-sm">
-          <p className="text-olive text-2xl leading-none font-semibold">Á</p>
+          <p className="text-primary text-2xl leading-none font-semibold">Á</p>
 
           <h1 className="text-ink mt-6 text-lg font-semibold">
             Каталог временно недоступен
@@ -53,7 +53,7 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="bg-olive text-surface hover:bg-olive-hover mt-8 inline-flex min-h-11 items-center justify-center rounded-md px-5 font-medium transition-colors"
+            className="bg-primary text-surface hover:bg-primary-hover mt-8 inline-flex min-h-11 items-center justify-center rounded-md px-5 font-medium transition-colors"
           >
             Попробовать снова
           </button>

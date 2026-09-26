@@ -55,7 +55,7 @@ async function Guard({ children }: { children: ReactNode }) {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <Link
             href="/admin"
-            className="font-display text-olive inline-flex min-h-11 shrink-0 items-center text-xl leading-none font-semibold"
+            className="font-wordmark text-wordmark inline-flex min-h-11 shrink-0 items-center text-xl leading-none font-semibold"
           >
             ÁRUMI
           </Link>
@@ -80,7 +80,7 @@ async function Guard({ children }: { children: ReactNode }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-muted hover:bg-olive-wash hover:text-ink inline-flex min-h-11 items-center rounded-md px-3 text-sm whitespace-nowrap transition-colors"
+                    className="text-muted hover:bg-primary-wash hover:text-ink inline-flex min-h-11 items-center rounded-md px-3 text-sm whitespace-nowrap transition-colors"
                   >
                     {item.label}
                   </Link>

@@ -23,8 +23,8 @@ export function Chip({
       {...rest}
       className={`${
         selected
-          ? "bg-olive text-surface border-olive"
-          : "bg-surface text-ink border-control hover:bg-olive-wash"
+          ? "bg-primary text-surface border-primary"
+          : "bg-surface text-ink border-control hover:bg-primary-wash"
       } inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors duration-150 ease-out ${className}`}
     >
       {children}

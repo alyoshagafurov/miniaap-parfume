@@ -91,7 +91,7 @@ export function FragranceForm({
       {saved ? (
         <p
           role="status"
-          className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm"
+          className="border-primary bg-primary-wash text-ink rounded-md border p-3 text-sm"
         >
           Сохранено. Товары этого аромата переиндексированы, витрина обновлена.
         </p>

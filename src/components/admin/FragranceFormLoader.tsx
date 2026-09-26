@@ -15,7 +15,7 @@ export async function FragranceFormLoader({ id }: { id: string | null }) {
         <p className="text-ink text-lg">Аромат не найден</p>
         <Link
           href="/admin/fragrances"
-          className="text-olive mt-4 inline-block underline underline-offset-4"
+          className="text-primary mt-4 inline-block underline underline-offset-4"
         >
           Ко всем ароматам
         </Link>

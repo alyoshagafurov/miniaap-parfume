@@ -79,7 +79,7 @@ async function Card({ params }: PageProps) {
           <Row label="Телефон">
             <a
               href={`tel:${order.phone}`}
-              className="text-olive underline underline-offset-4"
+              className="text-primary underline underline-offset-4"
             >
               {order.phone}
             </a>
@@ -177,7 +177,7 @@ function ContactLink({ href, children }: { href: string; children: React.ReactNo
     <a
       href={href}
       rel="noopener noreferrer"
-      className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+      className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
     >
       {children}
     </a>

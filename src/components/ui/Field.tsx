@@ -44,7 +44,7 @@ export function Field({
 }
 
 const CONTROL =
-  "bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full rounded-md border px-3 py-3 text-base transition-colors duration-150 ease-out";
+  "bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full rounded-md border px-3 py-3 text-base transition-colors duration-150 ease-out";
 
 export function TextInput({
   invalid = false,

@@ -52,7 +52,7 @@ export default function ShopError({
 
       <div className="mt-8 flex flex-col items-center gap-4">
         <Button onClick={reset}>Попробовать снова</Button>
-        <Link href="/" className="text-olive underline underline-offset-4">
+        <Link href="/" className="text-primary underline underline-offset-4">
           В каталог
         </Link>
       </div>

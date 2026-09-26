@@ -30,10 +30,10 @@ export default function NotFound() {
         найдите нужное по названию либо артикулу.
       </p>
       <div className="mt-8 flex flex-col items-center gap-3">
-        <Link href="/" className="text-olive underline underline-offset-4">
+        <Link href="/" className="text-primary underline underline-offset-4">
           В каталог
         </Link>
-        <Link href="/search" className="text-olive underline underline-offset-4">
+        <Link href="/search" className="text-primary underline underline-offset-4">
           Поиск по каталогу
         </Link>
       </div>

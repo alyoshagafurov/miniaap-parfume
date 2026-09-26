@@ -25,7 +25,7 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
         <p className="text-muted mt-2 text-sm">Возможно, его удалили.</p>
         <Link
           href="/admin/products"
-          className="text-olive mt-4 inline-block underline underline-offset-4"
+          className="text-primary mt-4 inline-block underline underline-offset-4"
         >
           Ко всем товарам
         </Link>

@@ -11,16 +11,16 @@
  */
 
 /** --color-canvas */
-export const CANVAS = "#f8f5ee";
+export const CANVAS = "#f2f2f0";
 
 /** --color-surface */
-export const SURFACE = "#fffdf8";
+export const SURFACE = "#ffffff";
 
-/** --color-olive */
-export const OLIVE = "#4d522c";
+/** --color-primary. Graphite: buttons and active states. */
+export const PRIMARY = "#1e1e1c";
 
 /** --color-ink */
-export const INK = "#23241e";
+export const INK = "#1b1b1a";
 
-/** --color-olive-wash. Used for the header band of a generated spreadsheet. */
-export const OLIVE_WASH = "#eceade";
+/** --color-primary-wash. Used for the header band of a generated spreadsheet. */
+export const PRIMARY_WASH = "#e8e8e5";

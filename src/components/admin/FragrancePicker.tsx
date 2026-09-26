@@ -145,7 +145,7 @@ export function FragrancePicker({
                   <button
                     type="button"
                     onClick={() => add(option)}
-                    className="hover:bg-olive-wash flex min-h-11 w-full items-center px-3 text-left text-sm transition-colors"
+                    className="hover:bg-primary-wash flex min-h-11 w-full items-center px-3 text-left text-sm transition-colors"
                   >
                     <span className="text-muted">{option.brandName}</span>
                     <span className="text-ink ml-2">{option.name}</span>

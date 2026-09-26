@@ -21,7 +21,7 @@ export function Mark({ text, query }: { text: string; query?: string | undefined
     <>
       {parts.map((part, i) =>
         part.match ? (
-          <mark key={i} className="bg-olive-wash text-ink px-0.5">
+          <mark key={i} className="bg-primary-wash text-ink px-0.5">
             {part.text}
           </mark>
         ) : (

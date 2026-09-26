@@ -51,14 +51,14 @@ export function Sheet({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-30 bg-ink/40" />
         <Drawer.Content
-          className="bg-canvas fixed inset-x-0 bottom-0 z-40 flex sheet-height flex-col rounded-t-md outline-none"
+          className="bg-canvas fixed inset-x-0 bottom-0 z-40 flex sheet-height flex-col rounded-t-lg outline-none"
           style={{ paddingBottom: "var(--tg-safe-bottom)" }}
         >
           <div className="flex shrink-0 flex-col gap-3 px-4 pt-3 pb-2">
             <span aria-hidden className="bg-rule mx-auto h-1 w-10 rounded-full" />
             <Drawer.Title
               className={
-                hideTitle ? "sr-only" : "font-display text-ink text-lg font-semibold"
+                hideTitle ? "sr-only" : "display-caps text-ink text-xl"
               }
             >
               {title}

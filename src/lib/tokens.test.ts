@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { CANVAS, INK, OLIVE, OLIVE_WASH, SURFACE } from "./tokens";
+import { CANVAS, INK, PRIMARY, PRIMARY_WASH, SURFACE } from "./tokens";
 
 /**
  * tokens.ts duplicates a handful of values from globals.css, because Telegram's
@@ -26,9 +26,9 @@ describe("tokens.ts mirrors globals.css", () => {
   it.each([
     ["color-canvas", CANVAS],
     ["color-surface", SURFACE],
-    ["color-olive", OLIVE],
+    ["color-primary", PRIMARY],
     ["color-ink", INK],
-    ["color-olive-wash", OLIVE_WASH],
+    ["color-primary-wash", PRIMARY_WASH],
   ])("--%s matches", (name, js) => {
     expect(js.toLowerCase()).toBe(cssToken(name));
   });
@@ -61,5 +61,57 @@ describe("tokens.ts mirrors globals.css", () => {
     )) {
       expect(Number(ms)).toBeLessThanOrEqual(250);
     }
+  });
+});
+
+/** WCAG relative luminance of a #rrggbb colour. */
+function luminance(hex: string): number {
+  const channel = (i: number) => {
+    const c = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
+}
+
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+describe("every text colour reads on the ground it is used on", () => {
+  // The floor is 4.5:1 for all text, not only body copy — PRODUCT.md sets it
+  // for a phone read outdoors, and a price is exactly the text that most needs
+  // to survive a bright screen.
+  it.each([
+    ["ink", "canvas"],
+    ["ink", "surface"],
+    ["muted", "canvas"],
+    ["muted", "surface"],
+    ["price", "canvas"],
+    ["price", "surface"],
+    ["on-night", "night"],
+    ["on-night-muted", "night"],
+    ["price-bright", "night"],
+    ["danger", "canvas"],
+    ["danger", "surface"],
+    ["wordmark", "canvas"],
+  ])("%s on %s clears 4.5:1", (fg, bg) => {
+    expect(contrast(cssToken(`color-${fg}`), cssToken(`color-${bg}`))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("a form field's edge clears 3:1 on both grounds (WCAG 1.4.11)", () => {
+    for (const bg of ["canvas", "surface"]) {
+      expect(contrast(cssToken("color-control"), cssToken(`color-${bg}`))).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("the reference's own amber is kept off every light ground", () => {
+    // Why there are two ambers. #C8955F is the reference's price colour and
+    // it is 2.65:1 on white — it vanishes in daylight. It reads at 6.3:1 on
+    // the dark blocks, so that is the only place it may appear. If this ever
+    // passes, the second amber is no longer needed; until then it is.
+    const bright = cssToken("color-price-bright");
+    expect(contrast(bright, cssToken("color-surface"))).toBeLessThan(4.5);
+    expect(contrast(bright, cssToken("color-night"))).toBeGreaterThanOrEqual(4.5);
   });
 });

@@ -13,10 +13,13 @@ test.describe("Карточка товара", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Об аромате" })).toBeVisible();
-    // The brief's requirement: the same fragrance in its other volumes.
-    await expect(
-      page.getByRole("heading", { name: "Этот аромат в других форматах" }),
-    ).toBeVisible();
+    // The brief's requirement: the same fragrance in its other volumes. For a
+    // single fragrance it is the format row under the name — the reference's
+    // size row — found by its accessible name rather than by a heading, which
+    // it no longer has. A twin keeps the grouped list under its own heading.
+    const formats = page.getByRole("navigation", { name: "Другие форматы этого аромата" });
+    await expect(formats).toBeVisible();
+    await expect(formats.getByRole("link").first()).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: "Хлебные крошки" }),
     ).toBeVisible();
@@ -27,9 +30,11 @@ test.describe("Карточка товара", () => {
   test("переключает формат и оказывается на другом товаре", async ({ page }) => {
     await page.goto(PRODUCT);
 
+    // The row's links are the other formats; the current one is not a link.
     const formats = page
-      .getByRole("heading", { name: "Этот аромат в других форматах" })
-      .locator("xpath=following::a[1]");
+      .getByRole("navigation", { name: "Другие форматы этого аромата" })
+      .getByRole("link")
+      .first();
     await expect(formats).toBeVisible();
 
     const href = await formats.getAttribute("href");

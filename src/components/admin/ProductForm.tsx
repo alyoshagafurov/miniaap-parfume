@@ -152,7 +152,7 @@ export function ProductForm({
       {saved ? (
         <p
           role="status"
-          className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm"
+          className="border-primary bg-primary-wash text-ink rounded-md border p-3 text-sm"
         >
           Сохранено. Витрина уже показывает новые данные.
         </p>
@@ -280,7 +280,7 @@ export function ProductForm({
           <label className="flex min-h-11 items-center gap-2">
             <input
               type="checkbox"
-              className="accent-olive h-5 w-5"
+              className="accent-primary h-5 w-5"
               {...form.register("isNew")}
             />
             <span className="text-ink text-sm">Новинка</span>
@@ -288,7 +288,7 @@ export function ProductForm({
           <label className="flex min-h-11 items-center gap-2">
             <input
               type="checkbox"
-              className="accent-olive h-5 w-5"
+              className="accent-primary h-5 w-5"
               {...form.register("isHit")}
             />
             <span className="text-ink text-sm">Хит</span>

@@ -205,7 +205,7 @@ export function ImageManager({
               {u.state === "uploading" ? (
                 <span className="text-muted">— загружается…</span>
               ) : u.state === "done" ? (
-                <span className="text-olive">— готово</span>
+                <span className="text-primary">— готово</span>
               ) : (
                 <span className="text-danger" role="alert">
                   — {u.error}
@@ -264,7 +264,7 @@ function IconButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="border-control text-ink hover:bg-olive-wash disabled:text-muted h-11 w-11 rounded-md border transition-colors disabled:cursor-not-allowed"
+      className="border-control text-ink hover:bg-primary-wash disabled:text-muted h-11 w-11 rounded-md border transition-colors disabled:cursor-not-allowed"
     >
       {children}
     </button>

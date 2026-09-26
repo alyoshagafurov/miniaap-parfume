@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductGridSkeleton } from "@/components/shop/ProductGrid";
-import { GoldRule, RuledHeading } from "@/components/ui/GoldRule";
+import { GoldRule, SectionHeading } from "@/components/ui/GoldRule";
 import { getBrandBySlug, getBrandProducts } from "@/server/catalog/queries";
 import { getSettings } from "@/server/settings.cached";
 
@@ -61,7 +61,7 @@ async function Brand({ params }: PageProps) {
             Товары этого бренда скоро появятся в каталоге.
           </p>
           <div className="mt-6">
-            <Link href="/" className="text-olive underline underline-offset-4">
+            <Link href="/" className="text-primary underline underline-offset-4">
               В каталог
             </Link>
           </div>
@@ -69,7 +69,7 @@ async function Brand({ params }: PageProps) {
       ) : (
         groups.map((group) => (
           <section key={group.slug} className="mt-10">
-            <RuledHeading>{group.name}</RuledHeading>
+            <SectionHeading>{group.name}</SectionHeading>
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {group.products.map((p) => (
                 <li key={p.id}>

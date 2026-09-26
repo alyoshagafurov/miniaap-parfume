@@ -18,9 +18,9 @@ export function ProductGrid({
   query?: string | undefined;
 }) {
   return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
       {products.map((p, i) => (
-        <li key={p.id}>
+        <li key={p.id} className="flex">
           <ProductCard
             product={{
               id: p.id,
@@ -79,15 +79,18 @@ export function ProductGrid({
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <ul
-      className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4"
       aria-hidden
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"
     >
       {Array.from({ length: count }, (_, i) => (
-        <li key={i} className="flex flex-col gap-2">
-          <div className="bg-surface border-rule aspect-[4/5] w-full rounded-md border" />
-          <div className="bg-surface h-3 w-2/3 rounded-md" />
-          <div className="bg-surface h-4 w-full rounded-md" />
-          <div className="bg-surface h-4 w-1/2 rounded-md" />
+        <li key={i} className="stage p-2">
+          <div className="bg-canvas aspect-[4/5] w-full rounded-md" />
+          <div className="px-1.5 pt-3 pb-1.5">
+            <div className="bg-primary-wash h-3.5 w-11/12 rounded-md" />
+            <div className="bg-primary-wash mt-1.5 h-3.5 w-2/3 rounded-md" />
+            <div className="bg-primary-wash mt-4 h-6 w-1/2 rounded-md" />
+            <div className="bg-primary-wash mt-3 h-3 w-3/4 rounded-md" />
+          </div>
         </li>
       ))}
     </ul>

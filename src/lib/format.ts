@@ -115,3 +115,23 @@ export function plural(
 
 /** The common case: «1 товар», «3 товара», «400 товаров». */
 export const GOODS = ["товар", "товара", "товаров"] as const;
+
+/**
+ * Holds a number to its unit, so a line never breaks between them.
+ *
+ * Category names here carry their format — «Парфюм 35 мл «карандаши»» — and
+ * set in heavy capitals across a phone they broke as «ПАРФЮМ 35 / МЛ», with the
+ * number stranded at the end of one line and its unit starting the next. The
+ * same for «2 в 1». A non-breaking space binds each pair; nothing else in the
+ * name is touched.
+ *
+ * The boundary is written out rather than `\b`: in a JavaScript regular
+ * expression `\b` only knows Latin word characters, so «мл» followed by a
+ * Cyrillic letter would still count as a boundary and a word like «млн» would
+ * be caught.
+ */
+export function keepUnits(text: string): string {
+  return text
+    .replace(/(\d)\s+(мл|шт|г|кг|л)(?![а-яёa-z])/giu, "$1 $2")
+    .replace(/(\d)\s+в\s+(\d)/gu, "$1 в $2");
+}

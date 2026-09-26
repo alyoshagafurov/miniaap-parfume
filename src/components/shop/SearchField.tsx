@@ -77,7 +77,7 @@ export function SearchField({ autoFocus = false }: { autoFocus?: boolean }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Бренд, аромат или артикул"
-        className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full rounded-md border px-4 py-3 text-base transition-colors duration-150 ease-out"
+        className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full rounded-full border px-5 py-3 text-base transition-colors duration-150 ease-out"
       />
       <span aria-live="polite" className="sr-only">
         {isPending ? "Идёт поиск" : ""}

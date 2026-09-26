@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { ProductCard } from "@/components/shop/ProductCard";
-import { GoldRule, RuledHeading } from "@/components/ui/GoldRule";
+import { SectionHeading } from "@/components/ui/GoldRule";
 import { objectUrl } from "@/lib/media";
-import { GOODS, plural } from "@/lib/format";
+import { GOODS, keepUnits, plural } from "@/lib/format";
 import { formatRub } from "@/lib/money";
 import {
   getCategories,
@@ -83,9 +83,9 @@ async function Categories() {
   if (categories.length === 0) {
     return (
       <section aria-labelledby="categories" className="mt-12">
-        <RuledHeading>
+        <SectionHeading>
           <span id="categories">Категории</span>
-        </RuledHeading>
+        </SectionHeading>
         <p className="text-muted mt-5 text-sm leading-normal">
           Каталог наполняется. Позвоните или напишите в WhatsApp — подскажем, что
           есть в наличии сейчас.
@@ -96,11 +96,11 @@ async function Categories() {
 
   return (
     <section aria-labelledby="categories" className="mt-12">
-      <RuledHeading>
+      <SectionHeading>
         <span id="categories">Категории</span>
-      </RuledHeading>
+      </SectionHeading>
 
-      <ul className="border-rule mt-5 flex flex-col border-t">
+      <ul className="mt-5 flex flex-col gap-3">
         {categories.map((category) => (
           <CategoryRow key={category.id} category={category} />
         ))}
@@ -134,10 +134,15 @@ async function Lanes() {
  * read from Settings — the owner raises it from the panel and this line has to
  * follow — and the address and both numbers likewise.
  *
- * «Доставка по России» is the one phrase here written into the page. The terms
- * behind it live in Settings and are what the bot and the request screen quote;
- * this is the headline over them, and the direction's confirmed triad sits
- * above it untouched.
+ * The terms sit in a dark block, the reference's FEATURES panel, because they
+ * are the one part of this screen that is the same promise to every buyer. The
+ * minimum is a sentence in it rather than a big number over a small label —
+ * that arrangement is the stat tile every dashboard ships, and this is a
+ * condition of trade, not a metric. Its figure is money, so it is amber: the
+ * bright one, which reads at 6.3:1 on the block and would not on white.
+ *
+ * The «СКЛАД» label that stood over the address is gone. A label above a line
+ * that already says what it is was only ever a caption for itself.
  */
 function Hero({
   minOrderKop,
@@ -154,146 +159,122 @@ function Hero({
   const wa = whatsappPhone?.replace(/\D/g, "") ?? "";
 
   return (
-    <section className="pt-10 pb-2">
-      <h1 className="font-display text-ink text-h1 leading-tight font-semibold tracking-tight text-balance">
+    <section className="pt-8 pb-2">
+      <h1 className="display-caps text-ink text-h1 text-balance">
         Оптовый склад парфюмерии
       </h1>
 
-      <GoldRule className="mt-5 w-40" />
-
-      <p className="text-muted mt-5 text-sm">
+      <p className="text-muted mt-4 text-sm leading-snug">
         Известные бренды · Выгодные условия · Надёжные поставки
       </p>
 
-      {/* The concrete offer, in ink rather than muted: this is the line that
-          answers "can I order from here", and it is not a caption. */}
-      <p className="text-ink mt-2 text-base">
-        Оптом от{" "}
-        <span className="font-semibold tabular-nums">{formatRub(minOrderKop)}</span> ·
-        Доставка по России
-      </p>
+      <div className="bg-night text-on-night mt-6 rounded-lg p-5">
+        <p className="display-caps text-2xl">
+          Оптом от{" "}
+          <span className="text-price-bright tabular-nums">{formatRub(minOrderKop)}</span>
+        </p>
+        <p className="mt-2 text-base font-semibold">Доставка по России</p>
 
-      {/*
-        The warehouse and the two ways to reach it.
+        {address ? (
+          <p className="text-on-night-muted mt-4 text-sm leading-snug">{address}</p>
+        ) : null}
 
-        A bordered, filled card stood here, and on a phone it read as a second
-        header competing with the headline directly above it. Hairlines and
-        space do the same separating for none of the weight — which is the whole
-        argument of this direction, and the reference the client pointed at
-        makes the same one: rules, not boxes.
-      */}
-      {address || phone || whatsappPhone ? (
-        <div className="border-rule mt-8 border-t">
-          {address ? (
-            <p className="border-rule text-ink border-b py-4 text-sm leading-snug">
-              <span className="caps text-muted mb-1 block">Склад</span>
-              {address}
-            </p>
-          ) : null}
-
-          {phone || whatsappPhone ? (
-            <div className="flex flex-wrap items-center gap-3 py-4">
-              {phone ? (
-                <a
-                  href={`tel:${tel}`}
-                  className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-medium tabular-nums transition-colors"
-                >
-                  {phone}
-                </a>
-              ) : null}
-              {whatsappPhone ? (
-                <a
-                  href={`https://wa.me/${wa}`}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-medium transition-colors"
-                >
-                  WhatsApp
-                </a>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+        {phone || whatsappPhone ? (
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {/* The reference's white capsule on a dark ground: the call is the
+                primary action here, so it takes the light. */}
+            {phone ? (
+              <a
+                href={`tel:${tel}`}
+                className="bg-on-night text-night focus-visible:outline-on-night inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold tabular-nums transition-opacity hover:opacity-90"
+              >
+                {phone}
+              </a>
+            ) : null}
+            {whatsappPhone ? (
+              <a
+                href={`https://wa.me/${wa}`}
+                rel="noopener noreferrer"
+                target="_blank"
+                className="border-on-night-muted text-on-night focus-visible:outline-on-night inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-bold transition-opacity hover:opacity-80"
+              >
+                WhatsApp
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }
 
 /**
- * A category as a row: picture, name, what is in it, and where it goes.
+ * A category: a stage you press, with its picture, its name and its depth.
  *
  * The client's own example is a list of rows rather than a grid of tiles, and
  * it is the right shape for four categories whose names are long and whose
  * difference is a format rather than a look — «Парфюм 2 в 1 «двойняшки» 100 мл»
  * does not fit under a tile and is the whole distinction.
  *
- * The picture is optional and mostly absent: the client enters the catalog
- * themselves and a category cover is the last thing they will get to. So the
- * empty state is designed rather than left over — the monogram on the surface
- * colour, quiet enough that four of them in a column read as paper and not as
- * four errors.
+ * Names are in sentence case, bold, not capitals. The reference sets its tabs
+ * — «Underground», «Casual» — the same way, and a Russian category name that
+ * runs to five words is read faster in lower case by a buyer who is over forty
+ * and standing in daylight. 16px on a phone and 20 from `sm`: at 20 the longest
+ * name wrapped to two lines on a 375 screen.
+ *
+ * The picture is optional and mostly absent — the client enters the catalog
+ * themselves and a cover is the last thing they will get to — so the monogram
+ * in its well is a designed state, quiet enough that four in a column read as
+ * the brand and not as four errors.
  */
 function CategoryRow({ category }: { category: CategoryRowData }) {
   return (
-    <li className="border-rule border-b">
+    <li>
       <Link
         href={`/c/${category.slug}`}
-        className="group hover:bg-surface flex items-center gap-4 rounded-md px-2 py-5 transition-colors"
+        className="stage group flex items-center gap-4 p-3"
       >
         {category.coverKey ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={objectUrl(category.coverKey)}
             alt=""
-            width={80}
-            height={96}
+            width={64}
+            height={80}
             loading="lazy"
             decoding="async"
-            className="bg-surface h-24 w-20 shrink-0 rounded-md object-cover"
+            className="bg-canvas h-20 w-16 shrink-0 rounded-md object-cover"
           />
         ) : (
           <span
             aria-hidden
-            className="bg-surface border-rule flex h-24 w-20 shrink-0 items-center justify-center rounded-md border"
+            className="bg-canvas flex h-20 w-16 shrink-0 items-center justify-center rounded-md"
           >
-            <span className="font-display text-olive/45 text-2xl leading-none">Á</span>
+            <span className="font-wordmark text-wordmark/45 text-2xl leading-none">Á</span>
           </span>
         )}
 
         <span className="min-w-0 flex-1">
-          {/* 16px on a phone, 20 from `sm`. «Парфюм 2 в 1 «двойняшки» 100 мл»
-              is the longest name the client has, and at 20px it wrapped to two
-              lines on a 375 screen, which pushed the subtitle to four and made
-              four rows as tall as the whole viewport. */}
-          <span className="text-ink block text-base leading-snug font-medium sm:text-lg">
-            {category.name}
+          <span className="text-ink block text-base leading-snug font-bold sm:text-lg">
+            {keepUnits(category.name)}
           </span>
-          {/* The count, and nothing else.
-              
-              The category's own sentence used to follow it — «Компактный
-              формат, удобно носить с собой» — and it is the same sentence for
-              everyone who already knows what a 35 ml pencil is, which on a
-              wholesale catalog is everyone. Four of them wrapped every row to
-              three lines and pushed the fourth category off a 390px screen.
-              How deep a category is decides whether it is opened; that stays. */}
-          <span className="text-muted mt-0.5 block text-sm leading-snug">
+          <span className="text-muted mt-1 block text-sm leading-snug">
             {category.productCount} {plural(category.productCount, GOODS)}
           </span>
         </span>
 
-        {/* The affordance, not an icon set: one stroke, and it leans in on
-            hover so the row answers the pointer without moving anything that
-            costs a layout. */}
+        {/* One stroke, and it leans in on hover — movement by transform, so it
+            costs no layout. */}
         <svg
           aria-hidden
           viewBox="0 0 8 14"
-          className="text-muted group-hover:text-olive h-3.5 w-2 shrink-0 transition-[color,transform] duration-150 ease-out group-hover:translate-x-0.5"
+          className="text-ink mr-1 h-3.5 w-2 shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5"
         >
           <path
             d="M1 1l6 6-6 6"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.5"
+            strokeWidth="1.75"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -312,8 +293,7 @@ function CategoryRow({ category }: { category: CategoryRowData }) {
  * screen and say, by the card cut off at the edge, that there are more.
  *
  * Built from scroll-snap and overflow, so it costs no JavaScript and keeps
- * working with a keyboard, a trackpad and a screen reader — which a carousel
- * with dots and a timer would not.
+ * working with a keyboard, a trackpad and a screen reader.
  */
 function Lane({
   title,
@@ -327,8 +307,8 @@ function Lane({
   if (products.length === 0) return null;
 
   return (
-    <section className="mt-14">
-      <RuledHeading>{title}</RuledHeading>
+    <section className="mt-12">
+      <SectionHeading>{title}</SectionHeading>
 
       {/*
         Negative margin and matching padding: the rail bleeds to both edges of
@@ -337,17 +317,18 @@ function Lane({
 
         `scroll-px-4` is not decoration. A snap container snaps to its
         scrollport, which is the padding box — so with padding alone the browser
-        scrolls the gutter away to align the first card with the screen edge,
-        and the rail opens sixteen pixels in with its first card already
-        clipped. The scroll padding moves the snap edge to match the visual one.
+        scrolls the gutter away to align the first card with the screen edge.
+        The scroll padding moves the snap edge to match the visual one.
+
+        The vertical padding is for the stages' shadows. An overflow container
+        clips on both axes once one is set, and a card whose shadow is cut off
+        at its foot looks pasted onto the page rather than standing on it.
       */}
-      <ul className="-mx-4 mt-5 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pb-2">
+      <ul className="-mx-4 mt-5 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pt-1 pb-5">
         {products.map((product, i) => (
           // 5/12 rather than a half: two cards fit and a third shows its edge,
-          // which is what says the rail scrolls. The scrollbar is left alone —
-          // a touch browser hides it anyway, and on a desktop it is the only
-          // affordance a pointer has.
-          <li key={product.id} className="w-5/12 shrink-0 snap-start sm:w-48">
+          // which is what says the rail scrolls.
+          <li key={product.id} className="flex w-5/12 shrink-0 snap-start sm:w-48">
             <ProductCard
               product={product}
               showPrices={showPrices}
@@ -371,21 +352,11 @@ function Lane({
  */
 function HeroSkeleton() {
   return (
-    <section aria-hidden className="pt-10 pb-2">
-      <div className="bg-surface h-10 w-3/4 rounded-md" />
-      <GoldRule className="mt-5 w-40" />
-      <div className="bg-surface mt-6 h-4 w-2/3 rounded-md" />
-      <div className="bg-surface mt-3 h-4 w-1/2 rounded-md" />
-      <div className="border-rule mt-8 border-t">
-        <div className="border-rule border-b py-4">
-          <div className="bg-surface h-3 w-16 rounded-md" />
-          <div className="bg-surface mt-2 h-4 w-2/3 rounded-md" />
-        </div>
-        <div className="flex gap-3 py-4">
-          <div className="bg-surface h-11 w-40 rounded-full" />
-          <div className="bg-surface h-11 w-28 rounded-full" />
-        </div>
-      </div>
+    <section aria-hidden className="pt-8 pb-2">
+      <div className="bg-primary-wash h-8 w-4/5 rounded-md" />
+      <div className="bg-primary-wash mt-2 h-8 w-1/2 rounded-md" />
+      <div className="bg-primary-wash mt-5 h-4 w-3/4 rounded-md" />
+      <div className="bg-night mt-6 h-56 rounded-lg" />
     </section>
   );
 }
@@ -393,17 +364,14 @@ function HeroSkeleton() {
 function CategoriesSkeleton() {
   return (
     <section aria-hidden className="mt-12">
-      <RuledHeading>Категории</RuledHeading>
-      <ul className="border-rule mt-5 flex flex-col border-t">
+      <SectionHeading>Категории</SectionHeading>
+      <ul className="mt-5 flex flex-col gap-3">
         {Array.from({ length: 4 }, (_, i) => (
-          <li
-            key={i}
-            className="border-rule flex items-center gap-4 border-b px-2 py-3"
-          >
-            <span className="bg-surface border-rule h-20 w-16 shrink-0 rounded-md border" />
+          <li key={i} className="stage flex items-center gap-4 p-3">
+            <span className="bg-canvas h-20 w-16 shrink-0 rounded-md" />
             <span className="min-w-0 flex-1">
-              <span className="bg-surface block h-5 w-2/3 rounded-md" />
-              <span className="bg-surface mt-2 block h-4 w-1/2 rounded-md" />
+              <span className="bg-primary-wash block h-5 w-2/3 rounded-md" />
+              <span className="bg-primary-wash mt-2 block h-4 w-1/3 rounded-md" />
             </span>
           </li>
         ))}
@@ -416,15 +384,18 @@ function LanesSkeleton() {
   return (
     <div aria-hidden>
       {["Новинки", "Хиты"].map((title) => (
-        <section key={title} className="mt-14">
-          <RuledHeading>{title}</RuledHeading>
-          <div className="-mx-4 mt-5 flex gap-4 overflow-hidden px-4 pb-2">
-            {Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="w-5/12 shrink-0 sm:w-48">
-                <div className="bg-surface border-rule aspect-[4/5] w-full rounded-md border" />
-                <div className="bg-surface mt-3 h-3 w-1/2 rounded-md" />
-                <div className="bg-surface mt-2 h-4 w-3/4 rounded-md" />
-                <div className="bg-surface mt-2 h-4 w-1/3 rounded-md" />
+        <section key={title} className="mt-12">
+          <SectionHeading>{title}</SectionHeading>
+          <div className="-mx-4 mt-5 flex gap-3 overflow-hidden px-4 pt-1 pb-5">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="stage w-5/12 shrink-0 p-2 sm:w-48">
+                <div className="bg-canvas aspect-[4/5] w-full rounded-md" />
+                <div className="px-1.5 pt-3 pb-1.5">
+                  <div className="bg-primary-wash h-3.5 w-11/12 rounded-md" />
+                  <div className="bg-primary-wash mt-1.5 h-3.5 w-2/3 rounded-md" />
+                  <div className="bg-primary-wash mt-4 h-6 w-1/2 rounded-md" />
+                  <div className="bg-primary-wash mt-3 h-3 w-3/4 rounded-md" />
+                </div>
               </div>
             ))}
           </div>

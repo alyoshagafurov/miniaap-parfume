@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { ProductGrid, ProductGridSkeleton } from "@/components/shop/ProductGrid";
 import { SearchResults } from "@/components/shop/SearchResults";
-import { GoldRule, RuledHeading } from "@/components/ui/GoldRule";
+import { GoldRule, SectionHeading } from "@/components/ui/GoldRule";
 import { SEARCH_PAGE_SIZE } from "@/lib/search";
 import { searchProducts, similarWhenEmpty } from "@/server/catalog/search";
 import { getCategories } from "@/server/catalog/queries";
@@ -139,7 +139,7 @@ async function Empty({ query, showPrices }: { query: string; showPrices: boolean
 
       {similar.length > 0 ? (
         <div className="mt-10">
-          <RuledHeading>Часто заказывают</RuledHeading>
+          <SectionHeading>Часто заказывают</SectionHeading>
           <div className="mt-4">
             <ProductGrid products={similar} showPrices={showPrices} />
           </div>

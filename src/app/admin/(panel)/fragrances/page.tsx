@@ -21,7 +21,7 @@ export default function FragrancesPage({
         </h1>
         <Link
           href="/admin/fragrances/new"
-          className="bg-olive text-surface hover:bg-olive-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
         >
           Новый аромат
         </Link>
@@ -78,7 +78,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
             type="search"
             defaultValue={q}
             placeholder="Название, бренд или алиас"
-            className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-olive w-full rounded-md border px-3 py-2 text-base"
+            className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full rounded-md border px-3 py-2 text-base"
           />
         </div>
         <div className="min-w-0 max-w-full">
@@ -101,7 +101,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
         </div>
         <button
           type="submit"
-          className="bg-olive text-surface hover:bg-olive-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-primary text-surface hover:bg-primary-hover inline-flex min-h-11 items-center rounded-md px-5 text-base font-medium transition-colors"
         >
           Найти
         </button>
@@ -156,7 +156,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
           {result.page > 1 ? (
             <Link
               href={href({ page: result.page - 1 })}
-              className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+              className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
             >
               ← Назад
             </Link>
@@ -169,7 +169,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
           {result.page < result.pageCount ? (
             <Link
               href={href({ page: result.page + 1 })}
-              className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+              className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
             >
               Вперёд →
             </Link>

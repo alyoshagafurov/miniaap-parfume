@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Sheet } from "@/components/ui/Sheet";
+import { keepUnits } from "@/lib/format";
 
 export interface MenuCategory {
   name: string;
@@ -50,7 +51,7 @@ export function MainMenu({
         aria-label="Меню"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="text-ink hover:bg-surface -ml-2 inline-flex min-h-11 w-11 shrink-0 items-center justify-center rounded-md transition-colors"
+        className="text-ink hover:bg-primary-wash -ml-2 inline-flex min-h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors"
       >
         {/* Three strokes, drawn rather than imported: one icon does not earn a
             dependency, and the line weight is the rule's, not a library's. */}
@@ -65,7 +66,7 @@ export function MainMenu({
 
       <Sheet open={open} onOpenChange={setOpen} title="Меню">
         <nav
-          className="flex flex-col gap-8 px-4 pb-6"
+          className="flex flex-col gap-8 pb-6"
           onClick={(event) => {
             // Delegated: every destination in here is an anchor, and one
             // handler beats one per link.
@@ -77,15 +78,15 @@ export function MainMenu({
               worth reaching. */}
           <section hidden={categories.length === 0}>
             <h3 className="caps text-muted">Категории</h3>
-            <ul className="border-rule mt-3 flex flex-col border-t">
+            <ul className="stage divide-rule mt-3 flex flex-col divide-y overflow-hidden">
               {categories.map((category) => (
-                <li key={category.slug} className="border-rule border-b">
+                <li key={category.slug}>
                   <Link
                     href={`/c/${category.slug}`}
-                    className="hover:bg-surface flex min-h-11 items-center justify-between gap-4 rounded-md px-2 py-3 transition-colors"
+                    className="hover:bg-primary-wash flex min-h-12 items-center justify-between gap-4 px-4 py-3 transition-colors"
                   >
-                    <span className="text-ink text-base leading-snug">
-                      {category.name}
+                    <span className="text-ink text-base leading-snug font-bold">
+                      {keepUnits(category.name)}
                     </span>
                     <span className="text-muted shrink-0 text-sm tabular-nums">
                       {category.productCount}
@@ -98,7 +99,7 @@ export function MainMenu({
 
           <section>
             <h3 className="caps text-muted">Разделы</h3>
-            <ul className="border-rule mt-3 flex flex-col border-t">
+            <ul className="stage divide-rule mt-3 flex flex-col divide-y overflow-hidden">
               <MenuLink href="/" label="Главная" />
               <MenuLink href="/cart" label="Заявка" />
               <MenuLink href="/orders" label="Мои заявки" />
@@ -115,7 +116,7 @@ export function MainMenu({
               which is exactly where they are when a price turns out wrong.
             */}
             <h3 className="caps text-muted">Для владельца</h3>
-            <ul className="border-rule mt-3 flex flex-col border-t">
+            <ul className="stage divide-rule mt-3 flex flex-col divide-y overflow-hidden">
               <MenuLink href={adminHref} label="Админка" separate />
             </ul>
           </section>
@@ -135,14 +136,14 @@ function MenuLink({
   separate?: boolean;
 }) {
   return (
-    <li className="border-rule border-b">
+    <li>
       <Link
         href={href}
         // The panel is a different application under the same domain: its own
         // layout, its own session, none of the storefront's chrome. Not
         // prefetched, so a buyer who never opens it never pays for it.
         {...(separate ? { prefetch: false } : {})}
-        className="hover:bg-surface text-ink flex min-h-11 items-center rounded-md px-2 py-3 text-base transition-colors"
+        className="hover:bg-primary-wash text-ink flex min-h-12 items-center px-4 py-3 text-base font-bold transition-colors"
       >
         {label}
       </Link>

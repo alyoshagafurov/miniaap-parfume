@@ -117,7 +117,7 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
                 </span>
                 <Link
                   href={`/admin/products?category=${category.slug}`}
-                  className="text-olive text-sm underline underline-offset-4"
+                  className="text-primary text-sm underline underline-offset-4"
                 >
                   Товары
                 </Link>
@@ -150,7 +150,7 @@ function Arrow({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="border-control text-ink hover:bg-olive-wash disabled:text-muted h-11 w-9 shrink-0 rounded-md border transition-colors disabled:cursor-not-allowed"
+      className="border-control text-ink hover:bg-primary-wash disabled:text-muted h-11 w-9 shrink-0 rounded-md border transition-colors disabled:cursor-not-allowed"
     >
       {children}
     </button>
@@ -249,7 +249,7 @@ function CategoryForm({
       <label className="flex min-h-11 items-center gap-2">
         <input
           type="checkbox"
-          className="accent-olive h-5 w-5"
+          className="accent-primary h-5 w-5"
           checked={isPublished}
           onChange={(e) => setPublished(e.target.checked)}
         />
@@ -400,12 +400,12 @@ function CategoryCover({
             aria-hidden
             className="bg-surface border-rule flex h-20 w-16 shrink-0 items-center justify-center rounded-md border"
           >
-            <span className="font-display text-olive/45 text-2xl leading-none">Á</span>
+            <span className="font-wordmark text-wordmark/45 text-2xl leading-none">Á</span>
           </span>
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          <label className="border-control text-ink hover:bg-olive-wash inline-flex min-h-11 cursor-pointer items-center rounded-md border px-4 text-sm font-medium transition-colors">
+          <label className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 cursor-pointer items-center rounded-md border px-4 text-sm font-medium transition-colors">
             {coverKey ? "Заменить" : "Загрузить фото"}
             <input
               type="file"

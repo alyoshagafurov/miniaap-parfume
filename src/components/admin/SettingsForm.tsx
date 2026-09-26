@@ -70,7 +70,7 @@ export function SettingsForm({
       {saved ? (
         <p
           role="status"
-          className="border-olive bg-olive-wash text-ink rounded-md border p-3 text-sm"
+          className="border-primary bg-primary-wash text-ink rounded-md border p-3 text-sm"
         >
           Сохранено. Витрина и бот уже отвечают по-новому.
         </p>
@@ -128,7 +128,7 @@ export function SettingsForm({
               <label className="flex min-h-11 items-center gap-2">
                 <input
                   type="checkbox"
-                  className="accent-olive h-5 w-5"
+                  className="accent-primary h-5 w-5"
                   {...form.register("showPrices")}
                 />
                 <span className="text-ink text-sm">Показывать цены</span>

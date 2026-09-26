@@ -24,11 +24,15 @@ import { roundToPack } from "@/lib/cart";
 export function AddToCart({
   line,
   disabled = false,
+  tone = "light",
 }: {
   /** Everything the basket needs, including what the storefront displayed. */
   line: Omit<CartLine, "qty">;
   disabled?: boolean;
+  /** `dark` inside the request bar on a phone. */
+  tone?: "light" | "dark";
 }) {
+  const quiet = tone === "dark" ? "text-on-night-muted" : "text-muted";
   const { add, setQuantity } = useCart();
   const inCart = useCartQty(line.productId);
   const haptics = useHaptics();
@@ -36,7 +40,7 @@ export function AddToCart({
 
   if (disabled) {
     return (
-      <p className="text-muted text-sm">
+      <p className={`${quiet} text-sm`}>
         Нет в наличии. Спросите менеджера — возможно, есть под заказ.
       </p>
     );
@@ -49,25 +53,29 @@ export function AddToCart({
           qty={inCart}
           packSize={line.seenPackSize}
           label={line.title}
+          tone={tone}
           onChange={(next) => {
             haptics.tap();
             setQuantity(line.productId, next);
           }}
         />
-        <p className="text-muted text-sm">В заявке</p>
+        <p className={`${quiet} text-sm font-semibold`}>В заявке</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex items-center gap-3">
       <Stepper
         qty={draft}
         packSize={line.seenPackSize}
         label={line.title}
+        tone={tone}
         onChange={setDraft}
       />
       <Button
+        variant={tone === "dark" ? "inverse" : "primary"}
+        className="flex-1"
         onClick={() => {
           if (draft <= 0) return;
           haptics.tap();

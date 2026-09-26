@@ -1,0 +1,511 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T08:09:47.411894+00:00",
+  "title": "Design System: ÁRUMI Parfum & Care",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Gallery Grey",
+        "canonical": "#f2f2f0",
+        "oklch": "oklch(96.1% 0.003 106.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5c",
+          "#80807e",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeec"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Stage White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Graphite Ink",
+        "canonical": "#1b1b1a",
+        "oklch": "oklch(22.2% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403f",
+          "#5e5e5c",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeed"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Quiet Grey",
+        "canonical": "#6d6d68",
+        "oklch": "oklch(53.3% 0.008 106.7)",
+        "tonalRamp": [
+          "#0b0b08",
+          "#242420",
+          "#40403b",
+          "#5e5e59",
+          "#81817b",
+          "#a5a5a0",
+          "#cbcbc5",
+          "#efefe9"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Showroom Graphite",
+        "canonical": "#1e1e1c",
+        "oklch": "oklch(23.4% 0.004 106.7)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#242422",
+          "#40403e",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cbcbc8",
+          "#efefec"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Graphite Hover",
+        "canonical": "#33322f",
+        "oklch": "oklch(31.7% 0.005 91.6)",
+        "tonalRamp": [
+          "#0c0b09",
+          "#252421",
+          "#41403d",
+          "#5f5d5a",
+          "#81807d",
+          "#a6a4a1",
+          "#cccac7",
+          "#f0eeea"
+        ]
+      },
+      "primary-wash": {
+        "role": "neutral",
+        "displayName": "Wash",
+        "canonical": "#e8e8e5",
+        "oklch": "oklch(93.0% 0.004 106.5)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#242422",
+          "#40403d",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cbcbc8",
+          "#efefec"
+        ]
+      },
+      "night": {
+        "role": "primary",
+        "displayName": "Night Block",
+        "canonical": "#1e1e1c",
+        "oklch": "oklch(23.4% 0.004 106.7)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#242422",
+          "#40403e",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cbcbc8",
+          "#efefec"
+        ]
+      },
+      "on-night": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "#f2f2f0",
+        "oklch": "oklch(96.1% 0.003 106.4)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5c",
+          "#80807e",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeec"
+        ]
+      },
+      "on-night-muted": {
+        "role": "neutral",
+        "displayName": "Night Grey",
+        "canonical": "#a6a6a1",
+        "oklch": "oklch(72.4% 0.007 106.6)",
+        "tonalRamp": [
+          "#0b0b08",
+          "#242420",
+          "#40403c",
+          "#5e5e59",
+          "#80807c",
+          "#a5a5a0",
+          "#cbcbc6",
+          "#efefe9"
+        ]
+      },
+      "price": {
+        "role": "secondary",
+        "displayName": "Ledger Amber",
+        "canonical": "#96622a",
+        "oklch": "oklch(54.2% 0.098 64.9)",
+        "tonalRamp": [
+          "#230000",
+          "#421400",
+          "#623200",
+          "#835015",
+          "#a8733c",
+          "#cf9861",
+          "#f7be86",
+          "#ffe1a9"
+        ]
+      },
+      "price-bright": {
+        "role": "secondary",
+        "displayName": "Lamplit Amber",
+        "canonical": "#c8955f",
+        "oklch": "oklch(70.7% 0.094 66.9)",
+        "tonalRamp": [
+          "#220000",
+          "#401600",
+          "#603300",
+          "#805219",
+          "#a6753f",
+          "#cc9963",
+          "#f4bf88",
+          "#ffe3ab"
+        ]
+      },
+      "gold": {
+        "role": "tertiary",
+        "displayName": "Flourish Gold",
+        "canonical": "#c9a34c",
+        "oklch": "oklch(73.3% 0.114 85.6)",
+        "tonalRamp": [
+          "#1f0100",
+          "#3c1b00",
+          "#5a3800",
+          "#7a5700",
+          "#9f7a1b",
+          "#c59f48",
+          "#ecc56f",
+          "#ffe992"
+        ]
+      },
+      "wordmark": {
+        "role": "tertiary",
+        "displayName": "Wordmark Olive",
+        "canonical": "#4d522c",
+        "oklch": "oklch(42.4% 0.058 115.0)",
+        "tonalRamp": [
+          "#0b0d00",
+          "#232701",
+          "#3f431e",
+          "#5c623b",
+          "#7f855d",
+          "#a3a980",
+          "#c9d0a5",
+          "#edf4c8"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e2e2de",
+        "oklch": "oklch(91.2% 0.005 106.5)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#242421",
+          "#40403d",
+          "#5e5e5a",
+          "#80807d",
+          "#a5a5a1",
+          "#cbcbc7",
+          "#efefeb"
+        ]
+      },
+      "control": {
+        "role": "neutral",
+        "displayName": "Field Edge",
+        "canonical": "#858580",
+        "oklch": "oklch(61.5% 0.007 106.6)",
+        "tonalRamp": [
+          "#0b0b08",
+          "#242420",
+          "#40403c",
+          "#5e5e59",
+          "#80807c",
+          "#a5a5a0",
+          "#cbcbc5",
+          "#efefe9"
+        ]
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "Alarm",
+        "canonical": "#a33a2b",
+        "oklch": "oklch(49.5% 0.142 30.8)",
+        "tonalRamp": [
+          "#320000",
+          "#560000",
+          "#790e02",
+          "#9e3527",
+          "#c75a49",
+          "#f07f6d",
+          "#ffa691",
+          "#ffcab4"
+        ]
+      },
+      "danger-wash": {
+        "role": "neutral",
+        "displayName": "Alarm Wash",
+        "canonical": "#f7ebe8",
+        "oklch": "oklch(94.9% 0.014 34.3)",
+        "tonalRamp": [
+          "#100908",
+          "#2a2220",
+          "#473d3b",
+          "#655b59",
+          "#887d7b",
+          "#ada29f",
+          "#d3c8c5",
+          "#f7ebe8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page title — home, category, request."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "A product name on a card; two lines reserved so prices align."
+      },
+      "price": {
+        "displayName": "Price",
+        "purpose": "The largest text on any card; tabular figures."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, rows, form input."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, menu group names, note tiers; 12–14px only."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "The ÁRUMI mark and its monogram, nothing else."
+      }
+    },
+    "shadows": [
+      {
+        "name": "rest",
+        "value": "0 1px 2px rgb(30 30 28 / 0.05)",
+        "purpose": "Every stage at rest."
+      },
+      {
+        "name": "raised",
+        "value": "0 6px 20px rgb(30 30 28 / 0.07)",
+        "purpose": "A lifted state."
+      },
+      {
+        "name": "sheet",
+        "value": "0 14px 36px rgb(30 30 28 / 0.12)",
+        "purpose": "Overlays."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Every transition; symmetric curves are not used."
+      },
+      {
+        "name": "duration-default",
+        "value": "150ms",
+        "purpose": "Colour and opacity changes on controls."
+      },
+      {
+        "name": "duration-ceiling",
+        "value": "250ms",
+        "purpose": "The hard maximum; sheets and modals only move."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action on a light screen. Capsule, graphite, bold.",
+      "html": "<button class=\"ds-btn-primary\">В заявку</button>",
+      "css": ".ds-btn-primary{background:var(--color-primary);color:var(--color-surface);border:0;border-radius:999px;padding:12px 24px;font:700 16px/1.2 var(--font-sans);transition:background-color 150ms cubic-bezier(0.22,1,0.36,1);cursor:pointer}.ds-btn-primary:hover{background:var(--color-primary-hover)}.ds-btn-primary:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}"
+    },
+    {
+      "name": "Inverse Button",
+      "kind": "button",
+      "refersTo": "button-inverse",
+      "description": "The primary on a night ground — the request bar's «В заявку», the phone capsule in the terms block.",
+      "html": "<div class=\"ds-night-demo\"><button class=\"ds-btn-inverse\">В заявку</button></div>",
+      "css": ".ds-night-demo{background:var(--color-night);padding:16px;border-radius:28px}.ds-btn-inverse{background:var(--color-on-night);color:var(--color-night);border:0;border-radius:999px;padding:12px 24px;font:700 16px/1.2 var(--font-sans);cursor:pointer;transition:opacity 150ms cubic-bezier(0.22,1,0.36,1)}.ds-btn-inverse:hover{opacity:.9}.ds-btn-inverse:focus-visible{outline:2px solid var(--color-on-night);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A second, quieter action — «Фильтры», «Вернуться в каталог».",
+      "html": "<button class=\"ds-btn-secondary\">Фильтры</button>",
+      "css": ".ds-btn-secondary{background:var(--color-surface);color:var(--color-ink);border:1px solid var(--color-control);border-radius:999px;padding:12px 24px;font:700 16px/1.2 var(--font-sans);cursor:pointer;transition:background-color 150ms cubic-bezier(0.22,1,0.36,1)}.ds-btn-secondary:hover{background:var(--color-primary-wash)}.ds-btn-secondary:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Full-width capsule on its own header row, where a thumb reaches it.",
+      "html": "<input class=\"ds-input-search\" type=\"search\" placeholder=\"Бренд, аромат или артикул\">",
+      "css": ".ds-input-search{width:100%;background:var(--color-surface);color:var(--color-ink);border:1px solid var(--color-control);border-radius:999px;padding:12px 20px;font:400 16px/1.4 var(--font-sans)}.ds-input-search::placeholder{color:var(--color-muted)}.ds-input-search:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-color:var(--color-primary)}"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "chip-tag",
+      "description": "Gender and scent families on a product page.",
+      "html": "<span class=\"ds-tag\">Древесные</span>",
+      "css": ".ds-tag{display:inline-block;background:var(--color-primary-wash);color:var(--color-ink);border-radius:999px;padding:6px 12px;font:600 12px/1.2 var(--font-sans)}"
+    },
+    {
+      "name": "Product Stage",
+      "kind": "card",
+      "refersTo": "card-stage",
+      "description": "A product on its white stage: well, name, amber price, the rest small at the foot.",
+      "html": "<article class=\"ds-stage\"><div class=\"ds-well\">Á</div><h3 class=\"ds-name\">Coco Mademoiselle</h3><p class=\"ds-price\">1 325 ₽</p><p class=\"ds-meta\">Chanel · 100 мл · кратно 6</p></article>",
+      "css": ".ds-stage{width:170px;background:var(--color-surface);border-radius:28px;padding:8px;box-shadow:0 1px 2px rgb(30 30 28 / .05)}.ds-well{aspect-ratio:4/5;background:var(--color-canvas);border-radius:14px;display:grid;place-items:center;font:600 36px/1 var(--font-cormorant),Georgia,serif;color:var(--color-wordmark)}.ds-name{margin:12px 6px 0;font:800 14px/1.15 var(--font-sans);text-transform:uppercase;letter-spacing:-.03em;color:var(--color-ink);min-height:2.3em}.ds-price{margin:8px 6px 0;font:800 24px/1.1 var(--font-sans);letter-spacing:-.01em;color:var(--color-price);font-variant-numeric:tabular-nums}.ds-meta{margin:8px 6px 6px;font:400 12px/1.35 var(--font-sans);color:var(--color-muted)}"
+    },
+    {
+      "name": "Night Block",
+      "kind": "card",
+      "refersTo": "block-night",
+      "description": "The conditions a buyer reads before committing; money in the bright amber.",
+      "html": "<section class=\"ds-night\"><h2 class=\"ds-night-h\">Условия</h2><div class=\"ds-row\"><span>Минимальный заказ</span><b class=\"ds-amber\">5 000 ₽</b></div><div class=\"ds-row\"><span>Доставка</span><b>по всей России</b></div></section>",
+      "css": ".ds-night{background:var(--color-night);color:var(--color-on-night);border-radius:28px;padding:20px;max-width:340px}.ds-night-h{margin:0 0 12px;font:800 20px/1 var(--font-sans);text-transform:uppercase;letter-spacing:-.03em}.ds-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid rgb(166 166 161 / .25);font:400 14px/1.3 var(--font-sans)}.ds-row span{color:var(--color-on-night-muted)}.ds-row b{font-weight:700}.ds-amber{color:var(--color-price-bright);font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Format Row",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The fragrance in its other formats — the reference's size row, current one underlined in gold.",
+      "html": "<nav class=\"ds-formats\"><span class=\"ds-f ds-f-on\"><b>35 мл</b><i>435 ₽</i></span><a class=\"ds-f\" href=\"#\"><b>100 мл</b><i>1 170 ₽</i></a><a class=\"ds-f\" href=\"#\"><b>200 мл</b><i>890 ₽</i></a></nav>",
+      "css": ".ds-formats{display:flex;gap:24px}.ds-f{display:block;padding:4px 0 8px;text-decoration:none;border-bottom:2px solid transparent;transition:opacity 150ms cubic-bezier(0.22,1,0.36,1)}.ds-f:hover{opacity:.7}.ds-f-on{border-bottom-color:var(--color-gold)}.ds-f b{display:block;font:800 16px/1 var(--font-sans);color:var(--color-ink)}.ds-f i{display:block;margin-top:6px;font:700 14px/1 var(--font-sans);font-style:normal;color:var(--color-price);font-variant-numeric:tabular-nums}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The White Stage",
+    "overview": "A wholesale catalog that behaves like a showroom rather than a price list. Every product stands alone on a white stage lifted off a neutral ground, named in heavy grotesque capitals, with its price in amber. The world was pinned by the client's own fashion-app reference and met from their logo's own colours: the graphite of its «PARFUM & CARE» subtitle and the gold of its flourish. Olive, the wordmark's colour, survives in the wordmark alone.\n\nDensity is phone-first and thumb-led. The buyer is a wholesaler on a market floor, one hand, bright light: hierarchy is carried by scale and weight, not by colour or ornament, and every primary action sits in the lower third of a 390×844 screen. Dark blocks appear inside light screens — the terms of trade, the request total, the request bar — and never as a dark theme.",
+    "keyCharacteristics": [
+      "White stages on a neutral ground, lifted by soft offset shadow rather than outlined.",
+      "Heavy grotesque capitals for every heading; sentence case for long Russian names.",
+      "Amber means money and nothing else — two ambers, one per ground.",
+      "Dark blocks for the conditions a buyer must read before committing.",
+      "Everything pressed is a capsule."
+    ],
+    "rules": [
+      {
+        "name": "The Money Rule",
+        "section": "colors",
+        "body": "Amber is spent on prices, totals and minimums and on nothing else — not links, not tabs, not active states. A link coloured like a price reads as one."
+      },
+      {
+        "name": "The One Amber Per Ground Rule",
+        "section": "colors",
+        "body": "Ledger Amber on a light ground, Lamplit Amber on a night block, never the bright one on white. src/lib/tokens.test.ts measures both against their grounds and fails if either drifts."
+      },
+      {
+        "name": "The Four-and-a-Half Rule",
+        "section": "colors",
+        "body": "Every text colour clears 4.5:1 on the ground it is used on — not only body copy. A price is the text that most needs to survive a bright screen."
+      },
+      {
+        "name": "The Scale Carries It Rule",
+        "section": "typography",
+        "body": "Hierarchy comes from size and weight. A heading that needs a rule, a box or a colour to be read as a heading was set too small."
+      },
+      {
+        "name": "The Long-Name Rule",
+        "section": "typography",
+        "body": "Headings and product names are capitals; category names in rows, tabs and the menu are sentence case and bold. A five-word Russian format name reads faster in lower case."
+      },
+      {
+        "name": "The Unit Rule",
+        "section": "typography",
+        "body": "A number is never separated from its unit — «35 мл», «2 в 1» — bound with a non-breaking space by keepUnits() wherever a category name is set."
+      },
+      {
+        "name": "The Lift-Not-Line Rule",
+        "section": "elevation",
+        "body": "A card is separated from the ground by depth. A hairline box around every item is the grid this system replaced."
+      },
+      {
+        "name": "The One Capsule Rule",
+        "section": "elevation",
+        "body": "If you can press it, it is a capsule. The round shape is reserved for action, so it is never used for a container."
+      }
+    ],
+    "dos": [
+      "Do put a product on a white stage and let depth, not a border, separate it.",
+      "Do set every heading in heavy grotesque capitals and let its size do the work.",
+      "Do spend amber on money only: Ledger Amber on light grounds, Lamplit Amber on night blocks.",
+      "Do put the conditions a buyer must read — minimum, pack, delivery, total — in a night block.",
+      "Do make everything pressed a capsule, and keep capsules for things that are pressed.",
+      "Do draw icons as SVG in the rule's stroke weight — menu, back arrow, bag, chevron, plus and minus.",
+      "Do keep the primary action in the lower third of a phone screen.",
+      "Do design the empty states — a missing photograph is the Á monogram in its well; an empty catalog says so in a sentence."
+    ],
+    "donts": [
+      "Don't use cream or warm-tinted grounds; the ground is neutral.",
+      "Don't set a heading in a serif, or use the serif for anything but the ÁRUMI mark.",
+      "Don't use the bright amber on a light ground.",
+      "Don't colour a link, tab or active state amber.",
+      "Don't put a small spaced-caps label above a heading or a product name; the brand follows the name, it does not caption it.",
+      "Don't outline cards with hairlines, and don't nest cards.",
+      "Don't use a dark theme; dark is a block inside a light screen.",
+      "Don't use gradients, glass, emoji in the interface, or a third typeface.",
+      "Don't animate anything but sheets and modals, and never beyond 250ms or through layout properties."
+    ]
+  }
+}

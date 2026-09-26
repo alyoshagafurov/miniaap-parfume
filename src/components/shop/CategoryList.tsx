@@ -153,7 +153,7 @@ export function CategoryList({
             id="sort"
             value={sort}
             onChange={(e) => go(filters, e.target.value as SortKey)}
-            className="bg-surface text-ink border-control rounded-md border px-3 text-sm"
+            className="bg-surface text-ink border-control rounded-full border px-4 text-sm font-semibold"
           >
             {SORT_KEYS.map((key) => (
               <option key={key} value={key}>
@@ -226,8 +226,8 @@ export function CategoryList({
         {items.length > 0 ? (
           <ProductGrid products={items} showPrices={showPrices} />
         ) : (
-          <div className="border-rule rounded-md border px-4 py-12 text-center">
-            <p className="text-ink text-lg">
+          <div className="stage px-5 py-12 text-center">
+            <p className="display-caps text-ink text-lg">
               {active > 0 ? "По этим фильтрам ничего нет" : "В категории пока пусто"}
             </p>
             {active > 0 ? (
