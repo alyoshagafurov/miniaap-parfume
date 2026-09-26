@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { requireAdminPage } from "@/server/auth/roles";
 import { prisma } from "@/server/db";
 
@@ -97,34 +99,68 @@ export interface FragranceOption {
 /**
  * Fragrances matching what the administrator is typing.
  *
- * Matched on the brand as well as the name, because «шанель шанс» is how a
- * person looks for Chance and the fragrance row only holds "Chance".
+ * Word by word, and every word has to be found somewhere — in the fragrance's
+ * name, the brand's name, or either one's aliases. «Chanel Chance» is how a
+ * product title reads and how she will type it, and a match on the whole
+ * string found nothing, which sent her to «Нет в списке — создать» and made a
+ * second Chance.
+ *
+ * The aliases are why this is SQL and not a Prisma filter. They are stored as
+ * typed — «Шанель», «Блю де Шанель» — and Prisma can only ask whether an array
+ * holds an element equal to a value, exactly and with case. «шанель» is equal
+ * to none of those; ILIKE over the unnested array finds both. The brand's
+ * aliases are what make «шанель шанс» work at all: the fragrance row says
+ * "Chance" and the brand row says "Chanel", in Latin.
+ *
+ * Unindexed, deliberately: this runs for one person typing in the panel, over
+ * a few hundred fragrances.
  */
 export async function searchFragrances(query: string): Promise<FragranceOption[]> {
   await requireAdminPage();
+  return matchFragrances(query);
+}
 
-  const q = query.trim();
-  const rows = await prisma.fragrance.findMany({
-    where: q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { aliases: { has: q.toLowerCase() } },
-            { brand: { name: { contains: q, mode: "insensitive" } } },
-          ],
-        }
-      : {},
-    orderBy: [{ brand: { name: "asc" } }, { name: "asc" }],
-    take: 20,
-    select: { id: true, name: true, brand: { select: { id: true, name: true } } },
-  });
+/** The query behind the guard, for the test; the app calls searchFragrances. */
+export async function matchFragrances(query: string): Promise<FragranceOption[]> {
+  const words = searchWords(query);
+  const where =
+    words.length > 0
+      ? Prisma.sql`WHERE ${Prisma.join(words.map(wordMatches), " AND ")}`
+      : Prisma.empty;
 
-  return rows.map((r) => ({
-    id: r.id,
-    name: r.name,
-    brandName: r.brand.name,
-    brandId: r.brand.id,
-  }));
+  return prisma.$queryRaw<FragranceOption[]>`
+    SELECT f.id, f.name, b.name AS "brandName", b.id AS "brandId"
+    FROM fragrances f
+    JOIN brands b ON b.id = f."brandId"
+    ${where}
+    ORDER BY b.name ASC, f.name ASC
+    LIMIT 20
+  `;
+}
+
+/**
+ * The words of a query, as LIKE patterns.
+ *
+ * Capped, because each word adds four conditions, two of them subqueries, and
+ * the action lets through a hundred characters. `%` and `_` are escaped: a SKU-like «AR_1» otherwise
+ * matches «AR-1», «ARX1» and everything else with one character there.
+ */
+export function searchWords(query: string): string[] {
+  return query
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 6)
+    .map((word) => `%${word.replace(/[\\%_]/g, "\\$&")}%`);
+}
+
+function wordMatches(pattern: string): Prisma.Sql {
+  return Prisma.sql`(
+    f.name ILIKE ${pattern}
+    OR b.name ILIKE ${pattern}
+    OR EXISTS (SELECT 1 FROM unnest(f.aliases) AS alias WHERE alias ILIKE ${pattern})
+    OR EXISTS (SELECT 1 FROM unnest(b.aliases) AS alias WHERE alias ILIKE ${pattern})
+  )`;
 }
 
 /** Brands, for creating a fragrance without leaving the product form. */

@@ -7,7 +7,7 @@ import { saveAdmin, toggleAdmin } from "@/app/admin/(panel)/admins/actions";
 import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
 import { formatDateRu } from "@/lib/format";
-import type { AdminRow } from "@/server/admin/admins";
+import type { AdminField, AdminFieldErrors, AdminRow } from "@/server/admin/admins";
 
 const ROLE_LABELS: Record<string, string> = {
   OWNER: "Владелец — всё",
@@ -19,7 +19,10 @@ const ROLE_LABELS: Record<string, string> = {
  *
  * Two or three people, so they are listed and edited in place. Every row shows
  * its Telegram id, because that id is the allow-list: the Mini App login checks
- * the launch string against it and the browser login sends the code to it.
+ * the launch string against it, and the bot shows the «Админ-панель» button
+ * only to it. A row with somebody else's number looks fine here and leaves its
+ * owner without the button, which is why the field says where the number
+ * comes from.
  *
  * Nobody is deleted, only switched off. The question "who changed this" only
  * has an answer while the row exists, and `isActive` is re-read from the
@@ -133,6 +136,7 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AdminFieldErrors>({});
   const [login, setLogin] = useState(admin?.login ?? "");
   const [name, setName] = useState(admin?.name ?? "");
   const [telegramId, setTelegramId] = useState(admin?.telegramId ?? "");
@@ -140,15 +144,26 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
   const [password, setPassword] = useState("");
   const key = admin?.id ?? "new";
 
+  // A reason stays under its field until that field is edited: the rest are
+  // still true, and clearing them all on one keystroke would hide what is left
+  // to fix.
+  const edited = (field: AdminField) =>
+    setFieldErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+
   const save = () => {
     setError(null);
+    setFieldErrors({});
     startTransition(async () => {
       const result = await saveAdmin({
         id: admin?.id ?? null,
         fields: { login, name, telegramId, role, password },
       });
       if (!result.ok) {
-        setError(result.message);
+        const fields = result.fields ?? {};
+        setFieldErrors(fields);
+        // Above the form only what belongs to no field — «не удалось
+        // сохранить». Saying a field's reason twice reads as two problems.
+        setError(Object.values(fields).some(Boolean) ? null : result.message);
         return;
       }
       onDone();
@@ -165,44 +180,76 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Имя" htmlFor={`admin-name-${key}`}>
+        <Field label="Имя" htmlFor={`admin-name-${key}`} error={fieldErrors.name}>
           <TextInput
             id={`admin-name-${key}`}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            invalid={!!fieldErrors.name}
+            aria-describedby={describedBy(`admin-name-${key}`, fieldErrors.name, false)}
+            onChange={(e) => {
+              setName(e.target.value);
+              edited("name");
+            }}
           />
         </Field>
         <Field
           label="Логин"
           htmlFor={`admin-login-${key}`}
           hint="Им входят из браузера"
+          error={fieldErrors.login}
         >
           <TextInput
             id={`admin-login-${key}`}
             value={login}
             autoCapitalize="off"
             autoCorrect="off"
-            onChange={(e) => setLogin(e.target.value)}
+            invalid={!!fieldErrors.login}
+            aria-describedby={describedBy(
+              `admin-login-${key}`,
+              fieldErrors.login,
+              true,
+            )}
+            onChange={(e) => {
+              setLogin(e.target.value);
+              edited("login");
+            }}
           />
         </Field>
         <Field
           label="Telegram ID"
           htmlFor={`admin-tg-${key}`}
-          hint="Число. Именно на него бот пришлёт код"
+          hint="Человек узнает его, отправив нашему боту /id. По этому числу бот покажет ему кнопку «Админ-панель»"
+          error={fieldErrors.telegramId}
         >
           <TextInput
             id={`admin-tg-${key}`}
             inputMode="numeric"
             value={telegramId}
-            onChange={(e) => setTelegramId(e.target.value)}
+            invalid={!!fieldErrors.telegramId}
+            aria-describedby={describedBy(
+              `admin-tg-${key}`,
+              fieldErrors.telegramId,
+              true,
+            )}
+            onChange={(e) => {
+              setTelegramId(e.target.value);
+              edited("telegramId");
+            }}
           />
         </Field>
-        <Field label="Роль" htmlFor={`admin-role-${key}`}>
+        <Field label="Роль" htmlFor={`admin-role-${key}`} error={fieldErrors.role}>
           <select
             id={`admin-role-${key}`}
             value={role}
-            onChange={(e) => setRole(e.target.value as AdminRow["role"])}
-            className="bg-surface text-ink border-control w-full rounded-md border px-3 py-3 text-base"
+            aria-invalid={!!fieldErrors.role || undefined}
+            aria-describedby={describedBy(`admin-role-${key}`, fieldErrors.role, false)}
+            onChange={(e) => {
+              setRole(e.target.value as AdminRow["role"]);
+              edited("role");
+            }}
+            className={`bg-surface text-ink w-full rounded-md border px-3 py-3 text-base ${
+              fieldErrors.role ? "border-danger" : "border-control"
+            }`}
           >
             <option value="EDITOR">{ROLE_LABELS.EDITOR}</option>
             <option value="OWNER">{ROLE_LABELS.OWNER}</option>
@@ -212,13 +259,23 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
           label={admin ? "Новый пароль" : "Пароль"}
           htmlFor={`admin-pass-${key}`}
           hint={admin ? "Пусто — оставить прежний" : "Не короче 10 символов"}
+          error={fieldErrors.password}
         >
           <TextInput
             id={`admin-pass-${key}`}
             type="password"
             autoComplete="new-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            invalid={!!fieldErrors.password}
+            aria-describedby={describedBy(
+              `admin-pass-${key}`,
+              fieldErrors.password,
+              true,
+            )}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              edited("password");
+            }}
           />
         </Field>
       </div>
@@ -237,4 +294,20 @@ function AdminForm({ admin, onDone }: { admin: AdminRow | null; onDone: () => vo
       </div>
     </div>
   );
+}
+
+/**
+ * Ties a control to the line under it.
+ *
+ * Field renders the hint or the error, never both, under ids made from the
+ * control's; this points at whichever is showing, so a screen reader reads the
+ * reason when it lands on the field rather than only the moment it appeared.
+ */
+function describedBy(
+  id: string,
+  error: string | undefined,
+  hasHint: boolean,
+): string | undefined {
+  if (error) return `${id}-error`;
+  return hasHint ? `${id}-hint` : undefined;
 }

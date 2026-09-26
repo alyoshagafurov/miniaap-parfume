@@ -19,6 +19,12 @@ export interface CategoryInput {
   name: string;
   subtitle: string | null;
   slug?: string | null;
+  /**
+   * Absent means "leave it": on an update only an explicit value changes the
+   * cover, and null removes it. The photograph is attached by the upload
+   * route through setCategoryCover, never by the form, so the form's save
+   * does not know the cover and must not decide it.
+   */
   coverKey?: string | null;
   isPublished: boolean;
 }
@@ -74,7 +80,9 @@ export async function updateCategory(
         name: input.name.trim(),
         subtitle: blankToNull(input.subtitle),
         slug,
-        coverKey: input.coverKey ?? null,
+        // Not `?? null`: that turned every «Править» → «Сохранить» into a
+        // deletion of the photograph, and left its file orphaned in storage.
+        ...(input.coverKey !== undefined ? { coverKey: input.coverKey } : {}),
         isPublished: input.isPublished,
       },
       select: { id: true, slug: true },

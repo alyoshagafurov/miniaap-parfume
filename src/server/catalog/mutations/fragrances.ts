@@ -46,13 +46,18 @@ export async function createFragrance(
 
     const name = input.name.trim();
     const taken = await tx.fragrance.findFirst({
-      where: { brandId: input.brandId, name },
-      select: { id: true },
+      where: { brandId: input.brandId, name: { equals: name, mode: "insensitive" } },
+      select: { name: true },
     });
-    // The unique constraint would catch this, but «У Chanel уже есть аромат
-    // "Chance"» is an answer and P2002 is not.
+    // The unique constraint would catch an exact repeat, but «У Chanel уже есть
+    // аромат "Chance"» is an answer and P2002 is not. Without regard to case,
+    // which the constraint does not have: «chance» typed in a hurry is the same
+    // scent, and a second row for it splits its formats across two fragrances.
+    // The stored spelling in the message, so it is the one she searches for.
     if (taken)
-      throw new CatalogConflict(`У бренда ${brand.name} уже есть аромат «${name}»`);
+      throw new CatalogConflict(
+        `У бренда ${brand.name} уже есть аромат «${taken.name}»`,
+      );
 
     // The brand is in the slug because two houses may both sell an "Aqua", and
     // /f/aqua-2 is a worse URL than /f/chanel-aqua.
@@ -111,12 +116,19 @@ export async function updateFragrance(
       if (!brand) throw new CatalogConflict("Бренд не найден");
 
       const name = input.name.trim();
+      // The same rule as creating one, case and all.
       const clash = await tx.fragrance.findFirst({
-        where: { brandId: input.brandId, name, id: { not: id } },
-        select: { id: true },
+        where: {
+          brandId: input.brandId,
+          name: { equals: name, mode: "insensitive" },
+          id: { not: id },
+        },
+        select: { name: true },
       });
       if (clash)
-        throw new CatalogConflict(`У бренда ${brand.name} уже есть аромат «${name}»`);
+        throw new CatalogConflict(
+          `У бренда ${brand.name} уже есть аромат «${clash.name}»`,
+        );
 
       const slug = await allocateSlug(tx, "fragrance", `${brand.name} ${name}`, {
         exceptId: id,

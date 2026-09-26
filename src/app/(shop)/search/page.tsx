@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { ContactLinks } from "@/components/shop/ContactLinks";
 import { ProductGrid, ProductGridSkeleton } from "@/components/shop/ProductGrid";
 import { SearchResults } from "@/components/shop/SearchResults";
 import { GoldRule, SectionHeading } from "@/components/ui/GoldRule";
+import { keepUnits } from "@/lib/format";
 import { SEARCH_PAGE_SIZE } from "@/lib/search";
 import { searchProducts, similarWhenEmpty } from "@/server/catalog/search";
 import { getCategories } from "@/server/catalog/queries";
@@ -63,7 +65,14 @@ async function Results({ searchParams }: { searchParams: Promise<SearchParams> }
   ]);
 
   if (found.total === 0)
-    return <Empty query={query} showPrices={settings.showPrices} />;
+    return (
+      <Empty
+        query={query}
+        showPrices={settings.showPrices}
+        phone={settings.phone}
+        whatsappPhone={settings.whatsappPhone}
+      />
+    );
 
   return (
     <>
@@ -95,21 +104,25 @@ async function Prompt() {
       </p>
       <GoldRule className="mt-4 w-24" />
 
-      <ul className="mt-6 flex flex-col">
-        {categories.map((c) => (
-          <li key={c.id} className="border-rule border-b last:border-b-0">
-            <Link
-              href={`/c/${c.slug}`}
-              className="hover:bg-surface flex items-center justify-between gap-4 rounded-md px-2 py-4 transition-colors"
-            >
-              <span className="text-ink text-base leading-snug">{c.name}</span>
-              <span className="text-muted shrink-0 text-sm tabular-nums">
-                {c.productCount}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {categories.length > 0 ? (
+        <ul className="mt-6 flex flex-col">
+          {categories.map((c) => (
+            <li key={c.id} className="border-rule border-b last:border-b-0">
+              <Link
+                href={`/c/${c.slug}`}
+                className="hover:bg-surface flex items-center justify-between gap-4 rounded-md px-2 py-4 transition-colors"
+              >
+                <span className="text-ink text-base leading-snug">
+                  {keepUnits(c.name)}
+                </span>
+                <span className="text-muted shrink-0 text-sm tabular-nums">
+                  {c.productCount}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }
@@ -122,9 +135,41 @@ async function Prompt() {
  * something, and an empty screen sends them to a competitor's catalog. The
  * suggestions are the most popular products, which is an honest offer — they
  * are not claimed to be related to what was typed.
+ *
+ * With nothing published at all there are no suggestions either, and the
+ * advice to shorten the query was then the whole of the answer — to a buyer
+ * whose query was fine and whose catalog was still being filled. That case
+ * says so instead, the way the home page does, and offers the telephone:
+ * the goods are on the warehouse shelves before they are here. A catalog
+ * half filled has the same gap in a smaller size, so the telephone is offered
+ * under the advice as well.
  */
-async function Empty({ query, showPrices }: { query: string; showPrices: boolean }) {
+async function Empty({
+  query,
+  showPrices,
+  phone,
+  whatsappPhone,
+}: {
+  query: string;
+  showPrices: boolean;
+  phone: string | null;
+  whatsappPhone: string | null;
+}) {
   const similar = await similarWhenEmpty(undefined, 8);
+
+  if (similar.length === 0) {
+    return (
+      <section>
+        <p className="text-ink text-lg">Каталог наполняется</p>
+        <p className="text-muted mt-2 text-sm leading-normal">
+          {phone || whatsappPhone
+            ? "Свяжитесь с нами — подскажем, что есть в наличии сейчас."
+            : "Скоро здесь появятся товары."}
+        </p>
+        <ContactLinks phone={phone} whatsappPhone={whatsappPhone} className="mt-6" />
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -136,15 +181,23 @@ async function Empty({ query, showPrices }: { query: string; showPrices: boolean
       <p className="text-muted mt-2 text-sm">
         Попробуйте короче — только бренд или только аромат. Или наберите артикул.
       </p>
-
-      {similar.length > 0 ? (
-        <div className="mt-10">
-          <SectionHeading>Часто заказывают</SectionHeading>
-          <div className="mt-4">
-            <ProductGrid products={similar} showPrices={showPrices} />
-          </div>
-        </div>
+      {/* A catalog that is still being filled misses things the warehouse has,
+          and a buyer who typed the name correctly should have somewhere to ask. */}
+      {phone || whatsappPhone ? (
+        <>
+          <p className="text-muted mt-2 text-sm">
+            Не нашли — спросите нас: подскажем, есть ли на складе.
+          </p>
+          <ContactLinks phone={phone} whatsappPhone={whatsappPhone} className="mt-4" />
+        </>
       ) : null}
+
+      <div className="mt-10">
+        <SectionHeading>Часто заказывают</SectionHeading>
+        <div className="mt-4">
+          <ProductGrid products={similar} showPrices={showPrices} />
+        </div>
+      </div>
     </section>
   );
 }

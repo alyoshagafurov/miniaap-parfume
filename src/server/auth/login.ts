@@ -15,8 +15,9 @@ import type { AdminRoleName } from "./session";
  *   a Mini App session proves which Telegram account is open, not that the
  *   person holding the phone is its owner.
  *
- *   Browser — the password, then a six-digit code the bot sends to that
- *   administrator's Telegram. The password alone never issues a session.
+ *   Browser — the password, and a six-digit code the bot sends to that
+ *   administrator's Telegram when the deployment asks for one. Whether it
+ *   does is the `requireCode` fact below; see the note in decideLogin.
  */
 
 /** Five minutes, per the brief. */
@@ -33,6 +34,19 @@ export const LOGIN_CODE_MAX_ATTEMPTS = 5;
  * need to target.
  */
 const GENERIC_FAILURE = "Неверный логин или пароль";
+
+/**
+ * Two refusals from the limiter, and they must not read the same.
+ *
+ * The limiter fails closed: with Redis unreachable nobody gets in, which is
+ * right. But it used to say «Слишком много попыток» to someone on their first
+ * attempt, and an owner told that reports a lockout — and looks for whoever
+ * has been guessing their password — when the fault is a service that is down.
+ * Saying it is unavailable reveals nothing about any account: it is the same
+ * answer for every login, right or wrong.
+ */
+const TOO_MANY_ATTEMPTS = "Слишком много попыток входа. Попробуйте позже.";
+const LIMITER_UNAVAILABLE = "Вход временно недоступен. Попробуйте через минуту.";
 
 export interface AdminFacts {
   id: string;
@@ -59,12 +73,15 @@ export type LoginInput =
       initDataTelegramId: bigint | null;
       adminTelegramId: bigint | null;
       rateLimited: boolean;
+      limiterUnavailable: boolean;
     }
   | {
       path: "browser";
       admin: AdminFacts | null;
       passwordMatches: boolean;
       rateLimited: boolean;
+      /** The limiter could not be asked, as opposed to having said no. */
+      limiterUnavailable: boolean;
       /**
        * Whether the password alone is enough from a browser.
        *
@@ -78,11 +95,14 @@ export type LoginInput =
 
 export function decideLogin(input: LoginInput): LoginDecision {
   // Checked first: a throttled request must cost nothing and reveal nothing.
+  // An unreachable limiter refuses too, on its own say-so, whether or not the
+  // caller also reported the request as throttled — failing closed is decided
+  // here, not left to how the facts were gathered.
+  if (input.limiterUnavailable) {
+    return { outcome: "RATE_LIMITED", message: LIMITER_UNAVAILABLE };
+  }
   if (input.rateLimited) {
-    return {
-      outcome: "RATE_LIMITED",
-      message: "Слишком много попыток входа. Попробуйте позже.",
-    };
+    return { outcome: "RATE_LIMITED", message: TOO_MANY_ATTEMPTS };
   }
 
   const reject: LoginDecision = { outcome: "REJECT", message: GENERIC_FAILURE };
@@ -160,6 +180,7 @@ export function decideCodeCheck(input: {
   code: CodeFacts | null;
   codeMatches: boolean;
   rateLimited: boolean;
+  limiterUnavailable: boolean;
   nowMs?: number;
 }): CodeDecision {
   const now = input.nowMs ?? Date.now();
@@ -169,6 +190,7 @@ export function decideCodeCheck(input: {
     consumeAttempt,
   });
 
+  if (input.limiterUnavailable) return reject(LIMITER_UNAVAILABLE);
   if (input.rateLimited) return reject("Слишком много попыток. Попробуйте позже.");
   if (!input.code) return reject("Код не запрашивался или уже недействителен");
   if (input.code.usedAt !== null) return reject("Этот код уже использован");

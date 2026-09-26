@@ -3,7 +3,14 @@ import type { UserFromGetMe } from "grammy/types";
 
 import { handleStart } from "@/bot/handlers/start";
 import { mainKeyboard } from "@/bot/keyboards/main";
-import { BUTTON, NOT_ADMIN, contacts, terms } from "@/bot/texts/ru";
+import {
+  BUTTON,
+  NOT_ADMIN,
+  chatTelegramId,
+  contacts,
+  terms,
+  yourTelegramId,
+} from "@/bot/texts/ru";
 import { prisma } from "@/server/db";
 import { readSettings } from "@/server/settings";
 import { clientOptions, installAutoRetry } from "@/server/telegram/client";
@@ -101,8 +108,14 @@ export function createBot({ token, miniAppUrl, botInfo }: BotDeps): Bot {
    * In a private chat my_chat_member fires only on block and unblock, which is
    * the cheapest possible signal that a user has stopped the bot — far better
    * than discovering it from a 403 the next time a request is notified.
+   *
+   * Private chats only. In a group the same update means the bot was added or
+   * removed, and `from` is whoever did it: reading it as a block marked the
+   * person who took the bot out of a manager group as unreachable, and every
+   * one of their requests then said so in the panel.
    */
   bot.on("my_chat_member", async (ctx) => {
+    if (ctx.chat.type !== "private") return;
     const status = ctx.myChatMember.new_chat_member.status;
     const blocked = status === "kicked" || status === "left";
     await prisma.telegramUser.updateMany({
@@ -127,6 +140,31 @@ export function createBot({ token, miniAppUrl, botInfo }: BotDeps): Bot {
 
   bot.command("contacts", async (ctx) => {
     await ctx.reply(contacts(await readSettings()));
+  });
+
+  /**
+   * /id — a service command, and deliberately in no command menu: a buyer
+   * has no use for it, and the menu is the buyer's.
+   *
+   * Every place that asks for a Telegram ID points here, because nothing in
+   * Telegram's own interface shows the number. In a private chat the chat id is
+   * the person's own id, which is what an administrator's row needs; in a group
+   * it is the group's, which is what ADMIN_CHAT_ID needs for requests to land
+   * in a shared manager chat.
+   *
+   * The number is marked as code, so one tap copies it — with the minus of a
+   * group id, which is easy to lose when retyping. Nothing is logged: the id
+   * goes back to the chat it belongs to and nowhere else.
+   */
+  bot.command("id", async (ctx) => {
+    const id = String(ctx.chat.id);
+    const text =
+      ctx.chat.type === "private"
+        ? yourTelegramId(id)
+        : chatTelegramId(id, ctx.chat.type === "channel" ? "channel" : "group");
+    await ctx.reply(text, {
+      entities: [{ type: "code", offset: text.indexOf(id), length: id.length }],
+    });
   });
 
   bot.command("admin", async (ctx) => {

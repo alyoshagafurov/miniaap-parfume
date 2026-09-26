@@ -3,17 +3,12 @@
 #
 #   ./scripts/deploy.sh
 #
-# Порядок здесь не для красоты. Он вынужден одним свойством выбранной
-# архитектуры, и его стоит понимать, а не просто выполнять:
-#
-#   Под cacheComponents `next build` ВЫПОЛНЯЕТ функции с 'use cache', чтобы
-#   наполнить кэш при пререндере. То есть сборка образа витрины обращается к
-#   PostgreSQL по-настоящему — за настройками, категориями, лентами. Без базы
-#   она падает с «Can't reach database server», и никакие Suspense-границы это
-#   не меняют: граница решает, где результат окажется, а не будет ли он
-#   вычислен при сборке.
-#
-# Поэтому: сначала база и схема, только потом сборка витрины.
+# Порядок — база, схема, сборка, запуск. Написан он был, когда `next build`
+# под cacheComponents ходил в PostgreSQL за настройками и категориями. Теперь
+# не ходит: каждое чтение витрины ждёт io() до запроса (см. CLAUDE.md), и
+# сборка проходит с заведомо нерабочим DATABASE_URL. Адрес базы и
+# --network=host ниже от того времени остались и ничему не мешают, а порядок
+# «сначала схема, потом приложение» по-прежнему правильный.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -51,6 +46,7 @@ docker build \
   --build-arg "DATABASE_URL=$BUILD_DATABASE_URL" \
   --build-arg "NEXT_PUBLIC_S3_PUBLIC_URL=$NEXT_PUBLIC_S3_PUBLIC_URL" \
   --build-arg "NEXT_PUBLIC_YANDEX_METRICA_ID=${NEXT_PUBLIC_YANDEX_METRICA_ID:-}" \
+  --build-arg "ENABLE_HSTS=${ENABLE_HSTS:-}" \
   -f Dockerfile -t arumi-web:latest .
 $COMPOSE build bot
 

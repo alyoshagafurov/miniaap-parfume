@@ -30,6 +30,8 @@ const serverSchema = z.object({
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET должен быть не короче 32 символов"),
 
   BOT_TOKEN: z.string().min(1).optional(),
+  // Optional everywhere, the bot included: nothing but the product page's share
+  // link reads it, and without it that link is the storefront's own address.
   BOT_USERNAME: z.string().min(1).optional(),
   // api.telegram.org is unreachable from Russian hosting, so this points at the
   // relay in production. Defaulted rather than required so local work and tests
@@ -135,16 +137,4 @@ export function checkEnv():
     }
     throw error;
   }
-}
-
-/**
- * The bot process needs credentials the web process does not; it calls this
- * instead of reaching for process.env directly.
- */
-export function botEnv(): ServerEnv & { BOT_TOKEN: string; BOT_USERNAME: string } {
-  const e = env();
-  if (!e.BOT_TOKEN || !e.BOT_USERNAME) {
-    throw new Error("BOT_TOKEN и BOT_USERNAME обязательны для процесса бота");
-  }
-  return e as ServerEnv & { BOT_TOKEN: string; BOT_USERNAME: string };
 }

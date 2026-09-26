@@ -28,6 +28,7 @@ describe("decideLogin — Telegram path", () => {
     initDataTelegramId: 501n,
     adminTelegramId: 501n,
     rateLimited: false,
+    limiterUnavailable: false,
   };
 
   it("admits a verified admin with the right password", () => {
@@ -63,6 +64,15 @@ describe("decideLogin — Telegram path", () => {
     expect(d.outcome).toBe("RATE_LIMITED");
   });
 
+  it("refuses when the limiter is down, and says it is down", () => {
+    // Fail closed, but not as «too many attempts»: on a first attempt that
+    // reads as a lockout and sends the owner looking for an attacker.
+    const d = decideLogin({ ...base, rateLimited: true, limiterUnavailable: true });
+    expect(d.outcome).toBe("RATE_LIMITED");
+    expect(d.message).toBe("Вход временно недоступен. Попробуйте через минуту.");
+    expect(d.message).not.toBe(decideLogin({ ...base, rateLimited: true }).message);
+  });
+
   it("gives the same message whatever the reason", () => {
     // A different message for "no such admin" than for "wrong password" tells
     // an attacker which telegram ids are administrators.
@@ -80,6 +90,7 @@ describe("decideLogin — browser path", () => {
     admin,
     passwordMatches: true,
     rateLimited: false,
+    limiterUnavailable: false,
     requireCode: true,
   };
 
@@ -117,9 +128,38 @@ describe("decideLogin — browser path", () => {
   });
 
   it("still refuses while rate limited with the code switched off", () => {
-    expect(decideLogin({ ...base, requireCode: false, rateLimited: true }).outcome).toBe(
-      "RATE_LIMITED",
-    );
+    expect(
+      decideLogin({ ...base, requireCode: false, rateLimited: true }).outcome,
+    ).toBe("RATE_LIMITED");
+  });
+
+  it("refuses the right password while the limiter is down", () => {
+    // The production configuration: password alone, and Redis unreachable.
+    // Failing closed is the point — an unreachable limiter must never become
+    // an absent one — and it holds even if a caller forgets to also report
+    // the request as throttled.
+    const d = decideLogin({
+      ...base,
+      requireCode: false,
+      rateLimited: false,
+      limiterUnavailable: true,
+    });
+    expect(d.outcome).toBe("RATE_LIMITED");
+    expect(d.adminId).toBeUndefined();
+    expect(d.message).toBe("Вход временно недоступен. Попробуйте через минуту.");
+  });
+
+  it("gives the same limiter-down answer for any login", () => {
+    // It must not become a way to tell accounts apart.
+    const known = decideLogin({ ...base, limiterUnavailable: true, rateLimited: true });
+    const unknown = decideLogin({
+      ...base,
+      admin: null,
+      passwordMatches: false,
+      limiterUnavailable: true,
+      rateLimited: true,
+    });
+    expect(unknown).toEqual(known);
   });
 
   it("refuses a wrong password without sending a code", () => {
@@ -141,6 +181,7 @@ describe("decideCodeCheck", () => {
     code: { attempts: 0, expiresAt: new Date(Date.now() + 60_000), usedAt: null },
     codeMatches: true,
     rateLimited: false,
+    limiterUnavailable: false,
   };
 
   it("admits the right code", () => {
@@ -183,6 +224,17 @@ describe("decideCodeCheck", () => {
 
   it("refuses when there is no code at all", () => {
     expect(decideCodeCheck({ ...fresh, code: null }).outcome).toBe("REJECT");
+  });
+
+  it("refuses the right code while the limiter is down, without counting it", () => {
+    const d = decideCodeCheck({
+      ...fresh,
+      rateLimited: true,
+      limiterUnavailable: true,
+    });
+    expect(d.outcome).toBe("REJECT");
+    expect(d.message).toBe("Вход временно недоступен. Попробуйте через минуту.");
+    expect(d.consumeAttempt).toBe(false);
   });
 
   it("uses the five-minute TTL and five attempts the brief specifies", () => {

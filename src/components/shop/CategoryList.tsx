@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { loadMoreProducts } from "@/app/(shop)/c/[slug]/actions";
+import { ContactLinks } from "@/components/shop/ContactLinks";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -46,6 +47,7 @@ export function CategoryList({
   categorySlug,
   basePath,
   showPrices,
+  contacts,
 }: {
   initial: ListResult;
   filters: ActiveFilters;
@@ -54,6 +56,8 @@ export function CategoryList({
   categorySlug: string;
   basePath: string;
   showPrices: boolean;
+  /** Offered under an empty category, where the way on is a call. */
+  contacts: { phone: string | null; whatsappPhone: string | null };
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initial.items);
@@ -139,33 +143,43 @@ export function CategoryList({
   const brandName = (slug: string) =>
     facets.brands.find((b) => b.slug === slug)?.name ?? slug;
 
+  // Nothing published here at all, as opposed to nothing matching the filters.
+  // The storefront lists no such category, so this is a direct link opened
+  // before the first product went up. A count reading «Ничего не найдено» next
+  // to a sort and a «Фильтры» button made it look like a search that failed;
+  // there is nothing to sort or filter, so the bar goes, and the screen says
+  // the goods are on their way and how to ask about them now.
+  const unfilled = initial.total === 0 && active === 0;
+
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted text-sm tabular-nums" aria-live="polite">
-          {initial.total === 0 ? "Ничего не найдено" : `Найдено: ${initial.total}`}
-        </p>
-        <div className="flex items-center gap-2">
-          <label htmlFor="sort" className="sr-only">
-            Сортировка
-          </label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => go(filters, e.target.value as SortKey)}
-            className="bg-surface text-ink border-control rounded-full border px-4 text-sm font-semibold"
-          >
-            {SORT_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {SORT_LABELS[key]}
-              </option>
-            ))}
-          </select>
-          <Button variant="secondary" onClick={openFilters}>
-            Фильтры{active > 0 ? ` · ${active}` : ""}
-          </Button>
+      {unfilled ? null : (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted text-sm tabular-nums" aria-live="polite">
+            {initial.total === 0 ? "Ничего не найдено" : `Найдено: ${initial.total}`}
+          </p>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort" className="sr-only">
+              Сортировка
+            </label>
+            <select
+              id="sort"
+              value={sort}
+              onChange={(e) => go(filters, e.target.value as SortKey)}
+              className="bg-surface text-ink border-control rounded-full border px-4 text-sm font-semibold"
+            >
+              {SORT_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {SORT_LABELS[key]}
+                </option>
+              ))}
+            </select>
+            <Button variant="secondary" onClick={openFilters}>
+              Фильтры{active > 0 ? ` · ${active}` : ""}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {active > 0 ? (
         <ul className="mt-4 flex flex-wrap gap-2" aria-label="Выбранные фильтры">
@@ -242,7 +256,18 @@ export function CategoryList({
                 </div>
               </>
             ) : (
-              <p className="text-muted mt-2 text-sm">Скоро здесь появятся товары.</p>
+              <>
+                <p className="text-muted mt-2 text-sm leading-normal">
+                  {contacts.phone || contacts.whatsappPhone
+                    ? "Товары скоро появятся. Свяжитесь с нами — подскажем, что есть в наличии сейчас."
+                    : "Товары скоро появятся."}
+                </p>
+                <ContactLinks
+                  phone={contacts.phone}
+                  whatsappPhone={contacts.whatsappPhone}
+                  className="mt-6 justify-center"
+                />
+              </>
             )}
           </div>
         )}

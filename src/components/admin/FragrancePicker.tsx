@@ -9,12 +9,16 @@ import {
 } from "@/app/admin/(panel)/products/actions";
 import { Button } from "@/components/ui/Button";
 import { Field, TextInput } from "@/components/ui/Field";
+import { GENDER_LABELS, type Gender } from "@/lib/list-url";
 
 export interface PickedFragrance {
   id: string;
   name: string;
   brandName: string;
 }
+
+/** In the order a person says them, not the enum's. */
+const GENDER_CHOICES: readonly Gender[] = ["MALE", "FEMALE", "UNISEX"];
 
 /**
  * Choosing the fragrance a bottle contains.
@@ -23,11 +27,13 @@ export interface PickedFragrance {
  * real range is entered, and a select with several hundred options is a select
  * nobody uses.
  *
- * A fragrance can be created without leaving the form, with only its brand and
- * its name. The notes, the families and the description belong to the fragrance
- * screen; asking for them here would turn adding one product into filling in
- * two forms, which is how a catalog ends up with three slightly different
- * descriptions of the same scent.
+ * A fragrance can be created without leaving the form, with its brand, its name
+ * and who it is for. The notes, the families and the description belong to the
+ * fragrance screen; asking for them here would turn adding one product into
+ * filling in two forms, which is how a catalog ends up with three slightly
+ * different descriptions of the same scent. Who it is for is the exception
+ * because the storefront filters on it: a men's fragrance saved as unisex is
+ * missing from «Мужской».
  */
 export function FragrancePicker({
   value,
@@ -45,6 +51,7 @@ export function FragrancePicker({
   const [creating, setCreating] = useState(false);
   const [newBrand, setNewBrand] = useState("");
   const [newName, setNewName] = useState("");
+  const [newGender, setNewGender] = useState<Gender>("UNISEX");
   const [error, setError] = useState<string | null>(null);
   const [pendingCreate, startCreate] = useTransition();
 
@@ -78,6 +85,7 @@ export function FragrancePicker({
       const result = await createFragranceInline({
         brandName: newBrand,
         name: newName,
+        gender: newGender,
       });
       if (!result.ok) {
         setError(result.message);
@@ -88,6 +96,7 @@ export function FragrancePicker({
       setCreating(false);
       setNewName("");
       setNewBrand("");
+      setNewGender("UNISEX");
     });
   };
 
@@ -207,6 +216,30 @@ export function FragrancePicker({
                   invalid={!!error}
                 />
               </Field>
+
+              <fieldset>
+                <legend className="caps text-muted mb-2">Для кого</legend>
+                <div className="flex flex-wrap gap-2">
+                  {GENDER_CHOICES.map((gender) => (
+                    <label
+                      key={gender}
+                      className="border-control bg-surface flex min-h-11 items-center gap-2 rounded-full border px-4"
+                    >
+                      <input
+                        type="radio"
+                        name="new-fragrance-gender"
+                        value={gender}
+                        checked={newGender === gender}
+                        onChange={() => setNewGender(gender)}
+                        className="accent-primary h-5 w-5"
+                      />
+                      <span className="text-ink text-sm font-semibold">
+                        {GENDER_LABELS[gender]}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                 <Button

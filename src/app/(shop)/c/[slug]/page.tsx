@@ -70,12 +70,20 @@ async function CategoryHeader({ params }: { params: PageProps["params"] }) {
 
   return (
     <header className="pt-4 pb-6">
-      <h1 className="display-caps text-ink text-h1 text-balance">{keepUnits(category.name)}</h1>
+      <h1 className="display-caps text-ink text-h1 text-balance">
+        {keepUnits(category.name)}
+      </h1>
       {/* The subtitle is deliberately not here. It said the same thing as the
           row the buyer just tapped, one screen earlier, and on a listing the
           first screen belongs to the goods. It is still on the row, and still
           editable in the panel. */}
-      {all.length > 1 ? <CategoryTabs current={slug} categories={all} /> : null}
+      {/* Some other category to go to, rather than more than one in the list:
+          the list holds only categories with something published, so a direct
+          link to one not yet filled is not in it, and a single other category
+          is then exactly the tab a buyer on an empty page needs. */}
+      {all.some((c) => c.slug !== slug) ? (
+        <CategoryTabs current={slug} categories={all} />
+      ) : null}
     </header>
   );
 }
@@ -158,6 +166,7 @@ async function CategorySection({ params, searchParams }: PageProps) {
       categorySlug={slug}
       basePath={`/c/${slug}`}
       showPrices={settings.showPrices}
+      contacts={{ phone: settings.phone, whatsappPhone: settings.whatsappPhone }}
     />
   );
 }

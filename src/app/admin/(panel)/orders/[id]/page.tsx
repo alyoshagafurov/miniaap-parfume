@@ -19,6 +19,11 @@ export const metadata = { title: "Заявка" };
  *
  * Everything the manager needs to act: who to call, how to reach them in one
  * tap, what was ordered and for how much, and the one thing they may change.
+ *
+ * Most visits start here, from the «Открыть в админке» button in the Telegram
+ * notice, with no history behind them — so both ways out are on the page: to
+ * the list of requests, and to the home screen, since the panel has no row of
+ * sections above it any more.
  */
 export default function AdminOrderPage({ params }: PageProps) {
   return (
@@ -45,16 +50,25 @@ async function Card({ params }: PageProps) {
 
   return (
     <>
-      <Link
-        href="/admin/orders"
-        className="text-muted inline-flex min-h-11 items-center text-sm"
-      >
-        ← Все заявки
-      </Link>
+      <nav aria-label="Назад" className="flex flex-wrap items-center gap-x-5">
+        <Link
+          href="/admin/orders"
+          className="text-muted hover:text-ink inline-flex min-h-11 items-center text-sm font-semibold"
+        >
+          ← Все заявки
+        </Link>
+        <Link
+          href="/admin"
+          className="text-muted hover:text-ink inline-flex min-h-11 items-center text-sm font-semibold"
+        >
+          Главная
+        </Link>
+      </nav>
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
-        {/* Body face: an order number is data, and Cormorant's subset has only
-            old-style figures, which set «ARM-000144» with descenders. */}
+        {/* Capitals like every screen title, one step down: «№ ARM-000144» is
+            twelve characters with no space to break at, and at h1 it runs off
+            a 390 screen. */}
         <h1 className="display-caps text-ink text-h2 tabular-nums">№ {order.number}</h1>
         <span className="text-ink text-h2 font-semibold tabular-nums">
           {formatRub(order.totalKop)}
@@ -70,7 +84,7 @@ async function Card({ params }: PageProps) {
         <OrderStatusControl id={order.id} status={order.status} />
       </div>
 
-      <section className="border-rule bg-surface mt-8 rounded-md border p-4">
+      <section className="stage mt-8 p-5">
         <h2 className="caps text-muted">Покупатель</h2>
         <dl className="mt-3 flex flex-col gap-2 text-sm">
           <Row label="Имя">{order.name}</Row>
@@ -118,7 +132,7 @@ async function Card({ params }: PageProps) {
         </div>
       </section>
 
-      <section className="mt-8">
+      <section className="stage mt-8 p-5">
         <h2 className="caps text-muted">Состав</h2>
         <ul className="mt-3 flex flex-col">
           {order.items.map((item) => (
@@ -175,7 +189,7 @@ function ContactLink({ href, children }: { href: string; children: React.ReactNo
     <a
       href={href}
       rel="noopener noreferrer"
-      className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-md border px-4 text-sm transition-colors"
+      className="border-control text-ink hover:bg-primary-wash inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold transition-colors"
     >
       {children}
     </a>
@@ -185,10 +199,10 @@ function ContactLink({ href, children }: { href: string; children: React.ReactNo
 function CardSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-4">
-      <div className="bg-surface h-8 w-40 rounded-md" />
-      <div className="bg-surface h-11 w-full rounded-md" />
-      <div className="border-rule bg-surface h-48 rounded-md border" />
-      <div className="border-rule bg-surface h-48 rounded-md border" />
+      <div className="bg-primary-wash h-8 w-40 rounded-md" />
+      <div className="bg-primary-wash h-11 w-full rounded-full" />
+      <div className="stage h-48" />
+      <div className="stage h-48" />
     </div>
   );
 }

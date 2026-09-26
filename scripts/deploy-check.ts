@@ -24,6 +24,8 @@
  *              администратор грузит фотографию.
  *   TELEGRAM — релей отвечает на вызовы методов и может не отвечать на файлы;
  *              вторая форма ломается позже и не там, где её будут искать.
+ *              И ADMIN_CHAT_ID, в который бот не может писать, выглядит
+ *              заданным, пока не потеряется первое уведомление о заявке.
  *
  * Выход: 0 — можно запускать, 1 — есть отказы. Предупреждения не валят код.
  */
@@ -405,6 +407,42 @@ async function checkTelegram(): Promise<void> {
       "Путь /file/bot* не проксируется. apiRoot покрывает только вызовы " +
         "методов — файлы идут другим путём. См. relay/Caddyfile",
     );
+  }
+
+  // Задан — ещё не значит, что туда можно писать. Бот не может написать
+  // первым тому, кто ему ни разу не писал, и не видит группу, куда его не
+  // добавили: обоим Telegram отвечает «chat not found», и без этой проверки
+  // ошибка всплывала только первой заявкой, которая молча не дошла. Сам id не
+  // печатается — это чей-то Telegram ID.
+  const adminChat = process.env.ADMIN_CHAT_ID?.trim();
+  if (!adminChat) return;
+  try {
+    const response = await fetch(
+      `${root}/bot${token}/getChat?chat_id=${encodeURIComponent(adminChat)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    const body = (await response.json()) as {
+      ok?: boolean;
+      result?: { type?: string };
+      description?: string;
+    };
+    if (body.ok) {
+      ok(
+        "ADMIN_CHAT_ID",
+        body.result?.type === "private"
+          ? "бот видит этот личный чат"
+          : "бот видит этот групповой чат",
+      );
+    } else {
+      fail(
+        "ADMIN_CHAT_ID",
+        `бот не может писать в этот чат (${body.description ?? `ответ ${response.status}`})`,
+        "Получатель должен нажать /start в боте, для группы — добавить в неё бота. " +
+          "Id узнаётся командой /id. Уведомления шлёт web — там значение должно быть тем же",
+      );
+    }
+  } catch (error) {
+    fail("ADMIN_CHAT_ID", message(error), `${root} не отвечает на getChat`);
   }
 }
 

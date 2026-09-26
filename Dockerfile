@@ -48,6 +48,19 @@ ENV NEXT_PUBLIC_S3_PUBLIC_URL=$NEXT_PUBLIC_S3_PUBLIC_URL \
     NEXT_PUBLIC_YANDEX_METRICA_ID=$NEXT_PUBLIC_YANDEX_METRICA_ID \
     NEXT_TELEMETRY_DISABLED=1
 
+# HSTS — тоже решение сборки, хотя имя у переменной не NEXT_PUBLIC_.
+# next.config.ts читает ENABLE_HSTS внутри headers(), а headers() выполняется
+# при `next build`: результат вшивается в routes-manifest.json, и сервер в
+# рантайме берёт заголовки оттуда. Переменная окружения контейнера здесь уже
+# ничего не меняет — так прод и жил без Strict-Transport-Security при
+# ENABLE_HSTS=1 в переменных сервиса.
+#
+# Railway передаёт переменные сервиса в сборку только через объявленные ARG,
+# а ARG, объявленный в стадии, виден следующему RUN как переменная окружения.
+# ENV здесь не нужен: в готовый образ значение попадать не должно, оно уже в
+# манифесте. Пустое значение — заголовка нет, как и раньше.
+ARG ENABLE_HSTS
+
 # prisma generate требует DATABASE_URL, хотя базы ему не нужно: он только
 # читает схему. Причина — env("DATABASE_URL") в prisma.config.ts, который
 # вычисляется при загрузке конфига и бросает, если переменной нет.

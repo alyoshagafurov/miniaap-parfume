@@ -3,7 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/server/db";
 
 import { createBrand, updateBrand } from "./brands";
-import { createCategory, deleteCategory } from "./categories";
+import {
+  createCategory,
+  deleteCategory,
+  setCategoryCover,
+  updateCategory,
+} from "./categories";
 import { createFragrance } from "./fragrances";
 import { createProduct, updateProduct } from "./products";
 import { CatalogConflict } from "./run";
@@ -211,5 +216,65 @@ describe.skipIf(!reachable)("мутации каталога — теги и о�
     await expect(deleteCategory(category.data.id)).rejects.toThrow(
       "В категории ещё 1 товар. Перенесите его в другую категорию или удалите.",
     );
+  });
+
+  it("правка категории без обложки не стирает её фото", async () => {
+    const category = await createCategory({
+      name: `${MARK} категория g`,
+      slug: `${MARK}-cat-g`,
+      subtitle: null,
+      isPublished: true,
+    });
+    const key = `${MARK}/categories/cover-g.jpg`;
+    await setCategoryCover(category.data.id, key);
+
+    // What the form sends: no coverKey at all, because the photograph is the
+    // upload route's business. This used to write NULL over it.
+    await updateCategory(category.data.id, {
+      name: `${MARK} категория g — новое имя`,
+      subtitle: "Новый подзаголовок",
+      isPublished: false,
+    });
+
+    const after = await prisma.category.findUniqueOrThrow({
+      where: { id: category.data.id },
+      select: { coverKey: true, name: true },
+    });
+    expect(after.name).toBe(`${MARK} категория g — новое имя`);
+    expect(after.coverKey).toBe(key);
+
+    // An explicit null is still a removal.
+    await updateCategory(category.data.id, {
+      name: `${MARK} категория g`,
+      subtitle: null,
+      coverKey: null,
+      isPublished: true,
+    });
+    const cleared = await prisma.category.findUniqueOrThrow({
+      where: { id: category.data.id },
+      select: { coverKey: true },
+    });
+    expect(cleared.coverKey).toBeNull();
+  });
+
+  it("второй аромат с тем же именем в другом регистре не создаётся", async () => {
+    const { brand } = await fixture("h");
+
+    // The fixture's fragrance is «Аромат h»; «аромат H» is the same scent
+    // typed in a hurry, and the refusal names the spelling that exists.
+    await expect(
+      createFragrance({
+        brandId: brand.data.id,
+        name: "аромат H",
+        slug: `${MARK}-fra-h2`,
+        aliases: [],
+        gender: "UNISEX",
+        families: [],
+        notesTop: [],
+        notesHeart: [],
+        notesBase: [],
+        description: null,
+      }),
+    ).rejects.toThrow(`У бренда ${MARK} Бренд h уже есть аромат «Аромат h»`);
   });
 });

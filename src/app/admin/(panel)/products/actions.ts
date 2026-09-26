@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { PUBLISH_STATUSES, STOCK_STATES } from "@/lib/admin-products";
+import { GENDERS } from "@/lib/list-url";
 import { searchFragrances, type FragranceOption } from "@/server/admin/product-form";
 import { requirePermission } from "@/server/auth/roles";
 import { fromAction } from "@/server/catalog/revalidate";
@@ -113,22 +114,67 @@ export async function editStock(input: unknown): Promise<ActionResult> {
 
 // ── The form ─────────────────────────────────────────────────────────────────
 
+// A charset, because this value is concatenated into an S3 object key and
+// into a URL. A SKU of "../../banner" is not a write-anywhere primitive —
+// S3 treats ".." as a literal segment — but the browser normalises it before
+// fetching, so the URL requested stops being the URL stored.
+const Sku = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z0-9._-]+$/);
+
+/**
+ * What to say about a field the schema refused.
+ *
+ * One sentence per field, naming it, rather than zod's own messages: those are
+ * English and describe the check («Too small: expected number to be >0»), and
+ * the person reading this is looking at a form, not at a schema. Every field
+ * a person types or picks is here; what is missing — an id, a checkbox — can
+ * only be wrong if the request was not sent by the form.
+ */
+const FIELD_PROBLEMS: Record<string, string> = {
+  categoryId: "Выберите категорию",
+  fragranceIds: "Выберите один или два аромата",
+  sku: "Артикул: только латинские буквы, цифры, точка, дефис, подчёркивание — без пробелов внутри и русских букв, до 64 знаков",
+  title: "Название — не длиннее 200 знаков",
+  slug: "Адрес (slug) — не длиннее 200 знаков",
+  volumeMl: "Объём — целое число миллилитров больше нуля",
+  priceKop: "Цена должна быть больше нуля",
+  oldPriceKop: "Старая цена должна быть больше нуля",
+  packSize: "Кратность — целое число от 1 до 9999",
+  stock: "Выберите наличие",
+  status: "Выберите статус",
+  popularity: "Популярность — целое число от 0 до 1 000 000",
+};
+
+type Refusal = { ok: false; message: string; field?: string };
+
+/**
+ * The first refused field, in the order the form shows them, with its sentence.
+ *
+ * The first and not all of them: the client's own rules have already caught
+ * everything a person usually gets wrong, so what reaches here is one thing —
+ * most often an article typed on a Russian layout — and one clear sentence
+ * beats a list.
+ */
+function refusal(error: z.ZodError, order: readonly string[]): Refusal {
+  const fieldErrors: Partial<Record<string, string[]>> =
+    z.flattenError(error).fieldErrors;
+  const field = order.find((name) => (fieldErrors[name]?.length ?? 0) > 0);
+  if (!field) return { ok: false, message: "Проверьте заполнение формы" };
+  return {
+    ok: false,
+    field,
+    message: FIELD_PROBLEMS[field] ?? "Проверьте заполнение формы",
+  };
+}
+
 const ProductInputSchema = z.object({
   categoryId: z.string().min(1).max(64),
   fragranceIds: z.array(z.string().min(1).max(64)).min(1).max(2),
-  // A charset, because this value is concatenated into an S3 object key and
-  // into a URL. A SKU of "../../banner" is not a write-anywhere primitive —
-  // S3 treats ".." as a literal segment — but the browser normalises it before
-  // fetching, so the URL requested stops being the URL stored.
-  sku: z
-    .string()
-    .trim()
-    .min(1)
-    .max(64)
-    .regex(
-      /^[A-Za-z0-9._-]+$/,
-      "Артикул: латиница, цифры, точка, дефис, подчёркивание",
-    ),
+  sku: Sku,
   title: z.string().trim().max(200).nullish(),
   slug: z.string().trim().max(200).nullish(),
   volumeMl: z.number().int().positive().max(100_000),
@@ -142,19 +188,24 @@ const ProductInputSchema = z.object({
   popularity: z.number().int().min(0).max(1_000_000),
 });
 
-export type SaveResult =
-  { ok: true; id: string; slug: string } | { ok: false; message: string };
+export type SaveResult = { ok: true; id: string; slug: string } | Refusal;
 
 export async function saveProduct(input: unknown): Promise<SaveResult> {
   await requirePermission("catalog:write");
 
-  const parsed = z
-    .object({ id: z.string().min(1).max(64).nullish(), product: ProductInputSchema })
+  // In two steps, so the product's own fields are reported by their names
+  // rather than as one refusal of a key called "product".
+  const envelope = z
+    .object({ id: z.string().min(1).max(64).nullish(), product: z.unknown() })
     .safeParse(input);
-  if (!parsed.success) return { ok: false, message: "Проверьте заполнение формы" };
+  if (!envelope.success) return { ok: false, message: "Некорректный запрос" };
+  const parsed = ProductInputSchema.safeParse(envelope.data.product);
+  if (!parsed.success)
+    return refusal(parsed.error, Object.keys(ProductInputSchema.shape));
 
   try {
-    const { id, product } = parsed.data;
+    const id = envelope.data.id;
+    const product = parsed.data;
     const saved = id
       ? await fromAction(updateProduct(id, product))
       : await fromAction(createProduct(product));
@@ -168,19 +219,7 @@ export async function saveProduct(input: unknown): Promise<SaveResult> {
 const CopyInput = z.object({
   id: z.string().min(1).max(64),
   categoryId: z.string().min(1).max(64),
-  // A charset, because this value is concatenated into an S3 object key and
-  // into a URL. A SKU of "../../banner" is not a write-anywhere primitive —
-  // S3 treats ".." as a literal segment — but the browser normalises it before
-  // fetching, so the URL requested stops being the URL stored.
-  sku: z
-    .string()
-    .trim()
-    .min(1)
-    .max(64)
-    .regex(
-      /^[A-Za-z0-9._-]+$/,
-      "Артикул: латиница, цифры, точка, дефис, подчёркивание",
-    ),
+  sku: Sku,
   volumeMl: z.number().int().positive().max(100_000),
   priceKop: z.number().int().positive().max(2_147_483_647),
   packSize: z.number().int().min(1).max(9999),
@@ -189,7 +228,7 @@ const CopyInput = z.object({
 export async function copyProduct(input: unknown): Promise<SaveResult> {
   await requirePermission("catalog:write");
   const parsed = CopyInput.safeParse(input);
-  if (!parsed.success) return { ok: false, message: "Проверьте заполнение формы" };
+  if (!parsed.success) return refusal(parsed.error, Object.keys(CopyInput.shape));
 
   try {
     const { id, ...rest } = parsed.data;
@@ -253,6 +292,9 @@ export async function removeImage(input: unknown): Promise<ActionResult> {
 const InlineFragrance = z.object({
   brandName: z.string().trim().min(1).max(120),
   name: z.string().trim().min(1).max(200),
+  // Defaulted rather than required only for a form opened before this field
+  // existed; the picker always sends it.
+  gender: z.enum(GENDERS).default("UNISEX"),
 });
 
 export type FragranceCreated =
@@ -262,10 +304,14 @@ export type FragranceCreated =
 /**
  * A fragrance created from inside the product form.
  *
- * Only the brand and the name: the notes, the families and the description are
- * the fragrance screen's job, and asking for them here would turn adding a
- * product into filling in two forms. What it creates is complete enough to be
- * correct and obviously incomplete enough to be finished later.
+ * The brand, the name and who it is for: the notes, the families and the
+ * description are the fragrance screen's job, and asking for them here would
+ * turn adding a product into filling in two forms. What it creates is complete
+ * enough to be correct and obviously incomplete enough to be finished later.
+ *
+ * Gender is asked because it is not a detail. The storefront's «Мужской» and
+ * «Женский» filters match it exactly, and when it was fixed at unisex here
+ * every fragrance entered from the product form vanished from both.
  *
  * The brand is typed, not chosen from a list, and created if it is new. The
  * brands screen left the panel's menu when the client asked for five sections,
@@ -304,7 +350,7 @@ export async function createFragranceInline(input: unknown): Promise<FragranceCr
         brandId: brand.id,
         name: parsed.data.name,
         aliases: [],
-        gender: "UNISEX",
+        gender: parsed.data.gender,
         families: [],
         notesTop: [],
         notesHeart: [],

@@ -62,15 +62,20 @@ async function Table({ searchParams }: { searchParams: Promise<SearchParams> }) 
     <>
       <FilterBar query={query} facets={facets} />
 
-      {/* Silent at zero: the table below says "ничего не нашлось" and what to
-          do about it, and two sentences saying the same thing read as a bug. */}
+      {/* Silent at zero: the table below says what the emptiness is — nothing
+          matching, or no products at all yet and how to add the first — and
+          two sentences saying the same thing read as a bug. */}
       {page.total > 0 ? (
         <p className="text-muted mt-4 text-sm tabular-nums" aria-live="polite">
           Найдено: {page.total} · страница {page.page} из {page.pageCount}
         </p>
       ) : null}
 
-      <ProductTable rows={page.rows} categories={categories} />
+      <ProductTable
+        rows={page.rows}
+        categories={categories}
+        filtered={activeFilterCount(query) > 0 || page.total > 0}
+      />
 
       <Pager query={query} page={page.page} pageCount={page.pageCount} />
 

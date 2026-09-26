@@ -53,9 +53,18 @@ type BulkChoice =
 export function ProductTable({
   rows,
   categories,
+  filtered = true,
 }: {
   rows: readonly AdminProductRow[];
   categories: ReadonlyArray<{ id: string; name: string }>;
+  /**
+   * Whether a search or a filter narrowed the list. It decides what an empty
+   * table says: «снимите фильтры» to someone with no filters on the first day
+   * is advice about a problem they do not have, and no word about the one they
+   * do. Defaults to true, the old wording, so a caller that does not say is
+   * never told its catalog is empty when it is not.
+   */
+  filtered?: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
@@ -230,10 +239,39 @@ export function ProductTable({
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-muted mt-8 text-center text-sm">
-          Ничего не нашлось. Попробуйте снять часть фильтров.
-        </p>
+        filtered ? (
+          <p className="text-muted mt-8 text-center text-sm">
+            Ничего не нашлось. Попробуйте снять часть фильтров.
+          </p>
+        ) : (
+          <FirstProduct />
+        )
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * The empty catalog: what to do next, and what will happen when it is done.
+ *
+ * The second sentence is the one that matters. A new product is saved as a
+ * draft, and a client who adds one and then looks for it on the storefront
+ * finds nothing — so the screen says so before it happens, not after.
+ */
+function FirstProduct() {
+  return (
+    <div className="stage mt-4 flex flex-col items-center gap-3 p-6 text-center">
+      <p className="text-ink text-base font-bold">Товаров пока нет</p>
+      <p className="text-muted max-w-md text-sm leading-snug">
+        Новый товар сохраняется черновиком. На витрину он выйдет, когда вы поставите ему
+        статус «{PUBLISH_STATUS_LABELS.PUBLISHED}».
+      </p>
+      <Link
+        href="/admin/products/new"
+        className="bg-night text-on-night mt-1 inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
+      >
+        Добавить первый товар
+      </Link>
     </div>
   );
 }

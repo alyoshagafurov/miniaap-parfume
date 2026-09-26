@@ -1,5 +1,6 @@
 import type { Settings } from "@prisma/client";
 
+import { plural } from "@/lib/format";
 import { formatRub } from "@/lib/money";
 
 /**
@@ -38,14 +39,55 @@ export function terms(settings: Settings): string {
     .trim();
 }
 
+/**
+ * /contacts.
+ *
+ * The phone and WhatsApp are two fields in Settings, and the WhatsApp one is
+ * the number the «Написать в WhatsApp» button actually opens. This used to
+ * print the phone as «Телефон и WhatsApp» and ignore the other field, so the
+ * day the client moved WhatsApp to a second number, /contacts would have sent
+ * buyers to the wrong one. They share a line only when they are the same
+ * number; otherwise each gets its own, and WhatsApp is shown exactly as the
+ * button dials it.
+ */
 export function contacts(settings: Settings): string {
+  const phoneDigits = settings.phone.replace(/\D/g, "");
+  const whatsappDigits = settings.whatsappPhone.replace(/\D/g, "");
+  const sameNumber = phoneDigits !== "" && phoneDigits === whatsappDigits;
+
   const lines = [
     settings.companyName,
     settings.address ? `Адрес: ${settings.address}` : "",
-    settings.phone ? `Телефон и WhatsApp: ${settings.phone}` : "",
+    settings.phone
+      ? `${sameNumber ? "Телефон и WhatsApp" : "Телефон"}: ${settings.phone}`
+      : "",
+    whatsappDigits && !sameNumber ? `WhatsApp: +${whatsappDigits}` : "",
     `Минимальный заказ: ${formatRub(settings.minOrderKop)}`,
   ];
   return lines.filter(Boolean).join("\n");
+}
+
+/**
+ * /id in a private chat.
+ *
+ * Nothing in Telegram's own interface shows a person their numeric id, and two
+ * things are keyed by it: an administrator's row in the panel, and ADMIN_CHAT_ID,
+ * the chat new requests are sent to.
+ */
+export function yourTelegramId(id: string): string {
+  return (
+    `Ваш Telegram ID: ${id}\n\n` +
+    "Он нужен, чтобы открыть вам админ-панель или присылать вам новые заявки."
+  );
+}
+
+/** /id in a group: the number ADMIN_CHAT_ID takes for requests to land there. */
+export function chatTelegramId(id: string, kind: "group" | "channel"): string {
+  const where = kind === "channel" ? "этого канала" : "этой группы";
+  return (
+    `ID ${where}: ${id}\n\n` +
+    "Чтобы новые заявки приходили сюда, это число указывают в ADMIN_CHAT_ID."
+  );
 }
 
 /** Sent to the buyer once their request is recorded. */
@@ -61,7 +103,25 @@ export function orderAccepted(
   );
 }
 
-/** Sent to the manager's chat when a request arrives. */
+/**
+ * Telegram refuses a longer message outright, with 400 «message is too long».
+ * Counted in UTF-16 units here, which is never fewer than Telegram's own count,
+ * so staying under it here means staying under it there.
+ */
+export const TELEGRAM_MESSAGE_LIMIT = 4096;
+
+const POSITIONS = ["позиция", "позиции", "позиций"] as const;
+
+/**
+ * Sent to the manager's chat when a request arrives.
+ *
+ * A request may carry up to 200 lines, and at seventy-odd characters a line
+ * the whole list passes Telegram's limit at around fifty. Past it the send
+ * fails as a whole, so the largest requests — the ones that matter most — were
+ * the ones the manager would never hear about. The list is cut from the end
+ * until the message fits, and says how many lines are left for the panel,
+ * which the button under the message opens. The contacts are never cut.
+ */
 export function orderForManager(params: {
   number: string;
   name: string;
@@ -74,25 +134,39 @@ export function orderForManager(params: {
   lines: Array<{ title: string; sku: string; qty: number; lineTotalKop: number }>;
   username: string | null;
 }): string {
-  const items = params.lines
-    .map((l) => {
-      const sum = params.showPrices ? ` — ${formatRub(l.lineTotalKop)}` : "";
-      return `• ${l.title} (${l.sku}) × ${l.qty}${sum}`;
-    })
-    .join("\n");
+  const rows = params.lines.map((l) => {
+    const sum = params.showPrices ? ` — ${formatRub(l.lineTotalKop)}` : "";
+    return `• ${l.title} (${l.sku}) × ${l.qty}${sum}`;
+  });
 
   const total = params.showPrices ? `\nИтого: ${formatRub(params.totalKop)}` : "";
   const from = params.username ? `\nTelegram: @${params.username}` : "";
 
-  return (
-    `Новая заявка ${params.number}\n\n` +
-    `${items}${total}\n\n` +
+  const head = `Новая заявка ${params.number}\n\n`;
+  const tail =
+    `${total}\n\n` +
     `Имя: ${params.name}\n` +
     `Телефон: ${params.phone}\n` +
     `Город: ${params.city}\n` +
     `Доставка: ${params.delivery}${from}` +
-    (params.comment ? `\n\nКомментарий: ${params.comment}` : "")
-  );
+    (params.comment ? `\n\nКомментарий: ${params.comment}` : "");
+
+  const compose = (shown: number): string => {
+    const rest = rows.length - shown;
+    const items = rows.slice(0, shown);
+    if (rest > 0) {
+      items.push(`…и ещё ${rest} ${plural(rest, POSITIONS)} — полностью в админке`);
+    }
+    return head + items.join("\n") + tail;
+  };
+
+  let shown = rows.length;
+  let text = compose(shown);
+  while (text.length > TELEGRAM_MESSAGE_LIMIT && shown > 0) {
+    shown--;
+    text = compose(shown);
+  }
+  return text;
 }
 
 /** The one-time code an administrator needs to sign in from a browser. */

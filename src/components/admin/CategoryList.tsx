@@ -85,9 +85,8 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
                 <p className="text-ink text-base leading-snug font-bold sm:text-lg">
                   {category.name}
                 </p>
-                <p className="text-muted mt-1 text-sm tabular-nums">
-                  {category.productCount} {plural(category.productCount, GOODS)}
-                  {category.isPublished ? null : " · скрыта"}
+                <p className="text-muted mt-1 text-sm leading-snug tabular-nums">
+                  <Counts category={category} />
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-x-4">
                   <button
@@ -127,6 +126,25 @@ export function CategoryList({ categories }: { categories: readonly CategoryRow[
         )}
       </ul>
     </div>
+  );
+}
+
+/**
+ * How many products, and how many of them a buyer can see.
+ *
+ * The second number is the one that explains the storefront. A category is
+ * listed there only once it holds a published product, so a new one — or one
+ * full of drafts — is absent, and «3 товара» alone read as a fault.
+ */
+function Counts({ category }: { category: CategoryRow }) {
+  const total = `${category.productCount} ${plural(category.productCount, GOODS)}`;
+  if (!category.isPublished) return <>{total} · скрыта</>;
+  if (category.publishedCount === 0)
+    return <>{total} · на витрине появится с первым опубликованным товаром</>;
+  return (
+    <>
+      {total}, на витрине {category.publishedCount}
+    </>
   );
 }
 
@@ -201,12 +219,20 @@ function CategoryForm({
    */
   const [savedId, setSavedId] = useState<string | null>(category?.id ?? null);
   const [coverKey, setCoverKey] = useState<string | null>(category?.coverKey ?? null);
+  const [confirmation, setConfirmation] = useState<string | null>(null);
+
+  // A category created in this form and still open in it.
+  const justCreated = !category && savedId !== null;
 
   const save = () => {
     setError(null);
+    setConfirmation(null);
     startTransition(async () => {
       const result = await saveCategory({
-        id: category?.id ?? null,
+        // savedId, not the prop: the prop stays null for a category created
+        // here, and every «Сохранить» after the first — a typo fixed once the
+        // photo was in — used to create another one.
+        id: savedId,
         fields: {
           name,
           subtitle: subtitle || null,
@@ -221,8 +247,14 @@ function CategoryForm({
       router.refresh();
       // Editing an existing one is finished business; a new one has just
       // acquired an id and no picture, so it stays open for the next step.
-      if (category) onDone();
-      else setSavedId(result.data.id);
+      if (category) {
+        onDone();
+        return;
+      }
+      setConfirmation(
+        savedId ? "Сохранено." : "Категория создана. Можно добавить фото.",
+      );
+      setSavedId(result.data.id);
     });
   };
 
@@ -264,22 +296,35 @@ function CategoryForm({
         }}
       />
 
-      <label className="flex min-h-11 items-center gap-2">
-        <input
-          type="checkbox"
-          className="accent-primary h-5 w-5"
-          checked={isPublished}
-          onChange={(e) => setPublished(e.target.checked)}
-        />
-        <span className="text-ink text-sm">Показывать на витрине</span>
-      </label>
+      <div>
+        <label className="flex min-h-11 items-center gap-2">
+          <input
+            type="checkbox"
+            className="accent-primary h-5 w-5"
+            checked={isPublished}
+            onChange={(e) => setPublished(e.target.checked)}
+          />
+          <span className="text-ink text-sm">Показывать на витрине</span>
+        </label>
+        <p className="text-muted text-xs">
+          Покупатели увидят её, когда в ней будет хотя бы один опубликованный товар.
+        </p>
+      </div>
+
+      {confirmation ? (
+        <p role="status" className="text-ink text-sm font-semibold">
+          {confirmation}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={save} loading={pending} disabled={!name.trim()}>
           Сохранить
         </Button>
+        {/* «Готово» once it exists: «Отмена» after a save reads as though
+            closing would undo it, and it does not. */}
         <Button variant="secondary" onClick={onDone}>
-          Отмена
+          {justCreated ? "Готово" : "Отмена"}
         </Button>
 
         {category ? (

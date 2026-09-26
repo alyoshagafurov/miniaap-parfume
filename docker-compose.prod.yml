@@ -160,6 +160,10 @@ services:
         # Вшиваются в бандл при сборке — поменять их можно только пересборкой.
         NEXT_PUBLIC_S3_PUBLIC_URL: ${NEXT_PUBLIC_S3_PUBLIC_URL:?нужен NEXT_PUBLIC_S3_PUBLIC_URL}
         NEXT_PUBLIC_YANDEX_METRICA_ID: ${NEXT_PUBLIC_YANDEX_METRICA_ID:-}
+        # И этот тоже: next.config.ts читает его в headers(), которые Next
+        # вычисляет при сборке. ENABLE_HSTS в окружении контейнера (x-app-env)
+        # без пересборки заголовок не включит и не выключит.
+        ENABLE_HSTS: ${ENABLE_HSTS:-}
     restart: unless-stopped
     logging: *logging
     depends_on:

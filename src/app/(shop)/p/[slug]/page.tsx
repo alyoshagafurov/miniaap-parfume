@@ -220,7 +220,9 @@ async function Product({ params }: PageProps) {
             )}
             {` · ${product.volumeMl} мл · арт. ${product.sku}`}
             {STOCK_LABEL[product.stock] ? (
-              <span className={product.stock === "OUT" ? "text-danger font-semibold" : ""}>
+              <span
+                className={product.stock === "OUT" ? "text-danger font-semibold" : ""}
+              >
                 {` · ${STOCK_LABEL[product.stock]}`}
               </span>
             ) : null}
@@ -255,7 +257,9 @@ async function Product({ params }: PageProps) {
             {formatGroups.map((group) =>
               group.products.length > 0 ? (
                 <div key={group.fragranceName}>
-                  <h3 className="text-ink mb-2 text-sm font-bold">{group.fragranceName}</h3>
+                  <h3 className="text-ink mb-2 text-sm font-bold">
+                    {group.fragranceName}
+                  </h3>
                   <ul className="stage divide-rule flex flex-col divide-y overflow-hidden">
                     {group.products.map((other) => (
                       <li key={other.id}>
@@ -371,21 +375,30 @@ function FormatRow({
   showPrices: boolean;
 }) {
   const repeated = new Set(
-    items.map((i) => i.volumeMl).filter((v, _, all) => all.indexOf(v) !== all.lastIndexOf(v)),
+    items
+      .map((i) => i.volumeMl)
+      .filter((v, _, all) => all.indexOf(v) !== all.lastIndexOf(v)),
   );
 
   return (
-    <nav aria-label="Другие форматы этого аромата" className="-mx-4 mt-6 overflow-x-auto px-4">
+    <nav
+      aria-label="Другие форматы этого аромата"
+      className="-mx-4 mt-6 overflow-x-auto px-4"
+    >
       <ul className="flex gap-6">
         {items.map((item) => {
           const label = `${item.volumeMl} мл`;
-          const kind = repeated.has(item.volumeMl) ? formatKind(item.categoryName) : null;
+          const kind = repeated.has(item.volumeMl)
+            ? formatKind(item.categoryName)
+            : null;
           const body = (
             <>
               <span className="text-ink block text-base leading-none font-extrabold tabular-nums">
                 {label}
               </span>
-              {kind ? <span className="text-muted mt-1 block text-xs">{kind}</span> : null}
+              {kind ? (
+                <span className="text-muted mt-1 block text-xs">{kind}</span>
+              ) : null}
               {showPrices ? (
                 <span className="text-price mt-1.5 block text-sm font-bold tabular-nums">
                   {formatRub(item.priceKop)}
@@ -446,7 +459,10 @@ function Conditions({
   showPrices: boolean;
 }) {
   return (
-    <section aria-labelledby="conditions" className="bg-night text-on-night mt-6 rounded-lg p-5">
+    <section
+      aria-labelledby="conditions"
+      className="bg-night text-on-night mt-6 rounded-lg p-5"
+    >
       <h2 id="conditions" className="display-caps text-lg">
         Условия
       </h2>
@@ -593,17 +609,25 @@ function Tag({ children }: { children: React.ReactNode }) {
 /**
  * The share link.
  *
- * `t.me/<bot>?startapp=p_<slug>` opens the Mini App straight on this product,
- * which is what a buyer forwarding it to a colleague wants — not a web page the
- * colleague then has to find inside Telegram.
+ * With BOT_USERNAME set it is `t.me/<bot>?start=p_<slug>`: the colleague it is
+ * forwarded to lands in the bot, and /start points «Открыть каталог» at this
+ * product (miniAppUrlFor in src/bot/handlers/start.ts reads `p_<slug>`).
  *
- * Without BOT_USERNAME there is no such link, so it falls back to the public
- * site. Local work has no bot configured and the button still has to do
- * something honest.
+ * `?start=`, not `?startapp=`. The latter would skip the bot and open the Mini
+ * App directly, but only for a bot with a Main Mini App configured in
+ * BotFather, and it hands the product over as start_param, which nothing in
+ * the storefront reads — the link opened the catalog's home page instead.
+ *
+ * Telegram passes a start payload of at most 64 characters, so a slug longer
+ * than the room left after `p_` falls back to the storefront's own address.
+ * So does every product when BOT_USERNAME is unset, which is how production
+ * runs: that address opens this product too, in or out of Telegram.
  */
 function shareLink(slug: string): string {
-  const bot = process.env.BOT_USERNAME;
-  if (bot) return `https://t.me/${bot}?startapp=p_${slug}`;
+  const bot = process.env.BOT_USERNAME?.trim().replace(/^@/, "");
+  if (bot && /^[a-z0-9-]{1,62}$/.test(slug)) {
+    return `https://t.me/${bot}?start=p_${slug}`;
+  }
   const site = process.env.MINI_APP_URL ?? "";
   return `${site.replace(/\/+$/, "")}/p/${slug}`;
 }

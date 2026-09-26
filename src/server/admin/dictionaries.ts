@@ -51,27 +51,45 @@ export interface CategoryRow {
   coverKey: string | null;
   sortOrder: number;
   isPublished: boolean;
+  /** Every product in it, drafts included — what deleting it would strand. */
   productCount: number;
+  /**
+   * Only the published ones — what a buyer sees. The storefront lists a
+   * category only once this is above zero, and without the number the owner
+   * sees «3 товара» on a category that is not on the storefront at all.
+   */
+  publishedCount: number;
 }
 
 export async function listCategories(): Promise<CategoryRow[]> {
   await requireAdminPage();
-  const rows = await prisma.category.findMany({
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      subtitle: true,
-      slug: true,
-      coverKey: true,
-      sortOrder: true,
-      isPublished: true,
-      _count: { select: { products: true } },
-    },
-  });
+  // Two queries, because one relation cannot be counted twice with different
+  // filters in a single `_count`.
+  const [rows, published] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        subtitle: true,
+        slug: true,
+        coverKey: true,
+        sortOrder: true,
+        isPublished: true,
+        _count: { select: { products: true } },
+      },
+    }),
+    prisma.product.groupBy({
+      by: ["categoryId"],
+      where: { status: "PUBLISHED" },
+      _count: { _all: true },
+    }),
+  ]);
+  const publishedIn = new Map(published.map((g) => [g.categoryId, g._count._all]));
   return rows.map(({ _count, ...rest }) => ({
     ...rest,
     productCount: _count.products,
+    publishedCount: publishedIn.get(rest.id) ?? 0,
   }));
 }
 

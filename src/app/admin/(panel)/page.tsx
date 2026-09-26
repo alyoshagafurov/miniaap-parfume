@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { SectionHeading } from "@/components/ui/GoldRule";
 import { GOODS, plural } from "@/lib/format";
-import { getDashboardCounts } from "@/server/admin/dashboard";
+import { attentionRows, getDashboardCounts } from "@/server/admin/dashboard";
 import { currentSession } from "@/server/auth/roles";
 
 export const metadata = { title: "Админка" };
@@ -16,9 +16,14 @@ export const metadata = { title: "Админка" };
  * things and the one action that matters most, then white stages to press.
  *
  * What it answers is what the owner opens the panel to ask. How much of the
- * catalog is live, what is half-done — drafts and products with no photograph,
- * shown only when there are any, because a row saying «0» is a row asking to be
- * read for nothing — and where everything else is.
+ * catalog is live, what is waiting — new requests, drafts, products with no
+ * photograph, shown only when there are any, because a row saying «0» is a row
+ * asking to be read for nothing — and where everything else is.
+ *
+ * Requests are not among the sections below, and that is the client's choice:
+ * five sections, orders not one of them. The Telegram notice is how a request
+ * normally arrives; «Новые заявки» under «Доделать» is how one that was missed
+ * is still found.
  */
 export default function AdminHomePage() {
   return (
@@ -35,14 +40,14 @@ async function Overview() {
   const [counts, session] = await Promise.all([getDashboardCounts(), currentSession()]);
   const isOwner = session?.role === "OWNER";
 
-  const attention = [
-    { href: "/admin/products?status=DRAFT", label: "Черновики", count: counts.drafts },
-    {
-      href: "/admin/products?photo=none",
-      label: "Без фото",
-      count: counts.withoutPhoto,
-    },
-  ].filter((row) => row.count > 0);
+  const attention = attentionRows(counts);
+
+  // On an empty catalog the first step is a category, not a product: a product
+  // cannot be saved without one, so the main button leads where the work starts.
+  const firstStep =
+    counts.categories === 0
+      ? { href: "/admin/categories", label: "Создать категорию" }
+      : { href: "/admin/products/new", label: "Новый товар" };
 
   return (
     <>
@@ -56,10 +61,10 @@ async function Overview() {
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <Link
-            href="/admin/products/new"
+            href={firstStep.href}
             className="bg-on-night text-night focus-visible:outline-on-night inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
           >
-            Новый товар
+            {firstStep.label}
           </Link>
           <Link
             href="/"

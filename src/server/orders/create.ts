@@ -333,13 +333,23 @@ export async function createOrder(
   });
 
   // Told about, not dependent on. The request is committed; a relay that is
-  // briefly unreachable must not turn a recorded order into a lost one, so
-  // every failure here is swallowed and the admin panel remains the record.
+  // briefly unreachable must not turn a recorded order into a lost one, so no
+  // failure here reaches the buyer and the admin panel remains the record.
+  //
+  // Swallowed from the buyer, not from the operator. This used to be silent
+  // end to end: a wrong ADMIN_CHAT_ID, a manager who never pressed /start, a
+  // bot removed from the group — each left requests piling up unseen with not
+  // one line in the logs. Now each leaves one, and the line carries the order
+  // number and Telegram's reason only. Never the chat id, the buyer's name or
+  // phone, or what they ordered: the number is enough to find the rest in the
+  // panel, and logs are not where personal data goes.
   try {
-    await notifyNewOrder(
+    const notified = await notifyNewOrder(
       telegramApi(),
       {
-        adminChatId: process.env.ADMIN_CHAT_ID ?? null,
+        // Blank is unset: a stray space would otherwise be sent to Telegram as a
+        // chat id and fail as «chat not found», blaming the wrong thing.
+        adminChatId: process.env.ADMIN_CHAT_ID?.trim() || null,
         adminOrderUrl: (id) =>
           `${(process.env.MINI_APP_URL ?? "").replace(/\/+$/, "")}/admin/orders/${id}`,
         markBlocked: async (id) => {
@@ -369,9 +379,28 @@ export async function createOrder(
       },
       { showPrices: settings.showPrices },
     );
-  } catch {
-    // Includes the case where BOT_TOKEN is not configured at all, which is
-    // exactly the state this project is in until the client supplies one.
+    if (!notified.managerNotified) {
+      console.error(
+        `Заявка ${created.number}: менеджер не получил уведомление — ${
+          notified.managerError ?? "причина неизвестна"
+        }`,
+      );
+    }
+    if (notified.buyerError) {
+      console.warn(
+        `Заявка ${created.number}: покупателю не ушло подтверждение — ${notified.buyerError}`,
+      );
+    }
+  } catch (error) {
+    // In practice only telegramApi() lands here, when BOT_TOKEN is missing:
+    // notifyNewOrder catches everything of its own. Its message names the
+    // variable and nothing else; anything stranger is logged by message alone,
+    // for the same reason as above.
+    console.error(
+      `Заявка ${created.number}: уведомления не отправлены — ${
+        error instanceof Error ? error.message : "неизвестная ошибка"
+      }`,
+    );
   }
 
   return {

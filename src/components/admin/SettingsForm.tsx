@@ -140,10 +140,13 @@ export function SettingsForm({
             </div>
           </div>
 
+          {/* The bot is the only reader of this text. The hint said «на главной
+              и в боте», and the client would have written terms for a
+              storefront that never prints them. */}
           <Field
             label="Условия доставки"
             htmlFor="deliveryTerms"
-            hint="Текст на главной и в боте"
+            hint="Бот присылает этот текст по кнопке «Условия и доставка». На сайте он не выводится"
           >
             <TextArea id="deliveryTerms" {...form.register("deliveryTerms")} />
           </Field>
@@ -151,10 +154,13 @@ export function SettingsForm({
 
         <section className="stage flex flex-col gap-5 p-5">
           <h2 className="display-caps text-ink text-lg">Приветствие бота</h2>
+          {/* Free text, not a template: a phone or an address typed into it
+              stays as typed when «Контакты» above change, so the hint says
+              where to fix it. */}
           <Field
             label="Текст"
             htmlFor="botGreeting"
-            hint="Первое, что видит покупатель после /start"
+            hint="Первое, что видит покупатель после /start. Это свободный текст: телефон или адрес внутри него меняются здесь, а не в «Контактах»"
           >
             <TextArea id="botGreeting" {...form.register("botGreeting")} />
           </Field>

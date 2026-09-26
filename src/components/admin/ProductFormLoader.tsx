@@ -33,30 +33,60 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
     );
   }
 
+  // Every product lives in a category, and on an empty catalog there is none
+  // to choose. The form used to render anyway, with an empty select that
+  // refused the save and said nothing — on the very first thing the owner
+  // tries. Only a new product can get here: an existing one has a category.
+  if (categories.length === 0) {
+    return (
+      <>
+        <BackLink />
+        <h1 className="display-caps text-ink text-h1">Новый товар</h1>
+        <div className="stage mt-6 p-5">
+          <p className="text-ink text-lg font-bold">Сначала создайте категорию</p>
+          <p className="text-muted mt-2 text-sm leading-snug">
+            Каждый товар лежит в категории — например, «Парфюм 35&nbsp;мл». Создайте
+            хотя бы одну и возвращайтесь сюда.
+          </p>
+          <Link
+            href="/admin/categories"
+            className="bg-night text-on-night mt-5 inline-flex min-h-11 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
+          >
+            Перейти в «Категории»
+          </Link>
+        </div>
+      </>
+    );
+  }
+
   const first = categories[0]?.id ?? "";
 
   return (
     <>
       <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <Link
-            href="/admin/products"
-            className="text-muted hover:text-ink inline-flex min-h-11 items-center text-sm font-semibold"
-          >
-            ← Все товары
-          </Link>
+          <BackLink />
           <h1 className="display-caps text-ink text-h1">
             {product ? product.title : "Новый товар"}
           </h1>
           {product ? (
             <p className="text-muted mt-1 text-sm">
               {product.sku} ·{" "}
-              <Link
-                href={`/p/${product.slug}`}
-                className="underline underline-offset-4"
-              >
-                открыть на витрине
-              </Link>
+              {/* Only a published product has a storefront page. The link used
+                  to be here for drafts too and opened «Такой страницы нет»,
+                  which read as the save having failed. */}
+              {product.status === "PUBLISHED" ? (
+                <Link
+                  href={`/p/${product.slug}`}
+                  className="underline underline-offset-4"
+                >
+                  открыть на витрине
+                </Link>
+              ) : product.status === "ARCHIVED" ? (
+                "в архиве, покупатели его не видят"
+              ) : (
+                "черновик, покупатели его не видят"
+              )}
             </p>
           ) : null}
         </div>
@@ -88,5 +118,16 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
         }}
       />
     </>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link
+      href="/admin/products"
+      className="text-muted hover:text-ink inline-flex min-h-11 items-center text-sm font-semibold"
+    >
+      ← Все товары
+    </Link>
   );
 }

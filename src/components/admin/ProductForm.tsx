@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useForm, type FieldPath } from "react-hook-form";
 
 import {
   copyProduct,
@@ -52,6 +52,57 @@ export interface ProductFormProps {
 }
 
 /**
+ * The article's charset, checked before the request.
+ *
+ * The same class as the server's rule. Surrounding spaces are allowed because
+ * the server trims them, and refusing here what the server would accept is
+ * a second rule nobody wrote down. What it catches is the case that cannot be
+ * seen: «АР-101» typed on a Russian layout looks exactly like «AR-101».
+ */
+const SKU_RULE = {
+  value: /^\s*[A-Za-z0-9._-]+\s*$/,
+  message:
+    "Только латинские буквы, цифры, точка, дефис, подчёркивание — без пробелов внутри и русских букв",
+};
+
+/** What a save says, by what the product became. */
+const SAVED_MESSAGES: Record<PublishStatusName, string> = {
+  DRAFT:
+    "Сохранено как черновик. Покупатели его не видят — чтобы показать, выберите статус «Опубликован».",
+  PUBLISHED: "Сохранено. Товар уже на витрине.",
+  ARCHIVED: "Сохранено. Товар в архиве — покупатели его не видят.",
+};
+
+/**
+ * The server names fields as it stores them; the form, as they are typed.
+ * Fragrances have no input of their own — the notice is the whole answer.
+ */
+const SERVER_FIELDS: Partial<Record<string, FieldPath<ProductFormValues>>> = {
+  categoryId: "categoryId",
+  sku: "sku",
+  title: "title",
+  slug: "slug",
+  volumeMl: "volume",
+  priceKop: "price",
+  oldPriceKop: "oldPrice",
+  packSize: "packSize",
+  stock: "stock",
+  status: "status",
+  popularity: "popularity",
+};
+
+/** The same mapping for the copy form, which asks for five of them. */
+const COPY_FIELDS: Partial<
+  Record<string, "categoryId" | "sku" | "volume" | "price" | "packSize">
+> = {
+  categoryId: "categoryId",
+  sku: "sku",
+  volumeMl: "volume",
+  priceKop: "price",
+  packSize: "packSize",
+};
+
+/**
  * The product form.
  *
  * react-hook-form through a transition, not `<form action={...}>`: React resets
@@ -76,11 +127,51 @@ export function ProductForm({
   brands,
 }: ProductFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const form = useForm<ProductFormValues>({ defaultValues: initial });
   const [fragrances, setFragrances] = useState<PickedFragrance[]>(initialFragrances);
   const [pending, startTransition] = useTransition();
   const [notice, setNotice] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+
+  /**
+   * The status the last save left the product in, or null before any save.
+   *
+   * A status and not a flag, because "saved" is only half an answer: a new
+   * product is a draft, and the message that used to say «Витрина уже
+   * показывает новые данные» was false for every product anybody created.
+   *
+   * Seeded from `?saved=1`, because creating a product moves from /new to
+   * /[id] — a different page, so a fresh form with fresh state — and the
+   * confirmation has to survive the move. Read once, in the initializer, from
+   * the router's own params: the address bar is updated only after this tree
+   * commits, so `window.location` would still say /new here. Both pages render
+   * this form inside <Suspense>, which `useSearchParams` needs to build.
+   */
+  const [saved, setSaved] = useState<PublishStatusName | null>(() =>
+    searchParams.get("saved") === "1" ? initial.status : null,
+  );
+
+  // The flag has done its job once it is in state; left in the address, a
+  // reload a day later would announce a save that did not just happen.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("saved")) return;
+    url.searchParams.delete("saved");
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, []);
+
+  /**
+   * Brought into view without animation.
+   *
+   * The messages sit beside «Сохранить», but a save that creates a product
+   * lands on a new page, and a refusal can arrive while the thumb has moved
+   * on. "nearest" does nothing when the message is already on screen, and
+   * there is no smooth scroll: motion here is for sheets and modals only.
+   */
+  const statusRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (notice || saved) statusRef.current?.scrollIntoView({ block: "nearest" });
+  }, [notice, saved]);
 
   const generatedTitle =
     fragrances.length > 0
@@ -89,7 +180,7 @@ export function ProductForm({
 
   const submit = form.handleSubmit((values) => {
     setNotice(null);
-    setSaved(false);
+    setSaved(null);
 
     if (fragrances.length === 0) {
       setNotice("Выберите хотя бы один аромат");
@@ -129,35 +220,24 @@ export function ProductForm({
 
       if (!result.ok) {
         setNotice(result.message);
+        // Also against the field itself, so the one that is wrong turns red
+        // rather than leaving her to match a sentence to an input.
+        const field = result.field ? SERVER_FIELDS[result.field] : undefined;
+        if (field) form.setError(field, { type: "server", message: result.message });
         return;
       }
-      setSaved(true);
+      setSaved(values.status);
       // A new product becomes an existing one: without this the next save
       // would create a second row with the same article and be refused.
-      if (!productId) router.replace(`/admin/products/${result.id}`);
+      // No scroll to the top: the confirmation is beside the button.
+      if (!productId)
+        router.replace(`/admin/products/${result.id}?saved=1`, { scroll: false });
       else router.refresh();
     });
   });
 
   return (
     <div className="flex flex-col gap-4">
-      {notice ? (
-        <p
-          role="alert"
-          className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
-        >
-          {notice}
-        </p>
-      ) : null}
-      {saved ? (
-        <p
-          role="status"
-          className="bg-night text-on-night rounded-md p-4 text-sm font-semibold"
-        >
-          Сохранено. Витрина уже показывает новые данные.
-        </p>
-      ) : null}
-
       <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
         <section className="stage p-5">
           <FragrancePicker
@@ -168,10 +248,14 @@ export function ProductForm({
         </section>
 
         <section className="stage grid gap-5 p-5 sm:grid-cols-2">
-          <Field label="Категория" htmlFor="categoryId">
+          <Field
+            label="Категория"
+            htmlFor="categoryId"
+            error={form.formState.errors.categoryId?.message}
+          >
             <select
               id="categoryId"
-              {...form.register("categoryId", { required: true })}
+              {...form.register("categoryId", { required: "Выберите категорию" })}
               className="bg-surface text-ink border-control w-full rounded-md border px-3 py-3 text-base"
             >
               {categories.map((c) => (
@@ -186,12 +270,15 @@ export function ProductForm({
             label="Артикул"
             htmlFor="sku"
             error={form.formState.errors.sku?.message}
-            hint="Тот же, что на складе — по нему идёт импорт"
+            hint="Латиница и цифры, как на складе — по нему идёт импорт"
           >
             <TextInput
               id="sku"
               invalid={!!form.formState.errors.sku}
-              {...form.register("sku", { required: "Укажите артикул" })}
+              {...form.register("sku", {
+                required: "Укажите артикул",
+                pattern: SKU_RULE,
+              })}
             />
           </Field>
 
@@ -255,7 +342,15 @@ export function ProductForm({
             </select>
           </Field>
 
-          <Field label="Статус" htmlFor="status">
+          <Field
+            label="Статус"
+            htmlFor="status"
+            hint={
+              productId
+                ? "Черновик и архив покупатели не видят — на витрине только «Опубликован»"
+                : "Новый товар сохраняется черновиком: покупатели увидят его, когда выберете «Опубликован»"
+            }
+          >
             <select
               id="status"
               {...form.register("status")}
@@ -312,6 +407,7 @@ export function ProductForm({
               label="Старая цена, ₽"
               htmlFor="oldPrice"
               hint="Необязательно. Показывается зачёркнутой и должна быть больше текущей"
+              error={form.formState.errors.oldPrice?.message}
             >
               <TextInput
                 id="oldPrice"
@@ -324,6 +420,7 @@ export function ProductForm({
               label="Популярность"
               htmlFor="popularity"
               hint="Чем больше, тем выше в списках"
+              error={form.formState.errors.popularity?.message}
             >
               <TextInput
                 id="popularity"
@@ -335,6 +432,7 @@ export function ProductForm({
               label="Название"
               htmlFor="title"
               hint="Пусто — соберётся из бренда и ароматов"
+              error={form.formState.errors.title?.message}
             >
               <TextInput
                 id="title"
@@ -346,6 +444,7 @@ export function ProductForm({
               label="Адрес (slug)"
               htmlFor="slug"
               hint="Пусто — соберётся из названия и артикула"
+              error={form.formState.errors.slug?.message}
             >
               <TextInput
                 id="slug"
@@ -355,6 +454,25 @@ export function ProductForm({
             </Field>
           </div>
         </details>
+
+        <div ref={statusRef} className="flex flex-col gap-3 empty:hidden">
+          {notice ? (
+            <p
+              role="alert"
+              className="border-danger bg-danger-wash text-ink rounded-md border p-3 text-sm"
+            >
+              {notice}
+            </p>
+          ) : null}
+          {saved ? (
+            <p
+              role="status"
+              className="bg-night text-on-night rounded-md p-4 text-sm font-semibold"
+            >
+              {SAVED_MESSAGES[saved]}
+            </p>
+          ) : null}
+        </div>
 
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <Button type="submit" loading={pending}>
@@ -460,6 +578,8 @@ function CopyToFormat({
       });
       if (!result.ok) {
         setError(result.message);
+        const field = result.field ? COPY_FIELDS[result.field] : undefined;
+        if (field) form.setError(field, { type: "server", message: result.message });
         return;
       }
       // Straight into the copy: it is a draft with no photographs, and that is
@@ -491,8 +611,19 @@ function CopyToFormat({
             ))}
           </select>
         </Field>
-        <Field label="Новый артикул" htmlFor="copy-sku">
-          <TextInput id="copy-sku" {...form.register("sku", { required: true })} />
+        <Field
+          label="Новый артикул"
+          htmlFor="copy-sku"
+          error={form.formState.errors.sku?.message}
+        >
+          <TextInput
+            id="copy-sku"
+            invalid={!!form.formState.errors.sku}
+            {...form.register("sku", {
+              required: "Укажите артикул",
+              pattern: SKU_RULE,
+            })}
+          />
         </Field>
         <Field label="Объём, мл" htmlFor="copy-volume">
           <TextInput

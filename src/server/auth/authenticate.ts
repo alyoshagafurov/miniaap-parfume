@@ -69,15 +69,27 @@ async function findAdmin(login: string) {
   });
 }
 
+/**
+ * What the limiter said, as two facts rather than one.
+ *
+ * `unavailable` is a refusal the store could not back with a count — Redis
+ * down or unconfigured. It is passed on separately so decideLogin can refuse
+ * it (still closed) with a message that does not accuse anyone of guessing.
+ */
+interface Throttle {
+  limited: boolean;
+  unavailable: boolean;
+}
+
 async function throttled(
   keys: readonly string[],
   config: typeof LOGIN_LIMIT,
-): Promise<boolean> {
+): Promise<Throttle> {
   for (const key of keys) {
     const result = await rateLimit(key, config);
-    if (!result.allowed) return true;
+    if (!result.allowed) return { limited: true, unavailable: result.storeUnavailable };
   }
-  return false;
+  return { limited: false, unavailable: false };
 }
 
 /**
@@ -122,9 +134,9 @@ export async function loginFromTelegram(input: {
   initDataRaw: string;
   ip: string;
 }): Promise<LoginResult> {
-  const rateLimited = await throttled([`login:ip:${input.ip}`], LOGIN_LIMIT);
+  const throttle = await throttled([`login:ip:${input.ip}`], LOGIN_LIMIT);
 
-  const admin = rateLimited ? null : await findAdmin(input.login);
+  const admin = throttle.limited ? null : await findAdmin(input.login);
   const identity = verifyInitData(input.initDataRaw, process.env.BOT_TOKEN);
 
   // Always spend the argon2 time, even when there is no such administrator:
@@ -148,7 +160,8 @@ export async function loginFromTelegram(input: {
     initDataValid: identity.ok,
     initDataTelegramId: identity.ok ? identity.user.telegramId : null,
     adminTelegramId: admin?.telegramId ?? null,
-    rateLimited,
+    rateLimited: throttle.limited,
+    limiterUnavailable: throttle.unavailable,
   });
 
   if (decision.outcome === "REJECT") await chargeFailure(input.login);
@@ -184,9 +197,9 @@ export async function loginFromBrowser(input: {
   password: string;
   ip: string;
 }): Promise<LoginResult> {
-  const rateLimited = await throttled([`login:ip:${input.ip}`], LOGIN_LIMIT);
+  const throttle = await throttled([`login:ip:${input.ip}`], LOGIN_LIMIT);
 
-  const admin = rateLimited ? null : await findAdmin(input.login);
+  const admin = throttle.limited ? null : await findAdmin(input.login);
   const passwordMatches = admin
     ? await verifyPassword(admin.passwordHash, input.password)
     : (await constantTimeReject(verifyPassword), false);
@@ -202,7 +215,8 @@ export async function loginFromBrowser(input: {
         }
       : null,
     passwordMatches,
-    rateLimited,
+    rateLimited: throttle.limited,
+    limiterUnavailable: throttle.unavailable,
     requireCode: requireLoginCode(),
   });
 
@@ -288,12 +302,12 @@ export async function confirmLoginCode(input: {
   code: string;
   ip: string;
 }): Promise<CodeResult> {
-  const rateLimited = await throttled(
+  const throttle = await throttled(
     [`code:ip:${input.ip}`, `code:id:${input.login.trim().toLowerCase()}`],
     CODE_LIMIT,
   );
 
-  const admin = rateLimited ? null : await findAdmin(input.login);
+  const admin = throttle.limited ? null : await findAdmin(input.login);
 
   // The newest unused code for this administrator. Requesting a second code
   // does not invalidate the first here — it simply stops being the newest, and
@@ -325,7 +339,8 @@ export async function confirmLoginCode(input: {
         }
       : null,
     codeMatches,
-    rateLimited,
+    rateLimited: throttle.limited,
+    limiterUnavailable: throttle.unavailable,
   });
 
   if (decision.consumeAttempt && stored) {

@@ -3,20 +3,36 @@ import Redis from "ioredis";
 /**
  * Rate limiting.
  *
- * Protects the two places where repetition is the attack: admin login
- * (5 per 15 minutes) and order submission (5 per 10 minutes, per user and per
- * IP separately).
+ * Guards the places where repetition is the attack. The limits live with their
+ * callers; as of this writing:
+ *
+ *   admin login — 10 per 10 minutes per IP, refused outright. There is also a
+ *   per-login bucket with the same numbers, but it is charged only by a failed
+ *   attempt and never refuses: once spent it slows each further wrong answer
+ *   by a second. Refusing on it would let anyone lock the owner out of their
+ *   own panel by guessing at their login (src/server/auth/authenticate.ts).
+ *
+ *   login code, where a deployment asks for one — 10 per 10 minutes, per IP
+ *   and per login.
+ *
+ *   order submission — 5 per 10 minutes, per IP and per Telegram account
+ *   separately (src/server/orders/create.ts).
+ *
+ *   storefront paging and live search — 60 a minute per IP, one bucket for
+ *   both, which a person scrolling never reaches.
  *
  * A sliding window, not a fixed one. A fixed window resets on a clock boundary,
- * which lets twice the limit through by straddling it — 10 password attempts
- * instead of 5. The window here is a sorted set of attempt timestamps: old
+ * which lets twice the limit through by straddling it — 20 password attempts
+ * instead of 10. The window here is a sorted set of attempt timestamps: old
  * entries are dropped, the rest counted, and a new one added only if the
- * attempt is allowed. At these limits the set holds a handful of members, so
+ * attempt is allowed. At these limits the set holds at most sixty members, so
  * the cost is trivial.
  *
  * It fails CLOSED. A rate limiter that fails open is not a rate limiter: if
  * Redis is down, the endpoints it guards must refuse rather than become
- * unlimited.
+ * unlimited. Such a refusal carries `storeUnavailable`, so a caller can say the
+ * service is down instead of telling someone on their first try that they have
+ * tried too often.
  */
 
 export interface RateLimitOptions {

@@ -6,9 +6,9 @@ import { prisma } from "@/server/db";
  * The administrators.
  *
  * Presence here is the allow-list: the Telegram id is what the Mini App login
- * checks against, and the browser login sends the code to it. A password is
- * always required as well — a phone left on a counter is exactly the case the
- * second factor guards.
+ * checks against and what the bot recognises before it shows the «Админ-панель»
+ * button. A password is always required as well — a phone left on a counter is
+ * exactly the case the second factor guards.
  *
  * `telegramId` is a string in every shape below, and that is not cosmetic. It
  * is a BigInt in the database, and a BigInt does not cross into a client
@@ -58,32 +58,61 @@ export interface AdminInput {
   password: string;
 }
 
+/**
+ * The form's fields, in the order the form shows them.
+ *
+ * A refusal names the field it is about, so the screen can put the reason under
+ * that field. «Проверьте заполнение формы» over five fields was the whole
+ * explanation before, and the owner adding a manager had to guess which of the
+ * five was wrong.
+ */
+export const ADMIN_FIELDS = [
+  "name",
+  "login",
+  "telegramId",
+  "role",
+  "password",
+] as const;
+export type AdminField = (typeof ADMIN_FIELDS)[number];
+export type AdminFieldErrors = Partial<Record<AdminField, string>>;
+
 export class AdminConflict extends Error {
-  constructor(message: string) {
+  /** Empty when the refusal is about the account, not about one field. */
+  readonly fields: AdminFieldErrors;
+
+  constructor(message: string, fields: AdminFieldErrors = {}) {
     super(message);
     this.name = "AdminConflict";
+    this.fields = fields;
   }
 }
 
-function parseTelegramId(value: string): bigint {
-  const digits = value.trim();
+/** One refusal per field at once, led by the first in the form's order. */
+function fieldConflict(fields: AdminFieldErrors): AdminConflict {
+  const first = ADMIN_FIELDS.map((field) => fields[field]).find(Boolean);
+  return new AdminConflict(first ?? "Проверьте поля формы", fields);
+}
+
+/**
+ * Where a Telegram id comes from.
+ *
+ * Telegram's own interface never shows a person their numeric id, so every
+ * message that asks for one says how to get it: the bot answers /id with it.
+ * This used to point at /admin, which answers a stranger with «only for
+ * administrators» and no number — a dead end for exactly the person being
+ * added.
+ */
+const TELEGRAM_ID_SOURCE = "Человек узнает его, отправив нашему боту /id.";
+
+function telegramIdProblem(digits: string): string | null {
+  if (digits === "") return `Укажите Telegram ID. ${TELEGRAM_ID_SOURCE}`;
   if (!/^\d{5,20}$/.test(digits)) {
-    throw new AdminConflict(
-      "Telegram ID — это число. Его покажет бот по команде /admin.",
-    );
+    return `Telegram ID — это число, а не @имя. ${TELEGRAM_ID_SOURCE}`;
   }
-  return BigInt(digits);
+  return null;
 }
 
-function normalizeLogin(value: string): string {
-  const login = value.trim().toLowerCase();
-  if (!/^[a-z0-9._-]{3,32}$/.test(login)) {
-    throw new AdminConflict(
-      "Логин: 3–32 символа, латиница, цифры, точка, дефис, подчёркивание",
-    );
-  }
-  return login;
-}
+const LOGIN_RULE = "Логин: 3–32 символа, латиница, цифры, точка, дефис, подчёркивание";
 
 /**
  * The password floor, in one place.
@@ -99,37 +128,70 @@ function normalizeLogin(value: string): string {
  */
 const MIN_PASSWORD = 10;
 
-function assertPassword(
+function passwordProblem(
   password: string,
   { allowEmpty }: { allowEmpty: boolean },
-): void {
-  if (allowEmpty && password === "") return;
+): string | null {
+  if (allowEmpty && password === "") return null;
   if (password.length < MIN_PASSWORD) {
-    throw new AdminConflict(`Пароль не короче ${MIN_PASSWORD} символов`);
+    return `Пароль не короче ${MIN_PASSWORD} символов`;
   }
+  return null;
+}
+
+/**
+ * Every rule for the fields, checked together.
+ *
+ * All of them rather than the first: a form that reports one mistake per press
+ * of «Сохранить» turns three mistakes into three round trips. The rules live
+ * here and not in the action's schema because this module is reachable from
+ * places other than that action, and a rule stated twice drifts.
+ */
+function checkInput(
+  input: AdminInput,
+  { allowEmptyPassword }: { allowEmptyPassword: boolean },
+): { login: string; name: string; telegramId: bigint } {
+  const errors: AdminFieldErrors = {};
+
+  const name = input.name.trim();
+  if (name === "") errors.name = "Укажите имя";
+
+  const login = input.login.trim().toLowerCase();
+  if (!/^[a-z0-9._-]{3,32}$/.test(login)) errors.login = LOGIN_RULE;
+
+  const digits = input.telegramId.trim();
+  const telegramId = telegramIdProblem(digits);
+  if (telegramId) errors.telegramId = telegramId;
+
+  const password = passwordProblem(input.password, { allowEmpty: allowEmptyPassword });
+  if (password) errors.password = password;
+
+  if (Object.keys(errors).length > 0) throw fieldConflict(errors);
+  return { login, name, telegramId: BigInt(digits) };
+}
+
+/** A login or a Telegram id somebody else already has. */
+function clashConflict(clashLogin: string, login: string): AdminConflict {
+  return clashLogin === login
+    ? fieldConflict({ login: "Такой логин уже занят" })
+    : fieldConflict({ telegramId: "Этот Telegram ID уже в списке" });
 }
 
 export async function createAdmin(input: AdminInput): Promise<{ id: string }> {
   await requirePermission("admins:write");
 
-  const login = normalizeLogin(input.login);
-  const telegramId = parseTelegramId(input.telegramId);
-  assertPassword(input.password, { allowEmpty: false });
+  const { login, name, telegramId } = checkInput(input, { allowEmptyPassword: false });
 
   const clash = await prisma.adminUser.findFirst({
     where: { OR: [{ login }, { telegramId }] },
     select: { login: true },
   });
-  if (clash) {
-    throw new AdminConflict(
-      clash.login === login ? "Такой логин уже занят" : "Этот Telegram ID уже в списке",
-    );
-  }
+  if (clash) throw clashConflict(clash.login, login);
 
   const created = await prisma.adminUser.create({
     data: {
       login,
-      name: input.name.trim(),
+      name,
       telegramId,
       role: input.role,
       passwordHash: await hashPassword(input.password),
@@ -142,31 +204,25 @@ export async function createAdmin(input: AdminInput): Promise<{ id: string }> {
 export async function updateAdmin(id: string, input: AdminInput): Promise<void> {
   const session = await requirePermission("admins:write");
 
-  const login = normalizeLogin(input.login);
-  const telegramId = parseTelegramId(input.telegramId);
-  assertPassword(input.password, { allowEmpty: true });
+  const { login, name, telegramId } = checkInput(input, { allowEmptyPassword: true });
 
   const clash = await prisma.adminUser.findFirst({
     where: { id: { not: id }, OR: [{ login }, { telegramId }] },
     select: { login: true },
   });
-  if (clash) {
-    throw new AdminConflict(
-      clash.login === login ? "Такой логин уже занят" : "Этот Telegram ID уже в списке",
-    );
-  }
+  if (clash) throw clashConflict(clash.login, login);
 
   // Demoting yourself is how a project ends up with no owner at all, and the
   // only way back is the command line.
   if (session.adminId === id && input.role !== "OWNER") {
-    throw new AdminConflict("Нельзя снять с себя роль владельца");
+    throw fieldConflict({ role: "Нельзя снять с себя роль владельца" });
   }
 
   await prisma.adminUser.update({
     where: { id },
     data: {
       login,
-      name: input.name.trim(),
+      name,
       telegramId,
       role: input.role,
       // An empty field means "leave it": an edit of somebody's name must not

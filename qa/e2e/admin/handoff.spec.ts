@@ -34,6 +34,21 @@ async function shot(page: import("@playwright/test").Page, name: string) {
 test.describe("Иллюстрации для HANDOFF.md", () => {
   test.describe.configure({ mode: "serial" });
 
+  // The document describes production, and production signs in on the
+  // password alone. Taken against the default build, the first picture showed
+  // «Получить код» and a promise of a Telegram code the client would never
+  // receive — and every ordinary run rewrote nine committed images for
+  // nothing. So these are taken only on purpose, the way production runs:
+  //
+  //   ADMIN_LOGIN_REQUIRE_CODE=0 pnpm test:e2e qa/e2e/admin/handoff.spec.ts
+  //
+  // (with no server already running on the port, so the one Playwright starts
+  // inherits the switch).
+  test.skip(
+    (process.env.ADMIN_LOGIN_REQUIRE_CODE ?? "1").trim() !== "0",
+    "HANDOFF.md показывает прод: вход только по паролю",
+  );
+
   test("снимает экраны, на которые ссылается документ", async ({ page }) => {
     // The login screen, before there is a session.
     await page.goto("/admin/login");

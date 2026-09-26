@@ -90,16 +90,31 @@ async function codeSentAfter(
   );
 }
 
-/** Password, then the code the bot sent. Leaves the page inside the panel. */
+/**
+ * Password, then — where the server asks for one — the code the bot sent.
+ * Leaves the page inside the panel.
+ *
+ * Production signs in on the password alone (ADMIN_LOGIN_REQUIRE_CODE=0) and
+ * the default build asks for the code, so the helper follows whichever form
+ * the server rendered. That is what lets the handover pictures be taken the
+ * way production has it without a second copy of the sign-in.
+ */
 export async function signIn(
   page: Page,
   who: { login: string; password: string; chatId: string } = OWNER,
 ): Promise<void> {
-  const from = relayLength();
-
   await page.goto("/admin/login");
   await page.getByLabel("Логин").fill(who.login);
   await page.getByLabel("Пароль").fill(who.password);
+
+  const direct = page.getByRole("button", { name: "Войти" });
+  if (await direct.isVisible()) {
+    await direct.click();
+    await expect(page).toHaveURL(/\/admin(?!\/login)/, { timeout: 15_000 });
+    return;
+  }
+
+  const from = relayLength();
   await page.getByRole("button", { name: "Получить код" }).click();
 
   const field = page.getByLabel("Код из Telegram");

@@ -1,4 +1,4 @@
-import { Api } from "grammy";
+import { Api, GrammyError } from "grammy";
 import { describe, expect, it, vi } from "vitest";
 
 import { notifyNewOrder, sendLoginCode, type NotifyDeps } from "./notify";
@@ -89,9 +89,10 @@ describe("notifyNewOrder", () => {
     expect(String(calls[0]?.payload.text)).not.toContain("12\u00a0400");
   });
 
-  it("does nothing, quietly, when no admin chat is configured", async () => {
+  it("sends nothing when no admin chat is configured, and says why", async () => {
     // A missing ADMIN_CHAT_ID must not fail the buyer's submission — their
-    // request is already recorded.
+    // request is already recorded. But it must not be silent either: the
+    // reason is what the caller writes to the log.
     const { api, calls } = recordingApi();
     const r = await notifyNewOrder(
       api,
@@ -101,6 +102,7 @@ describe("notifyNewOrder", () => {
     );
     expect(calls).toHaveLength(0);
     expect(r.managerNotified).toBe(false);
+    expect(r.managerError).toContain("ADMIN_CHAT_ID не задан");
   });
 
   it("also confirms to the buyer when Telegram vouched for them", async () => {
@@ -162,7 +164,89 @@ describe("notifyNewOrder", () => {
     api.config.use(() => Promise.reject(new Error("relay unreachable")));
     const r = await notifyNewOrder(api, deps(), { orderId: "o1", ...ORDER }, SETTINGS);
     expect(r.managerNotified).toBe(false);
-    expect(r.error).toBeTruthy();
+    expect(r.managerError).toBe("relay unreachable");
+  });
+
+  it("explains a wrong recipient in words safe for a log", async () => {
+    // The real thing, not a lookalike: grammY builds this from Telegram's
+    // answer, and it carries the whole request as `payload`.
+    const api = new Api("1:test", { apiRoot: "https://relay.example.net" });
+    api.config.use((_prev, method, payload) =>
+      Promise.reject(
+        new GrammyError(
+          `Call to '${method}' failed!`,
+          { ok: false, error_code: 400, description: "Bad Request: chat not found" },
+          method,
+          payload,
+        ),
+      ),
+    );
+
+    const r = await notifyNewOrder(api, deps(), { orderId: "o1", ...ORDER }, SETTINGS);
+
+    expect(r.managerNotified).toBe(false);
+    expect(r.managerError).toContain("chat not found");
+    expect(r.managerError).toContain("/start");
+    // Nothing that names the recipient or the buyer, nothing they ordered.
+    for (const leak of [
+      "-1001234567890",
+      ORDER.name,
+      ORDER.phone,
+      ORDER.city,
+      "Chanel",
+      "ARM-1001",
+    ]) {
+      expect(r.managerError).not.toContain(leak);
+    }
+  });
+
+  it("keeps the buyer's failure apart from the manager's", async () => {
+    const api = new Api("1:test", { apiRoot: "https://relay.example.net" });
+    let call = 0;
+    api.config.use((_prev, method, payload) => {
+      call++;
+      if (call === 2) {
+        return Promise.reject(
+          new GrammyError(
+            `Call to '${method}' failed!`,
+            { ok: false, error_code: 400, description: "Bad Request: chat not found" },
+            method,
+            payload,
+          ),
+        );
+      }
+      return Promise.resolve({ ok: true, result: { message_id: 1 } } as never);
+    });
+
+    const r = await notifyNewOrder(
+      api,
+      deps(),
+      { orderId: "o1", ...ORDER, telegramId: 501n },
+      SETTINGS,
+    );
+    expect(r.managerNotified).toBe(true);
+    expect(r.managerError).toBeUndefined();
+    expect(r.buyerNotified).toBe(false);
+    expect(r.buyerError).toContain("chat not found");
+    expect(r.buyerError).not.toContain("501");
+  });
+
+  it("gets a 200-line request to the manager in one message", async () => {
+    const { api, calls } = recordingApi();
+    const lines = Array.from({ length: 200 }, (_, i) => ({
+      title: `Chanel Coco Mademoiselle Eau de Parfum Intense ${i}`,
+      sku: `ARM-${2000 + i}`,
+      qty: 12,
+      lineTotalKop: 1_240_000,
+    }));
+    const r = await notifyNewOrder(
+      api,
+      deps(),
+      { orderId: "o1", ...ORDER, lines },
+      SETTINGS,
+    );
+    expect(r.managerNotified).toBe(true);
+    expect(String(calls[0]?.payload.text).length).toBeLessThanOrEqual(4096);
   });
 });
 

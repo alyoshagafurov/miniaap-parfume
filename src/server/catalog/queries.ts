@@ -89,6 +89,18 @@ export interface CategoryRow {
  * category sortOrder values default to 0, so the moment two categories share
  * that default the name becomes the effective sort key and the mis-ordering
  * becomes visible.
+ *
+ * Only categories with at least one published product. A category is created
+ * before anything is put in it and a new product starts as a draft, so for a
+ * while a shown category is an empty one — and listing it replaced the home
+ * page's «Каталог наполняется» with a row reading «0 товаров» that opened onto
+ * an empty page. The same list feeds the menu, the search prompt and the tabs
+ * over a category, so all four skip it until its first product is published.
+ * A direct link still opens it: getCategoryBySlug asks only whether the
+ * category itself is shown.
+ *
+ * No new tag is needed for that first publish. Every product mutation already
+ * invalidates CATALOG_TAG, which this entry carries.
  */
 export async function getCategories(): Promise<CategoryRow[]> {
   await io();
@@ -106,6 +118,8 @@ async function categories(): Promise<CategoryRow[]> {
         WHERE p."categoryId" = c.id AND p.status = 'PUBLISHED') AS "productCount"
     FROM categories c
     WHERE c."isPublished" = true
+      AND EXISTS (SELECT 1 FROM products p
+        WHERE p."categoryId" = c.id AND p.status = 'PUBLISHED')
     ORDER BY c."sortOrder" ASC, c.name COLLATE "ru-RU-x-icu" ASC, c.id ASC
   `;
 }

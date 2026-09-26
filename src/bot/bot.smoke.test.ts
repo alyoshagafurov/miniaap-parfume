@@ -77,6 +77,49 @@ function messageUpdate(text: string): Update {
   } as Update;
 }
 
+/** A manager group, for the updates that behave differently outside a private chat. */
+const GROUP_ID = -1_009_000_000_001;
+
+function groupCommandUpdate(text: string): Update {
+  return {
+    update_id: updateId++,
+    message: {
+      message_id: updateId,
+      date: 1_800_000_000,
+      chat: { id: GROUP_ID, type: "supergroup", title: "Менеджеры" },
+      from: { id: USER_ID, is_bot: false, first_name: "Тест", username: "tester" },
+      text,
+      entities: [
+        { type: "bot_command", offset: 0, length: text.split(" ")[0]!.length },
+      ],
+    },
+  } as Update;
+}
+
+/** The bot being taken out of a chat, by USER_ID. */
+function botRemovedUpdate(chat: {
+  id: number;
+  type: "private" | "supergroup";
+}): Update {
+  const bot = { id: BOT_INFO.id, is_bot: true, first_name: BOT_INFO.first_name };
+  return {
+    update_id: updateId++,
+    my_chat_member: {
+      chat:
+        chat.type === "private"
+          ? { id: chat.id, type: "private", first_name: "Тест" }
+          : { id: chat.id, type: "supergroup", title: "Менеджеры" },
+      from: { id: USER_ID, is_bot: false, first_name: "Тест" },
+      date: 1_800_000_000,
+      old_chat_member: { status: "member", user: bot },
+      new_chat_member:
+        chat.type === "private"
+          ? { status: "kicked", user: bot, until_date: 0 }
+          : { status: "left", user: bot },
+    },
+  } as Update;
+}
+
 function callbackUpdate(data: string): Update {
   return {
     update_id: updateId++,
@@ -156,6 +199,60 @@ describe.skipIf(!hasDb)(
       expect(text).toContain(settings.companyName);
     });
 
+    it("answers /id with the person's own id, ready to copy", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      await bot.handleUpdate(messageUpdate("/id"));
+
+      const sent = calls.find((c) => c.method === "sendMessage");
+      const text = String(sent?.payload.text ?? "");
+      expect(text).toContain(`Ваш Telegram ID: ${USER_ID}`);
+      // Marked as code over exactly the number, so one tap copies it.
+      const entities = sent?.payload.entities as
+        Array<{ type: string; offset: number; length: number }> | undefined;
+      const code = entities?.find((e) => e.type === "code");
+      expect(code && text.slice(code.offset, code.offset + code.length)).toBe(
+        String(USER_ID),
+      );
+    });
+
+    it("answers /id in a group with the group's id, for ADMIN_CHAT_ID", async () => {
+      const { bot, calls } = harness();
+      await bot.init();
+      await bot.handleUpdate(groupCommandUpdate("/id@arumi_test_bot"));
+
+      const sent = calls.find((c) => c.method === "sendMessage");
+      expect(sent?.payload.chat_id).toBe(GROUP_ID);
+      const text = String(sent?.payload.text ?? "");
+      expect(text).toContain(`ID этой группы: ${GROUP_ID}`);
+      // The id of the chat, not of the person who asked.
+      expect(text).not.toContain(String(USER_ID));
+    });
+
+    it("does not read removal from a group as the remover blocking the bot", async () => {
+      const { bot } = harness();
+      const { prisma } = await import("@/server/db");
+      await bot.init();
+
+      await bot.handleUpdate(botRemovedUpdate({ id: GROUP_ID, type: "supergroup" }));
+      const afterGroup = await prisma.telegramUser.findUnique({
+        where: { telegramId: BigInt(USER_ID) },
+        select: { botBlocked: true },
+      });
+      expect(afterGroup?.botBlocked).toBe(false);
+
+      // The private-chat block is still recorded — that is what the handler is for.
+      await bot.handleUpdate(botRemovedUpdate({ id: USER_ID, type: "private" }));
+      const afterBlock = await prisma.telegramUser.findUnique({
+        where: { telegramId: BigInt(USER_ID) },
+        select: { botBlocked: true },
+      });
+      expect(afterBlock?.botBlocked).toBe(true);
+
+      // Leave the row as the other tests expect to find it.
+      await bot.handleUpdate(messageUpdate("/start"));
+    });
+
     it("refuses /admin to someone who is not an administrator", async () => {
       const { bot, calls } = harness();
       await bot.init();
@@ -196,7 +293,7 @@ describe.skipIf(!hasDb)(
     it("uses no emoji in anything it says", async () => {
       const { bot, calls } = harness();
       await bot.init();
-      for (const command of ["/start", "/catalog", "/contacts", "/admin"]) {
+      for (const command of ["/start", "/catalog", "/contacts", "/id", "/admin"]) {
         await bot.handleUpdate(messageUpdate(command));
       }
       await bot.handleUpdate(callbackUpdate("terms"));

@@ -11,6 +11,14 @@ export const metadata = { title: "Заявки" };
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
+/**
+ * The requests.
+ *
+ * Not in the menu — the client asked for five sections and this is not one of
+ * them. A manager arrives here from the Telegram notice or from «Новые заявки»
+ * on the home screen, and with no row of sections above the page any more, the
+ * way back is the first line of it.
+ */
 export default function OrdersPage({
   searchParams,
 }: {
@@ -18,6 +26,12 @@ export default function OrdersPage({
 }) {
   return (
     <>
+      <Link
+        href="/admin"
+        className="text-muted hover:text-ink inline-flex min-h-11 items-center text-sm font-semibold"
+      >
+        ← Главная
+      </Link>
       <h1 className="display-caps text-ink text-h1">Заявки</h1>
       <Suspense fallback={<ListSkeleton />}>
         <List searchParams={searchParams} />
@@ -61,7 +75,7 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
         A GET form, not a client component: search here is a bookmarkable place
         in the panel, and one that keeps working before any JavaScript arrives.
       */}
-      <form action="/admin/orders" className="mt-4 flex gap-2">
+      <form action="/admin/orders" className="mt-4 flex max-w-xl gap-2">
         {status ? <input type="hidden" name="status" value={status} /> : null}
         <label htmlFor="q" className="sr-only">
           Поиск по номеру, имени, телефону, городу
@@ -72,24 +86,28 @@ async function List({ searchParams }: { searchParams: Promise<SearchParams> }) {
           type="search"
           defaultValue={query ?? ""}
           placeholder="Номер, имя, телефон, город"
-          className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary w-full max-w-md rounded-md border px-3 py-3 text-base"
+          className="bg-surface text-ink border-control placeholder:text-muted focus-visible:border-primary min-w-0 flex-1 rounded-full border px-5 py-3 text-base transition-colors duration-150 ease-out"
         />
         <button
           type="submit"
-          className="bg-primary text-surface hover:bg-primary-hover inline-flex items-center rounded-md px-5 text-base font-medium transition-colors"
+          className="bg-night text-on-night inline-flex min-h-11 shrink-0 items-center rounded-full px-5 text-sm font-bold transition-opacity hover:opacity-90"
         >
           Найти
         </button>
       </form>
 
       <p className="text-muted mt-4 text-sm tabular-nums" aria-live="polite">
-        {total === 0 ? "Ничего не найдено" : `Показано: ${orders.length} из ${total}`}
+        {total > 0
+          ? `Показано: ${orders.length} из ${total}`
+          : status || query
+            ? "Ничего не найдено"
+            : "Заявок пока нет"}
       </p>
 
       {orders.length === 0 ? null : (
         <ul className="mt-4 flex flex-col gap-4">
           {orders.map((order) => (
-            <li key={order.id} className="border-rule bg-surface rounded-md border p-4">
+            <li key={order.id} className="stage p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <Link
                   href={`/admin/orders/${order.id}`}
@@ -152,9 +170,9 @@ function FilterTab({
 function ListSkeleton() {
   return (
     <div aria-hidden className="mt-4 flex flex-col gap-4">
-      <div className="bg-surface h-11 w-full rounded-md" />
+      <div className="bg-primary-wash h-11 w-full rounded-full" />
       {[0, 1, 2].map((i) => (
-        <div key={i} className="border-rule bg-surface h-36 rounded-md border" />
+        <div key={i} className="stage h-36" />
       ))}
     </div>
   );

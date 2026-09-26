@@ -107,6 +107,8 @@ async function boot(): Promise<void> {
   // If a webhook was ever registered, getUpdates returns 409 forever.
   await bot.api.deleteWebhook({ drop_pending_updates: false });
 
+  // /id is answered but listed nowhere: it is a setup tool the owner is told
+  // about, not something a buyer should find in the menu.
   const PUBLIC_COMMANDS = [
     { command: "start", description: COMMAND_DESCRIPTION.start },
     { command: "catalog", description: COMMAND_DESCRIPTION.catalog },
