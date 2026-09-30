@@ -6,7 +6,7 @@ const VALID = {
   name: "Алишер",
   phone: "+7 928 314 40 00",
   city: "Хасавюрт",
-  delivery: "CDEK",
+  delivery: "OZON",
   comment: "",
   consent: true,
   items: [
@@ -85,6 +85,22 @@ describe("parseOrderInput", () => {
   it("rejects an unknown delivery method", () => {
     expect(parseOrderInput({ ...VALID, delivery: "TELEPORT" }).ok).toBe(false);
   });
+
+  it.each(["OZON", "TRANSPORT_COMPANY", "PICKUP"])("offers %s", (delivery) => {
+    expect(parseOrderInput({ ...VALID, delivery }).ok).toBe(true);
+  });
+
+  // Still valid in the database, for requests placed before the client moved
+  // to Ozon, but no longer something a new request may choose — a form left
+  // open from before the change is told so on the field.
+  it.each(["CDEK", "RUSSIAN_POST"])(
+    "no longer accepts %s for a new request",
+    (delivery) => {
+      const r = parseOrderInput({ ...VALID, delivery });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.fieldErrors.delivery).toBe("Выберите способ доставки");
+    },
+  );
 
   it("rejects an empty basket", () => {
     expect(parseOrderInput({ ...VALID, items: [] }).ok).toBe(false);

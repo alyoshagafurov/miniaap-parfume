@@ -65,7 +65,8 @@ browser.
 ## Operating Context
 
 - The business is a wholesale warehouse in Khasavyurt, "Novy Terek" market. It ships across
-  Russia via CDEK, Russian Post, freight carriers, or pickup at the market.
+  Russia via Ozon, freight carriers, or pickup at the market. (CDEK and Russian Post were
+  dropped on 2026-09-30 at the client's request; older requests still show them.)
 - Contact is by call or WhatsApp at 8 928 314 40 00. Minimum order 5 000 ₽.
 - **The buyer is on a market floor or in their own shop, phone in one hand**, between other
   tasks, often in daylight. Significant elements belong within thumb reach; touch targets stay

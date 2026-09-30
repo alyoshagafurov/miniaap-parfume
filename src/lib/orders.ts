@@ -20,11 +20,31 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   CANCELLED: "Отменена",
 };
 
+/**
+ * The ways a new request may be shipped, in the order the form shows them.
+ *
+ * One list for both ends: the order form draws its choices from it and the
+ * server refuses anything outside it. CDEK and Russian Post were dropped when
+ * the client moved to Ozon; a form cached in someone's Mini App from before
+ * that is refused rather than recorded with a carrier the warehouse no longer
+ * uses.
+ */
+export const OFFERED_DELIVERY = ["OZON", "TRANSPORT_COMPANY", "PICKUP"] as const;
+export type OfferedDelivery = (typeof OFFERED_DELIVERY)[number];
+
+/**
+ * What every delivery value is called — the offered ones and the retired ones.
+ *
+ * CDEK and Russian Post stay here on purpose: requests placed with them are
+ * still in the panel and in buyers' «Мои заявки», and must keep saying how
+ * they were sent.
+ */
 export const DELIVERY_LABELS: Record<string, string> = {
-  CDEK: "СДЭК",
-  RUSSIAN_POST: "Почта России",
+  OZON: "OZON",
   TRANSPORT_COMPANY: "Транспортная компания",
   PICKUP: "Самовывоз",
+  CDEK: "СДЭК",
+  RUSSIAN_POST: "Почта России",
 };
 
 export function isOrderStatus(value: unknown): value is OrderStatus {

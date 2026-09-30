@@ -73,7 +73,14 @@ enum OrderStatus {
   CANCELLED
 }
 
+/// How a request is to be shipped.
+///
+/// CDEK and RUSSIAN_POST are no longer offered — the client ships through Ozon
+/// instead — but they stay in the type: requests already placed with them
+/// keep saying how they were sent. What a new request may choose is decided in
+/// src/server/orders/create.ts, not here.
 enum DeliveryMethod {
+  OZON
   CDEK
   RUSSIAN_POST
   TRANSPORT_COMPANY

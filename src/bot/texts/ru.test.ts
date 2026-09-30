@@ -69,7 +69,7 @@ describe("orderForManager", () => {
     name: "Алишер",
     phone: "+79283144000",
     city: "Хасавюрт",
-    delivery: "СДЭК",
+    delivery: "OZON",
     comment: "Позвоните после обеда",
     totalKop: 1_240_000,
     showPrices: true,

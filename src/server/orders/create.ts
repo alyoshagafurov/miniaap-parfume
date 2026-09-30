@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { DELIVERY_LABELS, OFFERED_DELIVERY } from "@/lib/orders";
 import { prisma } from "@/server/db";
 import { rateLimit } from "@/server/rate-limit";
 import { readSettings } from "@/server/settings";
@@ -63,7 +64,9 @@ export const createOrderSchema = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(120),
   phone: z.string().trim().min(1, "Укажите телефон").max(30),
   city: z.string().trim().min(2, "Укажите город").max(120),
-  delivery: z.enum(["CDEK", "RUSSIAN_POST", "TRANSPORT_COMPANY", "PICKUP"]),
+  // Only what is offered now — see OFFERED_DELIVERY. The retired carriers are
+  // still valid values in the database, for requests placed before.
+  delivery: z.enum(OFFERED_DELIVERY, { message: "Выберите способ доставки" }),
   comment: z.string().trim().max(1000, "Комментарий слишком длинный").default(""),
   consent: z.literal(true, { message: "Нужно согласие на обработку данных" }),
   /**
@@ -365,7 +368,9 @@ export async function createOrder(
         name: input.name,
         phone: input.phone,
         city: input.city,
-        delivery: input.delivery,
+        // The name, not the value: the manager used to read «Доставка: CDEK»
+        // and «TRANSPORT_COMPANY» — the database's words, not theirs.
+        delivery: DELIVERY_LABELS[input.delivery] ?? input.delivery,
         comment: input.comment || null,
         totalKop: created.totalKop,
         username: identity?.ok ? (identity.user.username ?? null) : null,

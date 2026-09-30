@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
 import { applyCorrections, toOrderItems } from "@/lib/cart";
 import { formatRub } from "@/lib/money";
+import { DELIVERY_LABELS, OFFERED_DELIVERY, type OfferedDelivery } from "@/lib/orders";
 import type { CreateOrderResult } from "@/server/orders/create";
 
 /**
@@ -36,18 +37,19 @@ import type { CreateOrderResult } from "@/server/orders/create";
  * survive every outcome, which is the whole point.
  */
 
-const DELIVERY = [
-  { value: "CDEK", label: "СДЭК" },
-  { value: "RUSSIAN_POST", label: "Почта России" },
-  { value: "TRANSPORT_COMPANY", label: "Транспортная компания" },
-  { value: "PICKUP", label: "Самовывоз с рынка" },
-] as const;
+// From the shared list, so the form cannot offer what the server refuses.
+// Pickup reads «с рынка» here, where the buyer is choosing; elsewhere the
+// shorter «Самовывоз» is enough.
+const DELIVERY = OFFERED_DELIVERY.map((value) => ({
+  value,
+  label: value === "PICKUP" ? "Самовывоз с рынка" : (DELIVERY_LABELS[value] ?? value),
+}));
 
 interface FormValues {
   name: string;
   phone: string;
   city: string;
-  delivery: (typeof DELIVERY)[number]["value"];
+  delivery: OfferedDelivery;
   comment: string;
   consent: boolean;
   website: string;
@@ -77,7 +79,7 @@ export function OrderScreen({
       name: "",
       phone: "",
       city: "",
-      delivery: "CDEK",
+      delivery: "OZON",
       comment: "",
       consent: false,
       website: "",
@@ -231,7 +233,10 @@ export function OrderScreen({
         <h1 className="display-caps text-ink text-h1">В заявке пока пусто</h1>
         <p className="text-muted mt-4 text-sm leading-snug">
           Добавьте товары из каталога — минимальный заказ{" "}
-          <span className="text-price font-bold tabular-nums">{formatRub(minOrderKop)}</span>.
+          <span className="text-price font-bold tabular-nums">
+            {formatRub(minOrderKop)}
+          </span>
+          .
         </p>
         <div className="mt-6">
           <Link
@@ -390,6 +395,11 @@ export function OrderScreen({
               </label>
             ))}
           </div>
+          {form.formState.errors.delivery ? (
+            <p role="alert" className="text-danger mt-2 text-xs">
+              {form.formState.errors.delivery.message}
+            </p>
+          ) : null}
           {pickupAddress ? (
             <p className="text-muted mt-2 text-xs">Самовывоз: {pickupAddress}</p>
           ) : null}
@@ -485,7 +495,10 @@ function MinimumProgress({
             so the class did nothing — and had it worked it would have animated
             a layout property, which the direction does not allow. Motion in
             this interface is sheets and modals; a progress bar snaps. */}
-        <div className="bg-price-bright h-full rounded-full" style={{ width: `${pct}%` }} />
+        <div
+          className="bg-price-bright h-full rounded-full"
+          style={{ width: `${pct}%` }}
+        />
       </div>
       <p className="text-on-night-muted mt-3 text-sm leading-snug">
         {short === 0

@@ -23,7 +23,7 @@ const ORDER = {
   name: "Алишер",
   phone: "+79283144000",
   city: "Хасавюрт",
-  delivery: "CDEK" as const,
+  delivery: "OZON" as const,
   comment: null,
   totalKop: 1_240_000,
   username: null as string | null,

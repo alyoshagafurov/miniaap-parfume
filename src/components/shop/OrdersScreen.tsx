@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { GoldRule } from "@/components/ui/GoldRule";
 import { formatDateTimeRu } from "@/lib/format";
 import { formatRub } from "@/lib/money";
+import { DELIVERY_LABELS } from "@/lib/orders";
 import type { HistoryOrder } from "@/server/orders/history";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -18,13 +19,6 @@ const STATUS_LABEL: Record<string, string> = {
   IN_PROGRESS: "В работе",
   DONE: "Выполнена",
   CANCELLED: "Отменена",
-};
-
-const DELIVERY_LABEL: Record<string, string> = {
-  CDEK: "СДЭК",
-  RUSSIAN_POST: "Почта России",
-  TRANSPORT_COMPANY: "Транспортная компания",
-  PICKUP: "Самовывоз",
 };
 
 /**
@@ -156,7 +150,7 @@ function OrderCard({
 
       <p className="text-muted mt-1 text-sm">
         {formatDateTimeRu(order.createdAt)} ·{" "}
-        {DELIVERY_LABEL[order.delivery] ?? order.delivery}
+        {DELIVERY_LABELS[order.delivery] ?? order.delivery}
         {order.city ? ` · ${order.city}` : ""}
       </p>
 
