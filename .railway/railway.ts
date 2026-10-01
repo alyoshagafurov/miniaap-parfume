@@ -129,8 +129,12 @@ export default defineRailway(() => {
      * СВОИХ доменов, и выданный Railway адрес он отвергает словами
      * «Custom-domain registration is not supported».
      */
+    //
+    // Адрес проекта в аккаунте клиента. Прежний, web-production-f03bf,
+    // принадлежал старому проекту в аккаунте разработчика и при переезде
+    // 2026-10-01 не переносится: Railway выдаёт новый на каждый проект.
     networking: {
-      serviceDomains: { "web-production-f03bf.up.railway.app": {} },
+      serviceDomains: { "web-production-4128e.up.railway.app": {} },
     },
 
     // Ни build, ни start здесь нет намеренно.
