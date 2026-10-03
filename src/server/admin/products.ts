@@ -33,6 +33,8 @@ export interface AdminProductRow {
   oldPriceKop: number | null;
   packSize: number;
   stock: StockStateName;
+  /** The count on the shelf, or null when the owner does not keep one. */
+  stockQty: number | null;
   status: PublishStatusName;
   isNew: boolean;
   isHit: boolean;
@@ -127,6 +129,7 @@ export async function listAdminProducts(
       oldPriceKop: true,
       packSize: true,
       stock: true,
+      stockQty: true,
       status: true,
       isNew: true,
       isHit: true,
@@ -153,6 +156,7 @@ export async function listAdminProducts(
       oldPriceKop: row.oldPriceKop,
       packSize: row.packSize,
       stock: row.stock,
+      stockQty: row.stockQty,
       status: row.status,
       isNew: row.isNew,
       isHit: row.isHit,

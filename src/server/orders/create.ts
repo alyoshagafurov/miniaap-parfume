@@ -9,7 +9,11 @@ import { verifyInitData } from "@/server/telegram/init-data";
 import { notifyNewOrder } from "@/server/telegram/notify";
 
 import { quoteCart, type CatalogEntry, type Quote } from "./quote";
-import { reconcileCart, type LineChange, type CartSnapshotLine } from "./reconcile";
+import {
+  reconcileCart,
+  type CorrectedSnapshotLine,
+  type LineChange,
+} from "./reconcile";
 
 /**
  * Submitting a request.
@@ -58,6 +62,8 @@ const itemSchema = z.object({
   seenPriceKop: z.number().int().min(0).max(2_147_483_647),
   seenPackSize: z.number().int().min(1).max(9999),
   seenStock: z.enum(["IN_STOCK", "LOW", "OUT", "PREORDER"]),
+  // Optional: a basket from before counts existed does not send it.
+  seenStockQty: z.number().int().min(0).nullable().optional(),
 });
 
 export const createOrderSchema = z.object({
@@ -131,7 +137,7 @@ export type CreateOrderResult =
       totalKop?: number;
       previousTotalKop?: number;
       /** The basket as it now is; the client stores this and resubmits. */
-      correctedLines?: CartSnapshotLine[];
+      correctedLines?: CorrectedSnapshotLine[];
     };
 
 export async function createOrder(
@@ -190,6 +196,7 @@ export async function createOrder(
       priceKop: true,
       packSize: true,
       stock: true,
+      stockQty: true,
       status: true,
       volumeMl: true,
       images: { select: { key: true }, orderBy: { sortOrder: "asc" }, take: 1 },
@@ -212,6 +219,7 @@ export async function createOrder(
       priceKop: p.priceKop,
       packSize: p.packSize,
       stock: p.stock,
+      stockQty: p.stockQty,
       status: p.status,
       imageKey: p.images[0]?.key ?? null,
     };

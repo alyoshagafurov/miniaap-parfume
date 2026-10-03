@@ -11,6 +11,8 @@
  * the catalog moved underneath them.
  */
 
+import { maxOrderableQty } from "@/lib/stock";
+
 export interface CartLine {
   productId: string;
   qty: number;
@@ -18,6 +20,16 @@ export interface CartLine {
   seenPriceKop: number;
   seenPackSize: number;
   seenStock: "IN_STOCK" | "LOW" | "OUT" | "PREORDER";
+  /**
+   * The count on the shelf when the line was added, or null when the owner
+   * does not keep one.
+   *
+   * Optional because a basket written before counts existed does not have it,
+   * and a basket is kept for days: those lines read as uncounted, which is what
+   * they were. It is what the stepper stops at, so it has to travel with the
+   * line rather than be fetched again on every tap.
+   */
+  seenStockQty?: number | null;
   // Enough to render the basket without a round trip.
   slug: string;
   title: string;
@@ -48,13 +60,40 @@ export function roundToPack(qty: number, packSize: number): number {
 export function addLine(lines: readonly CartLine[], line: CartLine): CartLine[] {
   const existing = lines.find((l) => l.productId === line.productId);
   if (!existing) {
-    return [...lines, { ...line, qty: roundToPack(line.qty, line.seenPackSize) }];
+    return [
+      ...lines,
+      { ...line, qty: clampToStock(roundToPack(line.qty, line.seenPackSize), line) },
+    ];
   }
   return lines.map((l) =>
     l.productId === line.productId
       ? // The freshly seen price wins: it is the newer observation.
-        { ...line, qty: roundToPack(l.qty + line.qty, line.seenPackSize) }
+        {
+          ...line,
+          qty: clampToStock(roundToPack(l.qty + line.qty, line.seenPackSize), line),
+        }
       : l,
+  );
+}
+
+/**
+ * Holds a quantity to what is on the shelf.
+ *
+ * The same limit the server applies on submission, applied earlier so the
+ * buyer meets it at the stepper instead of at «каталог изменился». An uncounted
+ * line has no limit; a line below one pack has a limit of zero, and is dropped.
+ */
+export function clampToStock(
+  qty: number,
+  line: Pick<CartLine, "seenStock" | "seenStockQty" | "seenPackSize">,
+): number {
+  return Math.min(
+    qty,
+    maxOrderableQty({
+      stock: line.seenStock,
+      stockQty: line.seenStockQty ?? null,
+      packSize: line.seenPackSize,
+    }),
   );
 }
 
@@ -65,7 +104,9 @@ export function setQty(
 ): CartLine[] {
   return lines
     .map((l) =>
-      l.productId === productId ? { ...l, qty: roundToPack(qty, l.seenPackSize) } : l,
+      l.productId === productId
+        ? { ...l, qty: clampToStock(roundToPack(qty, l.seenPackSize), l) }
+        : l,
     )
     .filter((l) => l.qty > 0);
 }
@@ -96,6 +137,7 @@ export function toOrderItems(lines: readonly CartLine[]) {
     seenPriceKop: l.seenPriceKop,
     seenPackSize: l.seenPackSize,
     seenStock: l.seenStock,
+    seenStockQty: l.seenStockQty ?? null,
   }));
 }
 
@@ -111,6 +153,7 @@ export interface CorrectedLine {
   seenPriceKop: number;
   seenPackSize: number;
   seenStock: string;
+  seenStockQty: number | null;
 }
 
 /**
@@ -141,6 +184,7 @@ export function applyCorrections(
       seenPriceKop: fix.seenPriceKop,
       seenPackSize: fix.seenPackSize,
       seenStock: fix.seenStock,
+      seenStockQty: fix.seenStockQty,
     });
   }
 

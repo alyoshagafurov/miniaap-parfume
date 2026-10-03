@@ -23,7 +23,18 @@ export interface CartSnapshotLine {
   seenPriceKop: number;
   seenPackSize: number;
   seenStock: string;
+  /**
+   * The count the storefront displayed. Optional because a basket written
+   * before counts existed does not carry it; it is never used to decide
+   * anything, only handed back corrected.
+   */
+  seenStockQty?: number | null;
 }
+
+/** A snapshot line as the server returns it: the count is always stated. */
+export type CorrectedSnapshotLine = Omit<CartSnapshotLine, "seenStockQty"> & {
+  seenStockQty: number | null;
+};
 
 export type LineChange =
   | { productId: string; title: string; kind: "PRICE"; fromKop: number; toKop: number }
@@ -36,6 +47,15 @@ export type LineChange =
       to: number;
       qtyFrom: number;
       qtyTo: number;
+    }
+  | {
+      productId: string;
+      title: string;
+      /** Less on the shelf than the buyer asked for; the quantity was lowered. */
+      kind: "AVAILABLE";
+      from: number;
+      to: number;
+      stockQty: number;
     }
   | { productId: string; title: string; kind: "GONE" };
 
@@ -51,7 +71,7 @@ export interface Reconciliation {
    * accepting the change and resubmitting goes straight through instead of
    * asking again forever.
    */
-  correctedLines: CartSnapshotLine[];
+  correctedLines: CorrectedSnapshotLine[];
 }
 
 export function reconcileCart(
@@ -59,7 +79,7 @@ export function reconcileCart(
   quote: Quote,
 ): Reconciliation {
   const changes: LineChange[] = [];
-  const correctedLines: CartSnapshotLine[] = [];
+  const correctedLines: CorrectedSnapshotLine[] = [];
 
   const priced = new Map(quote.lines.map((l) => [l.productId, l]));
 
@@ -110,12 +130,29 @@ export function reconcileCart(
       });
     }
 
+    // The shelf had less than was asked for. Reported on its own line — the
+    // quantity the buyer will actually send is not the one they chose.
+    const lowered = quote.adjusted.find(
+      (a) => a.productId === was.productId && a.reason === "STOCK_LIMIT",
+    );
+    if (lowered) {
+      changes.push({
+        productId: was.productId,
+        title: now.title,
+        kind: "AVAILABLE",
+        from: lowered.from,
+        to: lowered.to,
+        stockQty: now.stockQty ?? lowered.to,
+      });
+    }
+
     correctedLines.push({
       productId: now.productId,
       qty: now.qty,
       seenPriceKop: quote.showPrices ? now.priceKop : 0,
       seenPackSize: now.packSize,
       seenStock: now.stock,
+      seenStockQty: now.stockQty,
     });
   }
 

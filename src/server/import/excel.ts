@@ -64,7 +64,10 @@ export async function buildTemplate(): Promise<Buffer> {
     "1325",
     "1450",
     "6",
-    "в наличии",
+    // A count teaches more than a word: the template is the only
+    // documentation some people read, and a number is what lets the storefront
+    // stop a buyer ordering more than there is. Words still work.
+    "240",
     "черновик",
     "да",
     "",
@@ -90,6 +93,8 @@ export interface ExportRow {
   oldPriceKop: number | null;
   packSize: number;
   stock: string;
+  /** The count, when the product is counted; written in place of the word. */
+  stockQty: number | null;
   status: string;
   isNew: boolean;
   isHit: boolean;
@@ -139,7 +144,12 @@ export async function buildExport(rows: readonly ExportRow[]): Promise<Buffer> {
       ? { value: "", type: String }
       : { value: row.oldPriceKop / 100, type: Number },
     { value: row.packSize, type: Number },
-    { value: STOCK_OUT[row.stock] ?? row.stock, type: String },
+    // The count where there is one, the word where there is not: both come back
+    // through the importer as what they were, so an export edited in Excel and
+    // loaded again changes nothing it was not asked to.
+    row.stockQty === null
+      ? { value: STOCK_OUT[row.stock] ?? row.stock, type: String }
+      : { value: row.stockQty, type: Number },
     { value: STATUS_OUT[row.status] ?? row.status, type: String },
     { value: row.isNew ? "да" : "", type: String },
     { value: row.isHit ? "да" : "", type: String },

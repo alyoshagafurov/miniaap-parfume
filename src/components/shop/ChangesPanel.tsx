@@ -1,4 +1,5 @@
 import { formatRub } from "@/lib/money";
+import { formatQty } from "@/lib/stock";
 import type { LineChange } from "@/server/orders/reconcile";
 
 const STOCK_LABEL: Record<string, string> = {
@@ -75,6 +76,10 @@ function describe(change: LineChange, showPrices: boolean): string {
       }`;
     case "PACK_SIZE":
       return `Кратность: ${change.from} → ${change.to}, количество ${change.qtyFrom} → ${change.qtyTo}`;
+    case "AVAILABLE":
+      // The count first: it is the reason, and «на складе 30 шт» tells the
+      // buyer more than «уменьшили» does.
+      return `На складе ${formatQty(change.stockQty)} шт — количество ${formatQty(change.from)} → ${formatQty(change.to)}`;
     case "GONE":
       return "Больше не продаётся — уберём из заявки";
   }

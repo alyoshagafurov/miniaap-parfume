@@ -112,6 +112,47 @@ describe("totals", () => {
   });
 });
 
+describe("a counted shelf", () => {
+  // Sold in sixes, a hundred on the shelf: ninety-six can be ordered.
+  const counted = (over: Partial<CartLine> = {}) =>
+    line({ seenPackSize: 6, seenStock: "IN_STOCK", seenStockQty: 100, ...over });
+
+  it("stops adding at what is on the shelf, in whole packs", () => {
+    expect(addLine([], counted({ qty: 120 }))[0]?.qty).toBe(96);
+  });
+
+  it("stops a second add at the shelf as well", () => {
+    const once = addLine([], counted({ qty: 90 }));
+    expect(addLine(once, counted({ qty: 30 }))[0]?.qty).toBe(96);
+  });
+
+  it("stops setting a quantity at the shelf", () => {
+    const once = addLine([], counted({ qty: 12 }));
+    expect(setQty(once, "p1", 300)[0]?.qty).toBe(96);
+  });
+
+  it("does not limit a line that is not counted, or a pre-order", () => {
+    expect(addLine([], line({ qty: 600 }))[0]?.qty).toBe(600);
+    expect(
+      addLine([], counted({ qty: 600, seenStock: "PREORDER", seenStockQty: 0 }))[0]
+        ?.qty,
+    ).toBe(600);
+  });
+
+  it("drops a line when the shelf holds less than one pack", () => {
+    expect(
+      addLine([], counted({ qty: 6, seenStockQty: 5, seenStock: "LOW" }))[0]?.qty,
+    ).toBe(0);
+  });
+
+  it("still reads a basket saved before counts existed", () => {
+    const old = line({ qty: 4 });
+    writeCart([old]);
+    expect(readCart()[0]?.seenStockQty).toBeUndefined();
+    expect(setQty(readCart(), "p1", 10)[0]?.qty).toBe(10);
+  });
+});
+
 describe("toOrderItems", () => {
   it("sends identity, quantity and what was displayed — and nothing else", () => {
     const [item] = toOrderItems([line({ qty: 6 })]);
@@ -121,6 +162,8 @@ describe("toOrderItems", () => {
       seenPriceKop: 150_000,
       seenPackSize: 1,
       seenStock: "IN_STOCK",
+      // A basket from before counts existed has none; it is sent as «not counted».
+      seenStockQty: null,
     });
     // The title and image are for rendering; the server has its own copy.
     expect(item).not.toHaveProperty("title");
@@ -204,6 +247,7 @@ describe("applyCorrections", () => {
           seenPriceKop: 110_000,
           seenPackSize: 12,
           seenStock: "LOW",
+          seenStockQty: 30,
         },
       ],
     );
@@ -213,6 +257,7 @@ describe("applyCorrections", () => {
       seenPriceKop: 110_000,
       seenPackSize: 12,
       seenStock: "LOW",
+      seenStockQty: 30,
     });
   });
 
@@ -231,6 +276,7 @@ describe("applyCorrections", () => {
           seenPriceKop: 1,
           seenPackSize: 6,
           seenStock: "IN_STOCK",
+          seenStockQty: null,
         },
         {
           productId: "p1",
@@ -238,6 +284,7 @@ describe("applyCorrections", () => {
           seenPriceKop: 1,
           seenPackSize: 6,
           seenStock: "IN_STOCK",
+          seenStockQty: null,
         },
       ],
     );
@@ -257,6 +304,7 @@ describe("applyCorrections", () => {
             seenPriceKop: 1,
             seenPackSize: 6,
             seenStock: "SOLD",
+            seenStockQty: null,
           },
         ],
       ),

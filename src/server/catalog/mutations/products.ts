@@ -1,5 +1,7 @@
 import type { PublishStatus, StockState } from "@prisma/client";
 
+import { MAX_STOCK_QTY, resolveStock } from "@/lib/stock";
+
 import { brandTag, CATALOG_TAG, categoryTag, productTag } from "@/server/catalog/tags";
 
 import { allocateSlug } from "./slugs";
@@ -33,6 +35,11 @@ export interface ProductInput {
   oldPriceKop: number | null;
   packSize: number;
   stock: StockState;
+  /**
+   * How many are on the shelf, or null when the owner does not count. With a
+   * number, `stock` is not taken from the caller: it is computed from it.
+   */
+  stockQty: number | null;
   status: PublishStatus;
   isNew: boolean;
   isHit: boolean;
@@ -116,6 +123,14 @@ function validate(input: ProductInput): void {
   }
   if (input.packSize < 1) throw new CatalogConflict("Кратность не может быть меньше 1");
   if (input.volumeMl <= 0) throw new CatalogConflict("Укажите объём");
+  if (
+    input.stockQty !== null &&
+    (!Number.isInteger(input.stockQty) ||
+      input.stockQty < 0 ||
+      input.stockQty > MAX_STOCK_QTY)
+  ) {
+    throw new CatalogConflict("Остаток — целое число штук от 0 до 1 000 000");
+  }
 }
 
 export async function createProduct(
@@ -180,7 +195,8 @@ export async function updateProduct(
         priceKop: input.priceKop,
         oldPriceKop: input.oldPriceKop,
         packSize: input.packSize,
-        stock: input.stock,
+        stock: resolveStock(input.stockQty, input.packSize, input.stock),
+        stockQty: input.stockQty,
         status: input.status,
         isNew: input.isNew,
         isHit: input.isHit,
@@ -231,6 +247,7 @@ export async function copyToFormat(
       select: {
         oldPriceKop: true,
         stock: true,
+        stockQty: true,
         isNew: true,
         isHit: true,
         popularity: true,
@@ -250,7 +267,12 @@ export async function copyToFormat(
       // Not copied: an old price belongs to the bottle it was discounted on.
       oldPriceKop: null,
       packSize: input.packSize,
-      stock: source.stock,
+      // The count is not copied, for the reason the price is not: it was taken of
+      // another bottle. A counted source therefore gives a copy whose word is
+      // not known yet, and «в наличии» is the neutral one — the copy is a draft
+      // until somebody has looked at it anyway.
+      stock: source.stockQty === null ? source.stock : "IN_STOCK",
+      stockQty: null,
       // A copy starts as a draft. It has no photographs and an article that may
       // still be wrong, and publishing it straight to the storefront would put
       // a monogram placeholder in front of buyers.
@@ -300,7 +322,8 @@ async function createInside(
       priceKop: input.priceKop,
       oldPriceKop: input.oldPriceKop,
       packSize: input.packSize,
-      stock: input.stock,
+      stock: resolveStock(input.stockQty, input.packSize, input.stock),
+      stockQty: input.stockQty,
       status: input.status,
       isNew: input.isNew,
       isHit: input.isHit,
@@ -385,11 +408,34 @@ export async function bulkUpdateProducts(
           break;
         }
         case "stock": {
-          const result = await tx.product.updateMany({
-            where: { id: { in: [...ids] } },
-            data: { stock: action.stock },
-          });
-          changed = result.count;
+          // A product with a count has its word computed from it, so a word
+          // pushed over it would either contradict the number or throw the
+          // number away. Neither is what «отметить выбранные» means.
+          //
+          // «Нет в наличии» is the exception, because it has a number to
+          // match: zero. A counted product marked out becomes a counted
+          // product at nought, and putting stock back is typing a count.
+          //
+          // Every other word is applied only to the products that are not
+          // counted; the rest are left alone, and the caller is told how many
+          // so it can say so.
+          if (action.stock === "OUT") {
+            const counted = await tx.product.updateMany({
+              where: { id: { in: [...ids] }, stockQty: { not: null } },
+              data: { stock: "OUT", stockQty: 0 },
+            });
+            const uncounted = await tx.product.updateMany({
+              where: { id: { in: [...ids] }, stockQty: null },
+              data: { stock: "OUT" },
+            });
+            changed = counted.count + uncounted.count;
+          } else {
+            const result = await tx.product.updateMany({
+              where: { id: { in: [...ids] }, stockQty: null },
+              data: { stock: action.stock },
+            });
+            changed = result.count;
+          }
           break;
         }
         case "category": {
@@ -441,14 +487,62 @@ export async function setProductPrice(
   });
 }
 
+/**
+ * Setting the word by hand.
+ *
+ * The table offers this only on products that are not counted, but an action is
+ * an endpoint and is reachable for any row, so the rule is kept here too: on a
+ * counted product, «нет» means zero and stays counted, and any other word means
+ * the owner has chosen to stop counting — the number is dropped rather than
+ * left saying something the word contradicts.
+ */
 export async function setProductStock(
   id: string,
   stock: StockState,
 ): Promise<Mutation<ProductRef>> {
   return inTransaction(async (tx) => {
+    const before = await tx.product.findUniqueOrThrow({
+      where: { id },
+      select: { stockQty: true },
+    });
+    const stockQty = before.stockQty === null ? null : stock === "OUT" ? 0 : null;
     const product = await tx.product.update({
       where: { id },
-      data: { stock },
+      data: { stock, stockQty },
+      select: { id: true, slug: true, sku: true },
+    });
+    return { data: product, tags: await tagsForProduct(tx, id) };
+  });
+}
+
+/**
+ * Setting the count, from the table.
+ *
+ * A number sets the word with it, by the same rule the form and the import use.
+ * Null stops counting and leaves the word as it was: it was right a moment ago,
+ * and what it should become is the owner's to say.
+ */
+export async function setProductStockQty(
+  id: string,
+  stockQty: number | null,
+): Promise<Mutation<ProductRef>> {
+  if (
+    stockQty !== null &&
+    (!Number.isInteger(stockQty) || stockQty < 0 || stockQty > MAX_STOCK_QTY)
+  ) {
+    throw new CatalogConflict("Остаток — целое число штук от 0 до 1 000 000");
+  }
+  return inTransaction(async (tx) => {
+    const before = await tx.product.findUniqueOrThrow({
+      where: { id },
+      select: { packSize: true, stock: true },
+    });
+    const product = await tx.product.update({
+      where: { id },
+      data: {
+        stockQty,
+        stock: resolveStock(stockQty, before.packSize, before.stock),
+      },
       select: { id: true, slug: true, sku: true },
     });
     return { data: product, tags: await tagsForProduct(tx, id) };

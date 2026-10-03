@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useForm, type FieldPath } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 
 import {
   copyProduct,
@@ -25,6 +25,7 @@ import {
   type StockStateName,
 } from "@/lib/admin-products";
 import { parsePriceToKop } from "@/lib/money";
+import { parseStockQty, stockLevelFor } from "@/lib/stock";
 
 export interface ProductFormValues {
   categoryId: string;
@@ -36,6 +37,8 @@ export interface ProductFormValues {
   oldPrice: string;
   packSize: string;
   stock: StockStateName;
+  /** The count on the shelf as typed; empty means it is not counted. */
+  stockQty: string;
   status: PublishStatusName;
   isNew: boolean;
   isHit: boolean;
@@ -87,6 +90,7 @@ const SERVER_FIELDS: Partial<Record<string, FieldPath<ProductFormValues>>> = {
   oldPriceKop: "oldPrice",
   packSize: "packSize",
   stock: "stock",
+  stockQty: "stockQty",
   status: "status",
   popularity: "popularity",
 };
@@ -173,6 +177,17 @@ export function ProductForm({
     if (notice || saved) statusRef.current?.scrollIntoView({ block: "nearest" });
   }, [notice, saved]);
 
+  // What the word will be, live: the owner types a number and sees «Мало» before
+  // saving rather than discovering it on the storefront.
+  const [qtyText, packText] = useWatch({
+    control: form.control,
+    name: ["stockQty", "packSize"],
+  });
+  const typedQty = parseStockQty(qtyText ?? "");
+  const typedPack = Number(packText) || 1;
+  const counted = typeof typedQty === "number";
+  const derivedStock = counted ? stockLevelFor(typedQty, typedPack) : null;
+
   const generatedTitle =
     fragrances.length > 0
       ? `${fragrances[0]?.brandName ?? ""} ${fragrances.map((f) => f.name).join(" + ")}`.trim()
@@ -197,6 +212,14 @@ export function ProductForm({
       return;
     }
 
+    const stockQty = parseStockQty(values.stockQty);
+    if (stockQty === undefined) {
+      const message = "Остаток — целое число штук, например 240";
+      form.setError("stockQty", { type: "validate", message });
+      setNotice(message);
+      return;
+    }
+
     startTransition(async () => {
       const result = await saveProduct({
         id: productId,
@@ -210,7 +233,13 @@ export function ProductForm({
           priceKop,
           oldPriceKop,
           packSize: Number(values.packSize),
-          stock: values.stock,
+          // With a count the server computes the word and ignores this; it is
+          // still a valid one, because the field is required there.
+          stock:
+            stockQty === null
+              ? values.stock
+              : stockLevelFor(stockQty, Number(values.packSize) || 1),
+          stockQty,
           status: values.status,
           isNew: values.isNew,
           isHit: values.isHit,
@@ -328,18 +357,57 @@ export function ProductForm({
             />
           </Field>
 
-          <Field label="Наличие" htmlFor="stock">
-            <select
-              id="stock"
-              {...form.register("stock")}
-              className="bg-surface text-ink border-control w-full rounded-md border px-3 py-3 text-base"
-            >
-              {STOCK_STATES.map((s) => (
-                <option key={s} value={s}>
-                  {STOCK_LABELS[s]}
-                </option>
-              ))}
-            </select>
+          <Field
+            label="Остаток, шт"
+            htmlFor="stockQty"
+            error={form.formState.errors.stockQty?.message}
+            hint="Впишите число — статус посчитается сам, и покупатель не закажет больше. Не ведёте учёт — оставьте пустым."
+          >
+            <TextInput
+              id="stockQty"
+              inputMode="numeric"
+              placeholder="не веду учёт"
+              invalid={!!form.formState.errors.stockQty}
+              {...form.register("stockQty", {
+                validate: (value) =>
+                  parseStockQty(value ?? "") !== undefined ||
+                  "Целое число штук, например 240",
+              })}
+            />
+          </Field>
+
+          <Field
+            label="Наличие"
+            htmlFor="stock"
+            hint={
+              derivedStock
+                ? "Считается по остатку. «Под заказ» — только без остатка."
+                : undefined
+            }
+          >
+            {derivedStock ? (
+              // Not a disabled select: a disabled control is left out of the
+              // form's values, and the word is still sent.
+              <output
+                id="stock"
+                aria-live="polite"
+                className="bg-canvas text-ink block w-full rounded-md px-3 py-3 text-base font-semibold"
+              >
+                {STOCK_LABELS[derivedStock]}
+              </output>
+            ) : (
+              <select
+                id="stock"
+                {...form.register("stock")}
+                className="bg-surface text-ink border-control w-full rounded-md border px-3 py-3 text-base"
+              >
+                {STOCK_STATES.map((s) => (
+                  <option key={s} value={s}>
+                    {STOCK_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            )}
           </Field>
 
           <Field

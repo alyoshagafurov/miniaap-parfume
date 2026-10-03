@@ -31,6 +31,7 @@ export function ProductGrid({
               oldPriceKop: p.oldPriceKop,
               packSize: p.packSize,
               stock: p.stock,
+              stockQty: p.stockQty,
               volumeMl: p.volumeMl,
               isNew: p.isNew,
               isHit: p.isHit,
@@ -78,10 +79,7 @@ export function ProductGrid({
  */
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <ul
-      aria-hidden
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4"
-    >
+    <ul aria-hidden className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
       {Array.from({ length: count }, (_, i) => (
         <li key={i} className="stage p-2">
           <div className="bg-canvas aspect-[4/5] w-full rounded-md" />

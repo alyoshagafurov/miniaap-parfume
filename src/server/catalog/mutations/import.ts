@@ -1,3 +1,4 @@
+import { resolveStock, stockLevelFor } from "@/lib/stock";
 import { brandTag, CATALOG_TAG, categoryTag, productTag } from "@/server/catalog/tags";
 import type { ParsedRow } from "@/server/import/rows";
 
@@ -139,6 +140,7 @@ async function applyBatch(
         status: true,
         publishedAt: true,
         categoryId: true,
+        stockQty: true,
       },
     });
 
@@ -160,6 +162,26 @@ async function applyBatch(
       });
 
       const status = row.status ?? existing.status;
+
+      // What the row says about availability, and only what it says.
+      //  - a count: store it, and the word follows from it;
+      //  - a word: the owner has stopped counting this one, so the count goes;
+      //  - nothing: leave both. A price list is not an inventory, and one
+      //    without this column must not wipe the counts typed in the panel.
+      // When nothing is said but the product is counted and its pack changed,
+      // the word is recomputed: «мало» is a number of packs, and the packs moved.
+      const availability =
+        row.stockQty !== null
+          ? {
+              stockQty: row.stockQty,
+              stock: stockLevelFor(row.stockQty, row.packSize),
+            }
+          : row.stock !== null
+            ? { stock: row.stock, stockQty: null }
+            : existing.stockQty !== null
+              ? { stock: stockLevelFor(existing.stockQty, row.packSize) }
+              : {};
+
       await tx.product.update({
         where: { id: existing.id },
         data: {
@@ -169,7 +191,7 @@ async function applyBatch(
           priceKop: row.priceKop,
           oldPriceKop: row.oldPriceKop,
           packSize: row.packSize,
-          stock: row.stock,
+          ...availability,
           status,
           isNew: row.isNew,
           isHit: row.isHit,
@@ -206,7 +228,8 @@ async function applyBatch(
           priceKop: row.priceKop,
           oldPriceKop: row.oldPriceKop,
           packSize: row.packSize,
-          stock: row.stock,
+          stock: resolveStock(row.stockQty, row.packSize, row.stock ?? "IN_STOCK"),
+          stockQty: row.stockQty,
           status,
           isNew: row.isNew,
           isHit: row.isHit,

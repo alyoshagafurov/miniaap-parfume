@@ -19,18 +19,12 @@ import {
 import { getSettings } from "@/server/settings.cached";
 import { keepUnits, productName } from "@/lib/format";
 import { formatRub } from "@/lib/money";
+import { describeAvailability, unorderableReason } from "@/lib/stock";
 import { objectUrl } from "@/lib/media";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
-
-const STOCK_LABEL: Record<string, string> = {
-  IN_STOCK: "В наличии",
-  LOW: "Мало",
-  OUT: "Нет в наличии",
-  PREORDER: "Под заказ",
-};
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -76,7 +70,11 @@ async function Product({ params }: PageProps) {
   const brandName = brand?.name ?? "ÁRUMI";
   const names = product.fragrances.map((f) => f.fragrance.name);
   const displayTitle = names.join(" + ") || product.title;
-  const orderable = product.stock !== "OUT";
+  // Not only «нет в наличии»: a count below one pack cannot be ordered either,
+  // and the buyer is told why instead of meeting a stepper that will not move.
+  const blocked = unorderableReason(product);
+  const orderable = product.stock !== "OUT" && blocked === null;
+  const availability = describeAvailability(product, "page");
 
   const [settings, moreFromBrand] = await Promise.all([
     getSettings(),
@@ -112,6 +110,7 @@ async function Product({ params }: PageProps) {
     seenPriceKop: settings.showPrices ? product.priceKop : 0,
     seenPackSize: product.packSize,
     seenStock: product.stock,
+    seenStockQty: product.stockQty,
     slug: product.slug,
     title: displayTitle,
     brandName,
@@ -219,14 +218,18 @@ async function Product({ params }: PageProps) {
               brandName
             )}
             {` · ${product.volumeMl} мл · арт. ${product.sku}`}
-            {STOCK_LABEL[product.stock] ? (
-              <span
-                className={product.stock === "OUT" ? "text-danger font-semibold" : ""}
-              >
-                {` · ${STOCK_LABEL[product.stock]}`}
-              </span>
-            ) : null}
           </p>
+
+          {/* What a wholesaler needs before choosing a quantity, set where the
+              choice is made rather than at the end of a line of small print:
+              how many there are, and how many packs that is. */}
+          {availability.text ? (
+            <p
+              className={`mt-2 text-base font-bold ${availability.tone === "out" ? "text-danger" : "text-ink"}`}
+            >
+              {availability.text}
+            </p>
+          ) : null}
 
           {formatRow.length > 1 ? (
             <FormatRow items={formatRow} showPrices={settings.showPrices} />
@@ -235,7 +238,11 @@ async function Product({ params }: PageProps) {
           {/* In the column from `md`, where the whole page fits beside the
               picture. On a phone it lives in the request bar at the foot. */}
           <div className="mt-6 hidden md:block">
-            <AddToCart disabled={!orderable} line={cartLine} />
+            <AddToCart
+              disabled={!orderable}
+              disabledReason={blocked ?? undefined}
+              line={cartLine}
+            />
           </div>
 
           <Conditions
@@ -344,7 +351,12 @@ async function Product({ params }: PageProps) {
         style={{ paddingBottom: "var(--tg-safe-bottom)" }}
       >
         <div className="px-4 pt-3 pb-4">
-          <AddToCart disabled={!orderable} line={cartLine} tone="dark" />
+          <AddToCart
+            disabled={!orderable}
+            disabledReason={blocked ?? undefined}
+            line={cartLine}
+            tone="dark"
+          />
         </div>
       </div>
     </>

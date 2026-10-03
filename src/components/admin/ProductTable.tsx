@@ -8,6 +8,7 @@ import {
   bulkProducts,
   editPrice,
   editStock,
+  editStockQty,
 } from "@/app/admin/(panel)/products/actions";
 import { Button } from "@/components/ui/Button";
 import {
@@ -19,6 +20,7 @@ import {
   type StockStateName,
 } from "@/lib/admin-products";
 import { formatRub, kopToRub, parsePriceToKop } from "@/lib/money";
+import { formatQty, parseStockQty } from "@/lib/stock";
 import type { AdminProductRow } from "@/server/admin/products";
 
 /**
@@ -70,6 +72,8 @@ export function ProductTable({
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [pending, startTransition] = useTransition();
   const [notice, setNotice] = useState<string | null>(null);
+  // A bulk action that did less than asked: said plainly, but it is not a fault.
+  const [note, setNote] = useState<string | null>(null);
 
   // A new page of rows is a new selection. Keeping it would leave an invisible
   // tick on a row that scrolled out of the filter, and a bulk action would then
@@ -95,6 +99,7 @@ export function ProductTable({
     startTransition(async () => {
       const result = await bulkProducts({ ids: [...selected], action });
       setNotice(result.ok ? null : result.message);
+      setNote(result.ok ? (result.note ?? null) : null);
       if (result.ok) {
         setSelected(new Set());
         router.refresh();
@@ -110,6 +115,12 @@ export function ProductTable({
           className="border-danger bg-danger-wash text-ink mb-4 rounded-md border p-3 text-sm"
         >
           {notice}
+        </p>
+      ) : null}
+
+      {note ? (
+        <p role="status" className="bg-canvas text-ink mb-4 rounded-md p-3 text-sm">
+          {note}
         </p>
       ) : null}
 
@@ -226,7 +237,7 @@ export function ProductTable({
                 </td>
 
                 <td className="mt-2 inline-block align-middle md:mt-0 md:table-cell md:py-3 md:pr-4 md:align-top">
-                  <StockCell id={row.id} stock={row.stock} />
+                  <StockCell id={row.id} stock={row.stock} stockQty={row.stockQty} />
                 </td>
 
                 <td className="hidden whitespace-nowrap md:table-cell md:py-3 md:align-top">
@@ -454,10 +465,36 @@ function PriceCell({ id, priceKop }: { id: string; priceKop: number }) {
   );
 }
 
-function StockCell({ id, stock }: { id: string; stock: StockStateName }) {
+/**
+ * Availability, edited where it is shown — as a count when there is one.
+ *
+ * Two states. A counted product shows its number, which is what the owner came
+ * to read, and the word it gives; tapping the number edits it, the way the
+ * price is edited. An uncounted product shows the select it always had, and an
+ * «остаток» button to start counting — so nothing changes for an owner who does
+ * not count, and one who wants to begins with a single tap.
+ *
+ * The word is not editable on a counted product: it is computed from the
+ * number, and a select beside it would be a second place to disagree.
+ *
+ * Emptying the field stops counting rather than saving a zero. Zero is «нет в
+ * наличии» and means something; empty means «не веду учёт».
+ */
+function StockCell({
+  id,
+  stock,
+  stockQty,
+}: {
+  id: string;
+  stock: StockStateName;
+  stockQty: number | null;
+}) {
   const router = useRouter();
   const [shown, setShown] = useState(stock);
   const [pending, startTransition] = useTransition();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(stockQty === null ? "" : String(stockQty));
+  const [error, setError] = useState<string | null>(null);
 
   const [seen, setSeen] = useState(stock);
   if (seen !== stock) {
@@ -465,8 +502,90 @@ function StockCell({ id, stock }: { id: string; stock: StockStateName }) {
     setShown(stock);
   }
 
+  // A count that changed on the server — saved here a moment ago, or edited in
+  // another tab — replaces what the field was holding.
+  const [seenQty, setSeenQty] = useState(stockQty);
+  if (seenQty !== stockQty) {
+    setSeenQty(stockQty);
+    setValue(stockQty === null ? "" : String(stockQty));
+  }
+
+  const saveQty = () => {
+    const parsed = parseStockQty(value);
+    if (parsed === undefined) {
+      setError("Целое число штук");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await editStockQty({ id, stockQty: parsed });
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    });
+  };
+
+  if (editing) {
+    return (
+      <span className="inline-flex flex-col gap-1">
+        <span className="inline-flex items-center gap-1">
+          <input
+            autoFocus
+            onFocus={(e) => e.currentTarget.select()}
+            value={value}
+            disabled={pending}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveQty();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            inputMode="numeric"
+            aria-label="Остаток, шт"
+            placeholder="не веду"
+            className="bg-surface text-ink border-control w-24 rounded-md border px-2 text-sm tabular-nums"
+          />
+          <Button variant="quiet" onClick={saveQty} loading={pending}>
+            ОК
+          </Button>
+          <Button variant="quiet" onClick={() => setEditing(false)} disabled={pending}>
+            Отмена
+          </Button>
+        </span>
+        <span className="text-muted text-xs">Пусто — не вести учёт</span>
+        {error ? (
+          <span role="alert" className="text-danger text-xs">
+            {error}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+
+  if (stockQty !== null) {
+    return (
+      <span className="inline-flex flex-wrap items-center gap-x-2">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          aria-label={`Изменить остаток: ${stockQty} шт`}
+          className="text-ink hover:bg-primary-wash -mx-2 inline-flex min-h-11 items-center rounded-full px-2 font-bold tabular-nums transition-colors"
+        >
+          {formatQty(stockQty)} шт
+        </button>
+        <span
+          className={`text-xs font-semibold ${stock === "OUT" ? "text-danger" : "text-muted"}`}
+        >
+          {STOCK_LABELS[stock]}
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <>
+    <span className="inline-flex flex-wrap items-center gap-x-2">
       <label htmlFor={`stock-${id}`} className="sr-only">
         Наличие
       </label>
@@ -492,7 +611,14 @@ function StockCell({ id, stock }: { id: string; stock: StockStateName }) {
           </option>
         ))}
       </select>
-    </>
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="text-muted hover:text-ink inline-flex min-h-11 items-center text-xs font-semibold underline decoration-rule underline-offset-4 hover:decoration-ink"
+      >
+        остаток
+      </button>
+    </span>
   );
 }
 

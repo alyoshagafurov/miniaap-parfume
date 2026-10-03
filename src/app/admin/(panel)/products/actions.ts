@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { PUBLISH_STATUSES, STOCK_STATES } from "@/lib/admin-products";
 import { GENDERS } from "@/lib/list-url";
+import { MAX_STOCK_QTY } from "@/lib/stock";
 import { searchFragrances, type FragranceOption } from "@/server/admin/product-form";
 import { requirePermission } from "@/server/auth/roles";
 import { fromAction } from "@/server/catalog/revalidate";
@@ -21,6 +22,7 @@ import {
   deleteProduct,
   setProductPrice,
   setProductStock,
+  setProductStockQty,
   updateProduct,
   type BulkAction,
 } from "@/server/catalog/mutations/products";
@@ -39,7 +41,11 @@ import { deleteObjects, renditionKeys } from "@/server/storage/s3";
  * the tags after the commit. There is no path here that writes and forgets.
  */
 
-export type ActionResult = { ok: true } | { ok: false; message: string };
+/**
+ * `note` is a sentence for the screen when an action succeeded but did less
+ * than was asked — not an error, and not worth hiding.
+ */
+export type ActionResult = { ok: true; note?: string } | { ok: false; message: string };
 
 /**
  * Turns a mutation into something a screen can print.
@@ -48,10 +54,14 @@ export type ActionResult = { ok: true } | { ok: false; message: string };
  * message is shown. Anything else is a fault, and its message may carry a
  * column name or a connection string, so it is replaced.
  */
-async function run(work: () => Promise<unknown>): Promise<ActionResult> {
+async function run<T>(
+  work: () => Promise<T>,
+  note?: (result: T) => string | undefined,
+): Promise<ActionResult> {
   try {
-    await work();
-    return { ok: true };
+    const result = await work();
+    const text = note?.(result);
+    return text ? { ok: true, note: text } : { ok: true };
   } catch (error) {
     if (error instanceof CatalogConflict) return { ok: false, message: error.message };
     return { ok: false, message: "Не удалось сохранить. Попробуйте ещё раз." };
@@ -79,8 +89,16 @@ export async function bulkProducts(input: unknown): Promise<ActionResult> {
   const parsed = BulkInput.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Некорректный запрос" };
 
-  return run(() =>
-    fromAction(bulkUpdateProducts(parsed.data.ids, parsed.data.action as BulkAction)),
+  const { ids, action } = parsed.data;
+  return run(
+    () => fromAction(bulkUpdateProducts(ids, action as BulkAction)),
+    // Only a word can be refused to some of the products: one that has a count
+    // takes its word from the count. Saying how many were left alone is the
+    // difference between «сделано» and «сделано не всё».
+    (changed) =>
+      action.kind === "stock" && changed < ids.length
+        ? `Изменено ${changed} из ${ids.length}. У остальных есть остаток — их статус считается по числу, поменяйте остаток.`
+        : undefined,
   );
 }
 
@@ -97,6 +115,24 @@ export async function editPrice(input: unknown): Promise<ActionResult> {
   if (!parsed.success) return { ok: false, message: "Некорректная цена" };
 
   return run(() => fromAction(setProductPrice(parsed.data.id, parsed.data.priceKop)));
+}
+
+const StockQtyInput = z.object({
+  id: z.string().min(1).max(64),
+  // Null stops counting; a number starts it, or corrects it.
+  stockQty: z.number().int().min(0).max(MAX_STOCK_QTY).nullable(),
+});
+
+export async function editStockQty(input: unknown): Promise<ActionResult> {
+  await requirePermission("catalog:write");
+  const parsed = StockQtyInput.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: "Остаток — целое число штук от 0 до 1 000 000" };
+  }
+
+  return run(() =>
+    fromAction(setProductStockQty(parsed.data.id, parsed.data.stockQty)),
+  );
 }
 
 const StockInput = z.object({
@@ -145,6 +181,7 @@ const FIELD_PROBLEMS: Record<string, string> = {
   oldPriceKop: "Старая цена должна быть больше нуля",
   packSize: "Кратность — целое число от 1 до 9999",
   stock: "Выберите наличие",
+  stockQty: "Остаток — целое число штук от 0 до 1 000 000",
   status: "Выберите статус",
   popularity: "Популярность — целое число от 0 до 1 000 000",
 };
@@ -182,6 +219,8 @@ const ProductInputSchema = z.object({
   oldPriceKop: z.number().int().positive().max(2_147_483_647).nullable(),
   packSize: z.number().int().min(1).max(9999),
   stock: z.enum(STOCK_STATES),
+  // Null is «не веду учёт»; a number makes the status follow from it.
+  stockQty: z.number().int().min(0).max(MAX_STOCK_QTY).nullable(),
   status: z.enum(PUBLISH_STATUSES),
   isNew: z.boolean(),
   isHit: z.boolean(),

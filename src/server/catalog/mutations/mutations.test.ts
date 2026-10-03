@@ -10,7 +10,16 @@ import {
   updateCategory,
 } from "./categories";
 import { createFragrance } from "./fragrances";
-import { createProduct, updateProduct } from "./products";
+import { importProducts } from "./import";
+import {
+  bulkUpdateProducts,
+  copyToFormat,
+  createProduct,
+  setProductStock,
+  setProductStockQty,
+  updateProduct,
+  type ProductInput,
+} from "./products";
 import { CatalogConflict } from "./run";
 
 /**
@@ -49,7 +58,7 @@ async function removeFixtures() {
 beforeAll(removeFixtures);
 afterAll(removeFixtures);
 
-async function fixture(suffix: string) {
+async function fixture(suffix: string, over: Partial<ProductInput> = {}) {
   const category = await createCategory({
     name: `${MARK} категория ${suffix}`,
     slug: `${MARK}-cat-${suffix}`,
@@ -84,10 +93,12 @@ async function fixture(suffix: string) {
     oldPriceKop: null,
     packSize: 1,
     stock: "IN_STOCK",
+    stockQty: null,
     status: "PUBLISHED",
     isNew: false,
     isHit: false,
     popularity: 0,
+    ...over,
   });
   return { category, brand, fragrance, product };
 }
@@ -167,6 +178,7 @@ describe.skipIf(!reachable)("мутации каталога — теги и о�
         oldPriceKop: null,
         packSize: 1,
         stock: "IN_STOCK",
+        stockQty: null,
         status: "PUBLISHED",
         isNew: false,
         isHit: false,
@@ -195,6 +207,7 @@ describe.skipIf(!reachable)("мутации каталога — теги и о�
       oldPriceKop: null,
       packSize: 1,
       stock: "IN_STOCK",
+      stockQty: null,
       status: "PUBLISHED",
       isNew: false,
       isHit: false,
@@ -276,5 +289,216 @@ describe.skipIf(!reachable)("мутации каталога — теги и о�
         description: null,
       }),
     ).rejects.toThrow(`У бренда ${MARK} Бренд h уже есть аромат «Аромат h»`);
+  });
+});
+
+describe.skipIf(!reachable)("остаток товара", () => {
+  const stateOf = (id: string) =>
+    prisma.product.findUniqueOrThrow({
+      where: { id },
+      select: { stock: true, stockQty: true },
+    });
+
+  it("число задаёт статус, и запрошенное слово при нём не учитывается", async () => {
+    // The word asked for is «нет», the count is a hundred: the count wins.
+    const { product } = await fixture("s1", {
+      stock: "OUT",
+      stockQty: 100,
+      packSize: 10,
+    });
+    expect(await stateOf(product.data.id)).toEqual({
+      stock: "IN_STOCK",
+      stockQty: 100,
+    });
+  });
+
+  it("правка остатка пересчитывает статус: нуль — нет, до трёх упаковок — мало", async () => {
+    const { product } = await fixture("s2", { stockQty: 100, packSize: 10 });
+    const id = product.data.id;
+
+    const edited = await setProductStockQty(id, 30);
+    expect(await stateOf(id)).toEqual({ stock: "LOW", stockQty: 30 });
+    // The listing and the page of this product are dirtied, or the old count
+    // stays on the shelf for an hour.
+    expect(edited.tags).toContain(`product:${product.data.slug}`);
+
+    await setProductStockQty(id, 0);
+    expect(await stateOf(id)).toEqual({ stock: "OUT", stockQty: 0 });
+
+    await setProductStockQty(id, 500);
+    expect(await stateOf(id)).toEqual({ stock: "IN_STOCK", stockQty: 500 });
+  });
+
+  it("пустой остаток перестаёт вести учёт и оставляет статус как был", async () => {
+    const { product } = await fixture("s3", { stockQty: 30, packSize: 10 });
+    const id = product.data.id;
+    expect(await stateOf(id)).toEqual({ stock: "LOW", stockQty: 30 });
+
+    await setProductStockQty(id, null);
+    expect(await stateOf(id)).toEqual({ stock: "LOW", stockQty: null });
+  });
+
+  it.each([-1, 1.5, 1_000_001])(
+    "остаток %s отклоняется понятным отказом",
+    async (qty) => {
+      const { product } = await fixture(`s4-${String(qty).replace(/\W/g, "")}`);
+      await expect(setProductStockQty(product.data.id, qty)).rejects.toBeInstanceOf(
+        CatalogConflict,
+      );
+    },
+  );
+
+  it("смена кратности пересчитывает «мало»: оно считается упаковками", async () => {
+    const { product, category, fragrance } = await fixture("s5", {
+      stockQty: 100,
+      packSize: 10,
+    });
+    expect((await stateOf(product.data.id)).stock).toBe("IN_STOCK");
+
+    await updateProduct(product.data.id, {
+      categoryId: category.data.id,
+      fragranceIds: [fragrance.data.id],
+      sku: `${MARK}-s5`,
+      volumeMl: 100,
+      priceKop: 100_000,
+      oldPriceKop: null,
+      // Fifty to a pack: a hundred is now two packs, which is «мало».
+      packSize: 50,
+      stock: "IN_STOCK",
+      stockQty: 100,
+      status: "PUBLISHED",
+      isNew: false,
+      isHit: false,
+      popularity: 0,
+    });
+    expect(await stateOf(product.data.id)).toEqual({ stock: "LOW", stockQty: 100 });
+  });
+
+  it("слово, выбранное вручную: у посчитанного «нет» — это нуль, остальное снимает учёт", async () => {
+    const counted = (await fixture("s6a", { stockQty: 100 })).product.data.id;
+    const out = (await fixture("s6b", { stockQty: 100 })).product.data.id;
+    const plain = (await fixture("s6c", { stock: "LOW" })).product.data.id;
+
+    await setProductStock(counted, "IN_STOCK");
+    expect(await stateOf(counted)).toEqual({ stock: "IN_STOCK", stockQty: null });
+
+    await setProductStock(out, "OUT");
+    expect(await stateOf(out)).toEqual({ stock: "OUT", stockQty: 0 });
+
+    // Not counted stays not counted.
+    await setProductStock(plain, "PREORDER");
+    expect(await stateOf(plain)).toEqual({ stock: "PREORDER", stockQty: null });
+  });
+
+  it("массовое слово не трогает посчитанные товары, а «нет» обнуляет их", async () => {
+    const a = (await fixture("s7a", { stockQty: 100 })).product.data.id;
+    const b = (await fixture("s7b", { stockQty: 100 })).product.data.id;
+    const c = (await fixture("s7c", { stock: "OUT" })).product.data.id;
+
+    // Only the uncounted one changes, and the count says how many that was —
+    // the screen turns it into «изменено 1 из 3».
+    const marked = await bulkUpdateProducts([a, b, c], {
+      kind: "stock",
+      stock: "IN_STOCK",
+    });
+    expect(marked.data).toBe(1);
+    expect(await stateOf(a)).toEqual({ stock: "IN_STOCK", stockQty: 100 });
+    expect(await stateOf(c)).toEqual({ stock: "IN_STOCK", stockQty: null });
+
+    const gone = await bulkUpdateProducts([a, b, c], { kind: "stock", stock: "OUT" });
+    expect(gone.data).toBe(3);
+    expect(await stateOf(a)).toEqual({ stock: "OUT", stockQty: 0 });
+    expect(await stateOf(b)).toEqual({ stock: "OUT", stockQty: 0 });
+    expect(await stateOf(c)).toEqual({ stock: "OUT", stockQty: null });
+  });
+
+  it("копия в другом формате не берёт остаток: он посчитан для другого флакона", async () => {
+    const { product, category } = await fixture("s8", { stockQty: 100 });
+    const copy = await copyToFormat(product.data.id, {
+      categoryId: category.data.id,
+      sku: `${MARK}-s8-copy`,
+      volumeMl: 35,
+      priceKop: 50_000,
+      packSize: 1,
+    });
+    expect(await stateOf(copy.data.id)).toEqual({ stock: "IN_STOCK", stockQty: null });
+  });
+
+  describe("загрузка прайса", () => {
+    const row = (suffix: string, over: Record<string, unknown> = {}) => ({
+      row: 2,
+      sku: `${MARK}-${suffix}`,
+      brand: `${MARK} Бренд ${suffix}`,
+      fragrance: `Аромат ${suffix}`,
+      fragrance2: null,
+      category: `${MARK} категория ${suffix}`,
+      title: null,
+      volumeMl: 100,
+      priceKop: 110_000,
+      oldPriceKop: null,
+      packSize: 1,
+      stock: null,
+      stockQty: null,
+      status: null,
+      isNew: false,
+      isHit: false,
+      gender: null,
+      ...over,
+    });
+
+    it("файл без остатка не стирает посчитанное в панели", async () => {
+      const { product } = await fixture("s9", { stockQty: 100 });
+      const id = product.data.id;
+
+      await importProducts([row("s9")]);
+
+      // The price moved, the count did not.
+      expect(await stateOf(id)).toEqual({ stock: "IN_STOCK", stockQty: 100 });
+      const priced = await prisma.product.findUniqueOrThrow({
+        where: { id },
+        select: { priceKop: true },
+      });
+      expect(priced.priceKop).toBe(110_000);
+    });
+
+    it("число в файле задаёт остаток и статус, слово — снимает учёт", async () => {
+      const { product } = await fixture("s10");
+      const id = product.data.id;
+
+      await importProducts([row("s10", { stockQty: 2 })]);
+      expect(await stateOf(id)).toEqual({ stock: "LOW", stockQty: 2 });
+
+      await importProducts([row("s10", { stock: "OUT" })]);
+      expect(await stateOf(id)).toEqual({ stock: "OUT", stockQty: null });
+    });
+
+    it("при смене кратности пустая клетка пересчитывает слово по остатку", async () => {
+      const { product } = await fixture("s11", { stockQty: 100, packSize: 10 });
+      const id = product.data.id;
+      expect((await stateOf(id)).stock).toBe("IN_STOCK");
+
+      // The file says nothing about stock but moves the pack to fifty.
+      await importProducts([row("s11", { packSize: 50 })]);
+      expect(await stateOf(id)).toEqual({ stock: "LOW", stockQty: 100 });
+    });
+
+    it("новый товар из файла получает остаток и вычисленный статус", async () => {
+      const { category, brand, fragrance } = await fixture("s12");
+      void category;
+      void brand;
+      void fragrance;
+      await importProducts([
+        row("s12", {
+          sku: `${MARK}-s12-new`,
+          stockQty: 500,
+          packSize: 12,
+        }),
+      ]);
+      const created = await prisma.product.findUniqueOrThrow({
+        where: { sku: `${MARK}-s12-new` },
+        select: { stock: true, stockQty: true },
+      });
+      expect(created).toEqual({ stock: "IN_STOCK", stockQty: 500 });
+    });
   });
 });

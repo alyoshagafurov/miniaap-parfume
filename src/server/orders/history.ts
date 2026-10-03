@@ -1,3 +1,4 @@
+import { maxOrderableQty } from "@/lib/stock";
 import { prisma } from "@/server/db";
 
 /**
@@ -72,6 +73,7 @@ export interface RepeatLine {
   seenPriceKop: number;
   seenPackSize: number;
   seenStock: "IN_STOCK" | "LOW" | "OUT" | "PREORDER";
+  seenStockQty: number | null;
   slug: string;
   title: string;
   brandName: string;
@@ -121,6 +123,7 @@ export async function repeatOrderFor(
           priceKop: true,
           packSize: true,
           stock: true,
+          stockQty: true,
           volumeMl: true,
           images: { select: { key: true }, orderBy: { sortOrder: "asc" }, take: 1 },
           fragrances: {
@@ -143,7 +146,10 @@ export async function repeatOrderFor(
       unavailable.push({ title: item.title, reason: "GONE" });
       continue;
     }
-    if (product.stock === "OUT") {
+    // «Нет в наличии», and also less than one pack on the shelf: neither can be
+    // put in a basket today, and both are said by name instead of dropped.
+    const limit = maxOrderableQty(product);
+    if (product.stock === "OUT" || limit === 0) {
       unavailable.push({ title: item.title, reason: "OUT_OF_STOCK" });
       continue;
     }
@@ -154,10 +160,14 @@ export async function repeatOrderFor(
       productId: product.id,
       // The pack may have grown since; round up, the same way everything else
       // does, rather than send a quantity the server will silently correct.
-      qty: Math.ceil(item.qty / pack) * pack,
+      // — and no more than the shelf holds, which is also what the server would
+      // lower it to. A repeat of last month's fifty when thirty are left is a
+      // basket of thirty, not a basket that is refused at the last step.
+      qty: Math.min(Math.ceil(item.qty / pack) * pack, limit),
       seenPriceKop: product.priceKop,
       seenPackSize: pack,
       seenStock: product.stock,
+      seenStockQty: product.stockQty,
       slug: product.slug,
       title: names.join(" + ") || item.title,
       brandName: product.fragrances[0]?.fragrance.brand.name ?? item.brandName,

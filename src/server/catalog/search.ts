@@ -48,7 +48,7 @@ export interface SearchOptions {
  */
 const CARD_COLUMNS = Prisma.sql`
   p.id, p.slug, p.sku, p.title, p."priceKop", p."oldPriceKop", p."packSize",
-  p.stock::text AS stock, p."volumeMl", p."isNew", p."isHit", p.popularity,
+  p.stock::text AS stock, p."stockQty", p."volumeMl", p."isNew", p."isHit", p.popularity,
   p."publishedAt",
   b.name AS "brandName", b.slug AS "brandSlug",
   COALESCE((

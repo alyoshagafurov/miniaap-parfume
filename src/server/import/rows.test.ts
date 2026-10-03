@@ -138,8 +138,59 @@ describe("parseRows", () => {
     expect(parse(row).rows[0]?.stock).toBe(expected);
   });
 
-  it("defaults stock to IN_STOCK when the column is blank", () => {
-    expect(parse(GOOD).rows[0]?.stock).toBe("IN_STOCK");
+  it("says nothing about availability when the cell is blank", () => {
+    // Blank used to read as «в наличии», which meant a price list without the
+    // column reset every product the owner had counted. Now it is silence, and
+    // the importer leaves what is there alone.
+    const row = parse(GOOD).rows[0];
+    expect(row?.stock).toBeNull();
+    expect(row?.stockQty).toBeNull();
+  });
+
+  it.each([
+    ["240", 240],
+    ["0", 0],
+    ["1 200", 1200],
+    ["24 шт", 24],
+  ])("reads the number %j as a count of %i", (input, expected) => {
+    const row = [...GOOD];
+    row[8] = input;
+    const parsed = parse(row);
+    expect(parsed.errors).toEqual([]);
+    // A count carries no word of its own: the word is computed from it.
+    expect(parsed.rows[0]?.stockQty).toBe(expected);
+    expect(parsed.rows[0]?.stock).toBeNull();
+  });
+
+  it("keeps a word as a word, with no count", () => {
+    const row = [...GOOD];
+    row[8] = "мало";
+    const parsed = parse(row);
+    expect(parsed.rows[0]?.stock).toBe("LOW");
+    expect(parsed.rows[0]?.stockQty).toBeNull();
+  });
+
+  it.each(["12,5", "12 коробок", "1e3", "5000000"])(
+    "refuses the count %j instead of reading part of it",
+    (input) => {
+      const row = [...GOOD];
+      row[8] = input;
+      const parsed = parse(row);
+      expect(parsed.rows).toEqual([]);
+      expect(parsed.errors[0]?.field).toBe("stock");
+      expect(parsed.errors[0]?.message).toMatch(/число штук/);
+    },
+  );
+
+  it("reads «Остаток» and «Количество» headers as the same column", () => {
+    for (const header of ["Остаток", "Остатки", "Количество", "Кол-во", "На складе"]) {
+      const headers = HEADERS.map((h) => (h === "Наличие" ? header : h));
+      const row = [...GOOD];
+      row[8] = "50";
+      const parsed = parseRows([headers, row], matchHeaders(headers));
+      expect(parsed.errors, header).toEqual([]);
+      expect(parsed.rows[0]?.stockQty, header).toBe(50);
+    }
   });
 
   it("rejects an unrecognised stock value rather than guessing", () => {

@@ -96,9 +96,21 @@ export const COLUMNS: Record<ImportField, ColumnDef> = {
     synonyms: ["Кратность", "Упаковка", "В упаковке", "Кратно", "Минимальная партия"],
   },
   stock: {
+    // One column for both kinds of answer: a word («есть», «мало», «нет») or a
+    // count of pieces. Which it is, is read from the cell, not from the header.
     label: "Наличие",
     required: false,
-    synonyms: ["Наличие", "Остаток", "В наличии", "Склад", "Остатки"],
+    synonyms: [
+      "Наличие",
+      "Остаток",
+      "В наличии",
+      "Склад",
+      "Остатки",
+      "Остаток шт",
+      "Кол-во",
+      "Количество",
+      "На складе",
+    ],
   },
   status: {
     label: "Статус",

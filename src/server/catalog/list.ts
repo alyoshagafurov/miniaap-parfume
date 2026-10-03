@@ -55,6 +55,8 @@ export interface ListedProduct {
   oldPriceKop: number | null;
   packSize: number;
   stock: "IN_STOCK" | "LOW" | "OUT" | "PREORDER";
+  /** The count on the shelf, or null when the owner does not keep one. */
+  stockQty: number | null;
   volumeMl: number;
   isNew: boolean;
   isHit: boolean;
@@ -214,7 +216,7 @@ export async function listProducts(params: ListParams): Promise<ListResult> {
   const rows = await prisma.$queryRaw<ListedProduct[]>`
     SELECT
       p.id, p.slug, p.sku, p.title, p."priceKop", p."oldPriceKop", p."packSize",
-      p.stock::text AS stock, p."volumeMl", p."isNew", p."isHit", p.popularity,
+      p.stock::text AS stock, p."stockQty", p."volumeMl", p."isNew", p."isHit", p.popularity,
       p."publishedAt",
       b.name AS "brandName", b.slug AS "brandSlug",
       COALESCE((

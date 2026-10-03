@@ -111,6 +111,7 @@ export async function ProductFormLoader({ id }: { id: string | null }) {
           oldPrice: product ? kopToField(product.oldPriceKop) : "",
           packSize: product ? String(product.packSize) : "1",
           stock: (product?.stock ?? "IN_STOCK") as StockStateName,
+          stockQty: product?.stockQty == null ? "" : String(product.stockQty),
           status: (product?.status ?? "DRAFT") as PublishStatusName,
           isNew: product?.isNew ?? false,
           isHit: product?.isHit ?? false,

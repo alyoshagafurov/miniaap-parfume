@@ -23,6 +23,7 @@ export interface ProductFormData {
     oldPriceKop: number | null;
     packSize: number;
     stock: string;
+    stockQty: number | null;
     status: string;
     isNew: boolean;
     isHit: boolean;
@@ -56,6 +57,7 @@ export async function getProductForm(id: string | null): Promise<ProductFormData
       oldPriceKop: true,
       packSize: true,
       stock: true,
+      stockQty: true,
       status: true,
       isNew: true,
       isHit: true,

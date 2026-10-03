@@ -12,6 +12,7 @@ const CATALOG: Record<string, CatalogEntry> = {
     priceKop: 150_000,
     packSize: 1,
     stock: "IN_STOCK",
+    stockQty: null,
     status: "PUBLISHED",
     imageKey: null,
   },
@@ -24,6 +25,7 @@ const CATALOG: Record<string, CatalogEntry> = {
     priceKop: 50_000,
     packSize: 6,
     stock: "IN_STOCK",
+    stockQty: null,
     status: "PUBLISHED",
     imageKey: null,
   },
@@ -36,6 +38,7 @@ const CATALOG: Record<string, CatalogEntry> = {
     priceKop: 120_000,
     packSize: 1,
     stock: "OUT",
+    stockQty: null,
     status: "PUBLISHED",
     imageKey: null,
   },
@@ -48,6 +51,7 @@ const CATALOG: Record<string, CatalogEntry> = {
     priceKop: 99_000,
     packSize: 1,
     stock: "IN_STOCK",
+    stockQty: null,
     status: "DRAFT",
     imageKey: null,
   },
@@ -118,6 +122,63 @@ describe("availability", () => {
     const q = quoteCart([line("pDraft", 1)], CATALOG, SETTINGS);
     expect(q.lines).toHaveLength(0);
     expect(q.removed).toContainEqual({ productId: "pDraft", reason: "UNAVAILABLE" });
+  });
+});
+
+describe("a counted shelf", () => {
+  // Sold in sixes, a hundred on the shelf: sixteen packs, ninety-six bottles.
+  const counted = (over: Partial<CatalogEntry> = {}): Record<string, CatalogEntry> => ({
+    p6: { ...CATALOG.p6!, stock: "IN_STOCK", stockQty: 100, ...over },
+  });
+
+  it("lowers a quantity above what is on the shelf, to whole packs, and says so", () => {
+    const q = quoteCart([line("p6", 120)], counted(), SETTINGS);
+    expect(q.lines[0]?.qty).toBe(96);
+    expect(q.adjusted).toContainEqual({
+      productId: "p6",
+      from: 120,
+      to: 96,
+      reason: "STOCK_LIMIT",
+    });
+    // Priced at what is actually sent.
+    expect(q.subtotalKop).toBe(96 * 50_000);
+  });
+
+  it("leaves a quantity that fits exactly as it is", () => {
+    const q = quoteCart([line("p6", 96)], counted(), SETTINGS);
+    expect(q.lines[0]?.qty).toBe(96);
+    expect(q.adjusted).toEqual([]);
+  });
+
+  it("lowers two lines for the same product together, not one at a time", () => {
+    // Each fits alone; together they are 120.
+    const q = quoteCart([line("p6", 60), line("p6", 60)], counted(), SETTINGS);
+    expect(q.lines).toHaveLength(1);
+    expect(q.lines[0]?.qty).toBe(96);
+  });
+
+  it("refuses a product with less than one pack on the shelf, as if it were out", () => {
+    const q = quoteCart(
+      [line("p6", 6)],
+      counted({ stock: "LOW", stockQty: 5 }),
+      SETTINGS,
+    );
+    expect(q.lines).toEqual([]);
+    expect(q.removed).toEqual([{ productId: "p6", reason: "OUT_OF_STOCK" }]);
+  });
+
+  it("does not limit a pre-order, which is a promise beyond the shelf", () => {
+    const q = quoteCart(
+      [line("p6", 600)],
+      counted({ stock: "PREORDER", stockQty: 0 }),
+      SETTINGS,
+    );
+    expect(q.lines[0]?.qty).toBe(600);
+  });
+
+  it("does not limit a product nobody counts", () => {
+    const q = quoteCart([line("p6", 600)], counted({ stockQty: null }), SETTINGS);
+    expect(q.lines[0]?.qty).toBe(600);
   });
 });
 

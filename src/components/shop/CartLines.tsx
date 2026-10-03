@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Price } from "@/components/ui/Price";
 import { ProductImage } from "@/components/shop/ProductImage";
 import { Stepper } from "@/components/ui/Stepper";
+import { maxOrderableQty } from "@/lib/stock";
 
 /**
  * The lines of a request.
@@ -83,6 +84,11 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
               qty={line.qty}
               packSize={line.seenPackSize}
               label={line.title}
+              max={maxOrderableQty({
+                stock: line.seenStock,
+                stockQty: line.seenStockQty ?? null,
+                packSize: line.seenPackSize,
+              })}
               onChange={(next) => {
                 haptics.tap();
                 setQuantity(line.productId, next);
@@ -90,7 +96,11 @@ export function CartLines({ showPrices }: { showPrices: boolean }) {
             />
             <div className="flex items-center gap-4">
               {showPrices ? (
-                <Price kop={line.seenPriceKop * line.qty} showPrices className="text-lg" />
+                <Price
+                  kop={line.seenPriceKop * line.qty}
+                  showPrices
+                  className="text-lg"
+                />
               ) : null}
               <Button
                 variant="quiet"

@@ -91,6 +91,85 @@ test.describe("Админка — действия", () => {
     await shop.close();
   });
 
+  test("остаток, вписанный в админке, виден покупателю и не даёт заказать больше", async ({
+    page,
+    browser,
+  }, info) => {
+    await useAdmin(page, OWNER);
+    await page.goto("/admin/products?q=ARM-1040");
+
+    // The exact row, for the reason the price test gives.
+    const row = page
+      .getByRole("row")
+      .filter({ has: page.getByLabel("Выбрать ARM-1040", { exact: true }) });
+    await expect(row).toBeVisible({ timeout: 15_000 });
+
+    const shop = await browser.newContext();
+    const buyer = await shop.newPage();
+    try {
+      // Not counted yet: the select the table always had, and a way to start.
+      await row.getByRole("button", { name: "остаток" }).click();
+      const field = row.getByRole("textbox", { name: "Остаток, шт" });
+      await expect(field).toBeVisible();
+      // Sold in twelves: a hundred is eight packs, so ninety-six can be ordered
+      // and the word is «в наличии», not «мало».
+      await field.fill("100");
+      await field.press("Enter");
+      await expect(
+        row.getByRole("button", { name: /^Изменить остаток: 100/ }),
+      ).toBeVisible({ timeout: 15_000 });
+      await shot(page, info, "36-admin-stock-counted");
+
+      // The storefront as a buyer meets it: no session, nothing cached on
+      // their side. The tag has to have been invalidated for this to be new.
+      const base = test.info().project.use.baseURL ?? "http://localhost:3100";
+      await buyer.goto(`${base}/p/lancome-idole-35ml-arm-1040`);
+      await expect
+        .poll(() => buyer.getByText("В наличии 100 шт · 8 упак. по 12").count(), {
+          message: "витрина не показала остаток",
+          timeout: 15_000,
+        })
+        .toBeGreaterThan(0);
+
+      // The stepper stops at ninety-six, and says why.
+      const stepper = buyer.getByRole("group", { name: /^Количество:/ });
+      const plus = stepper.getByRole("button", { name: "Увеличить" });
+      for (let i = 0; i < 12 && (await plus.isEnabled()); i += 1) await plus.click();
+      await expect(plus).toBeDisabled();
+      await expect(stepper.getByRole("status")).toHaveText("96");
+      await expect(
+        buyer.getByText(/Максимум 96 шт, кратно 12 — на складе 100/),
+      ).toBeVisible();
+      await shot(buyer, info, "37-shop-availability-cap");
+
+      // And it follows the line into the basket, where the stepper has the same
+      // ceiling: the limit does not depend on which screen it is met on.
+      await buyer.getByRole("button", { name: "В заявку" }).click();
+      await buyer.goto(`${base}/cart`);
+      const inBasket = buyer.getByRole("group", { name: /^Количество:/ }).first();
+      await expect(inBasket.getByRole("status")).toHaveText("96");
+      await expect(inBasket.getByRole("button", { name: "Увеличить" })).toBeDisabled();
+    } finally {
+      // Put the product back, whatever happened above: left counted, every
+      // other spec would meet a hundred bottles where it expects no limit.
+      await shop.close();
+      await page.goto("/admin/products?q=ARM-1040");
+      const again = page
+        .getByRole("row")
+        .filter({ has: page.getByLabel("Выбрать ARM-1040", { exact: true }) });
+      const counted = again.getByRole("button", { name: /^Изменить остаток/ });
+      if (await counted.isVisible().catch(() => false)) {
+        await counted.click();
+        const clear = again.getByRole("textbox", { name: "Остаток, шт" });
+        await clear.fill("");
+        await clear.press("Enter");
+        await expect(again.getByRole("button", { name: "остаток" })).toBeVisible({
+          timeout: 15_000,
+        });
+      }
+    }
+  });
+
   test("фотография с телефона встаёт вертикально, а не боком", async ({
     page,
   }, info) => {

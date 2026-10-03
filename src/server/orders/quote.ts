@@ -1,4 +1,5 @@
 import { sumKop } from "@/lib/money";
+import { maxOrderableQty } from "@/lib/stock";
 
 /**
  * Pricing a request.
@@ -31,6 +32,8 @@ export interface CatalogEntry {
   priceKop: number;
   packSize: number;
   stock: string;
+  /** The count on the shelf, or null when the owner does not keep one. */
+  stockQty: number | null;
   status: string;
   imageKey: string | null;
 }
@@ -44,7 +47,7 @@ export interface QuotedLine extends CatalogEntry {
 export type RemovalReason =
   "NOT_FOUND" | "UNAVAILABLE" | "OUT_OF_STOCK" | "BAD_QUANTITY";
 
-export type AdjustmentReason = "PACK_SIZE" | "MAX_QUANTITY";
+export type AdjustmentReason = "PACK_SIZE" | "MAX_QUANTITY" | "STOCK_LIMIT";
 
 export interface Quote {
   lines: QuotedLine[];
@@ -100,6 +103,16 @@ export function quoteCart(
       removed.push({ productId, reason: "OUT_OF_STOCK" });
       continue;
     }
+
+    // What is on the shelf, in whole packs. Below one pack there is nothing a
+    // buyer can order — a product sold in twelves with five left — and that is
+    // the same answer to them as «нет в наличии»: it cannot go in the request.
+    const limit = maxOrderableQty(entry);
+    if (limit === 0) {
+      removed.push({ productId, reason: "OUT_OF_STOCK" });
+      continue;
+    }
+
     if (!Number.isInteger(rawQty) || rawQty <= 0) {
       removed.push({ productId, reason: "BAD_QUANTITY" });
       continue;
@@ -121,6 +134,15 @@ export function quoteCart(
       const capped = Math.floor(MAX_QTY_PER_LINE / pack) * pack;
       adjusted.push({ productId, from: qty, to: capped, reason: "MAX_QUANTITY" });
       qty = capped;
+    }
+
+    // Lowered rather than refused: the buyer asked for fifty and there are
+    // thirty, and a request for thirty is the one they can still make. It is
+    // reported to them as a change, so it is never a smaller order they did not
+    // see. `limit` is a whole number of packs, so the pack rule still holds.
+    if (qty > limit) {
+      adjusted.push({ productId, from: qty, to: limit, reason: "STOCK_LIMIT" });
+      qty = limit;
     }
 
     lines.push({

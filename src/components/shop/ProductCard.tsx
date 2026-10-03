@@ -3,13 +3,19 @@ import Link from "next/link";
 import { Mark } from "@/components/ui/Mark";
 import { Price } from "@/components/ui/Price";
 import { ProductImage } from "@/components/shop/ProductImage";
+import { describeAvailability } from "@/lib/stock";
 import type { ProductCard as ProductCardData } from "@/server/catalog/queries";
 
-const STOCK_LABEL: Record<string, string> = {
-  LOW: "Мало",
-  OUT: "Нет в наличии",
-  PREORDER: "Под заказ",
-};
+/**
+ * How availability is coloured. Danger is for «нет» alone; «осталось» is the
+ * body colour in weight rather than a warning tint, because amber is spent on
+ * money and nothing else.
+ */
+const AVAILABILITY_TONE = {
+  plain: "text-muted",
+  low: "text-ink",
+  out: "text-danger",
+} as const;
 
 /**
  * A product in a list: one object on a white stage.
@@ -49,7 +55,7 @@ export function ProductCard({
   const primary = product.fragrances[0];
   const brandName = primary?.fragrance.brand.name ?? "ÁRUMI";
   const names = product.fragrances.map((f) => f.fragrance.name);
-  const stock = STOCK_LABEL[product.stock];
+  const availability = describeAvailability(product, "card");
 
   return (
     <article className="stage group relative flex h-full w-full flex-col p-2">
@@ -90,11 +96,11 @@ export function ProductCard({
           {product.packSize > 1 ? ` · кратно ${product.packSize}` : ""}
         </p>
 
-        {stock ? (
+        {availability.text ? (
           <p
-            className={`mt-0.5 text-xs font-semibold ${product.stock === "OUT" ? "text-danger" : "text-muted"}`}
+            className={`mt-0.5 text-xs font-semibold ${AVAILABILITY_TONE[availability.tone]}`}
           >
-            {stock}
+            {availability.text}
           </p>
         ) : null}
       </div>

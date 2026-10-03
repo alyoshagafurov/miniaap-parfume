@@ -19,6 +19,7 @@ const CATALOG: Record<string, CatalogEntry> = {
     priceKop: 150_000,
     packSize: 1,
     stock: "IN_STOCK",
+    stockQty: null,
     status: "PUBLISHED",
     imageKey: null,
   },
@@ -31,6 +32,7 @@ const CATALOG: Record<string, CatalogEntry> = {
     priceKop: 50_000,
     packSize: 6,
     stock: "IN_STOCK",
+    stockQty: null,
     status: "PUBLISHED",
     imageKey: null,
   },
@@ -168,6 +170,7 @@ describe("the corrected basket", () => {
         seenPriceKop: 170_000,
         seenPackSize: 6,
         seenStock: "IN_STOCK",
+        seenStockQty: null,
       },
     ]);
   });
@@ -236,5 +239,59 @@ describe("prices hidden", () => {
     });
     const r = reconcileCart([seen({ seenPriceKop: 0 })], quote);
     expect(r.changes.some((c) => c.kind === "PRICE")).toBe(false);
+  });
+});
+
+describe("the shelf has less than was asked", () => {
+  // A hundred on the shelf, sold in sixes: ninety-six can be ordered.
+  const counted: Record<string, CatalogEntry> = {
+    p6: { ...CATALOG.p6!, stockQty: 100 },
+  };
+  const buyer = (qty: number) =>
+    seen({
+      productId: "p6",
+      qty,
+      seenPriceKop: 50_000,
+      seenPackSize: 6,
+      seenStockQty: 400,
+    });
+
+  it("reports the lowered quantity with the count that caused it", () => {
+    const r = reconcile([buyer(120)], counted);
+    expect(r.changed).toBe(true);
+    expect(r.changes).toContainEqual({
+      productId: "p6",
+      title: "Dior Sauvage",
+      kind: "AVAILABLE",
+      from: 120,
+      to: 96,
+      stockQty: 100,
+    });
+  });
+
+  it("hands back the lowered quantity and the new count as the corrected basket", () => {
+    const r = reconcile([buyer(120)], counted);
+    expect(r.correctedLines[0]).toMatchObject({
+      productId: "p6",
+      qty: 96,
+      seenStockQty: 100,
+    });
+  });
+
+  it("says nothing when what was asked still fits", () => {
+    const r = reconcile([buyer(60)], counted);
+    expect(r.changes.some((c) => c.kind === "AVAILABLE")).toBe(false);
+  });
+
+  it("reconciling the corrected basket again reports nothing", () => {
+    const first = reconcile([buyer(120)], counted);
+    const again = reconcile(first.correctedLines, counted);
+    expect(again.changed).toBe(false);
+  });
+
+  it("reports a product left with less than one pack as gone", () => {
+    const tiny = { p6: { ...CATALOG.p6!, stock: "LOW", stockQty: 5 } };
+    const r = reconcile([buyer(6)], tiny);
+    expect(r.changes).toContainEqual({ productId: "p6", title: "", kind: "GONE" });
   });
 });

@@ -1,4 +1,5 @@
 import { parsePriceToKop } from "@/lib/money";
+import { parseStockQty } from "@/lib/stock";
 
 import type { HeaderMatch, ImportField } from "./columns";
 
@@ -44,7 +45,13 @@ export interface ParsedRow {
   priceKop: number;
   oldPriceKop: number | null;
   packSize: number;
-  stock: "IN_STOCK" | "LOW" | "OUT" | "PREORDER";
+  /**
+   * The word, when the cell held one. Null when it held a count or nothing — a
+   * count's word is computed from it, and an empty cell says nothing at all.
+   */
+  stock: "IN_STOCK" | "LOW" | "OUT" | "PREORDER" | null;
+  /** The count, when the cell held a number; null otherwise. */
+  stockQty: number | null;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED" | null;
   isNew: boolean;
   isHit: boolean;
@@ -253,16 +260,46 @@ export function parseRows(
       }
     }
 
+    // One column, two kinds of answer. A warehouse's price list writes
+    // availability as words — «есть», «нет» — or as a count, and often one
+    // column holds either. A cell that starts with a digit is a count and is
+    // read as one, strictly: «12 коробок» is refused, not read as twelve.
+    // Anything else is a word.
+    //
+    // Empty is neither, and is not treated as «в наличии» as it once was: a
+    // price list without this column would otherwise reset every product the
+    // owner had counted. The importer leaves what is there alone.
     const stockRaw = cell("stock");
-    let stock: ParsedRow["stock"] = "IN_STOCK";
+    let stock: ParsedRow["stock"] = null;
+    let stockQty: number | null = null;
     if (stockRaw !== "") {
-      const found = STOCK_WORDS[fold(stockRaw)];
-      if (!found) {
-        // Guessing here would silently publish something as available.
-        fail(rowNumber, "stock", "Непонятное значение наличия", stockRaw);
-        ok = false;
+      if (/^\d/.test(stockRaw)) {
+        const counted = parseStockQty(stockRaw);
+        if (typeof counted === "number") {
+          stockQty = counted;
+        } else {
+          fail(
+            rowNumber,
+            "stock",
+            "Остаток — целое число штук, например 240",
+            stockRaw,
+          );
+          ok = false;
+        }
       } else {
-        stock = found;
+        const found = STOCK_WORDS[fold(stockRaw)];
+        if (!found) {
+          // Guessing here would silently publish something as available.
+          fail(
+            rowNumber,
+            "stock",
+            "Непонятное значение наличия: слово («есть», «нет») или число штук",
+            stockRaw,
+          );
+          ok = false;
+        } else {
+          stock = found;
+        }
       }
     }
 
@@ -304,6 +341,7 @@ export function parseRows(
       oldPriceKop,
       packSize,
       stock,
+      stockQty,
       status,
       isNew: TRUTHY.has(fold(cell("isNew"))),
       isHit: TRUTHY.has(fold(cell("isHit"))),

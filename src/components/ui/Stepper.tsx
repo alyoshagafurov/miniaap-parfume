@@ -19,11 +19,17 @@ export function Stepper({
   disabled = false,
   label,
   tone = "light",
+  max = Infinity,
 }: {
   qty: number;
   packSize: number;
   onChange: (next: number) => void;
   disabled?: boolean;
+  /**
+   * The most the shelf holds, in units. The plus stops there, so the buyer
+   * meets the limit at the control instead of at the end of the request.
+   */
+  max?: number;
   label: string;
   /** The ground it sits on. `dark` only inside the request bar. */
   tone?: "light" | "dark";
@@ -64,7 +70,7 @@ export function Stepper({
       <button
         type="button"
         onClick={increase}
-        disabled={disabled}
+        disabled={disabled || qty + step > max}
         aria-label="Увеличить"
         className={control}
       >
@@ -84,7 +90,13 @@ export function Stepper({
 function Stroke({ d }: { d: string }) {
   return (
     <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4">
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

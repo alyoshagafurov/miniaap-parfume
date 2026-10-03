@@ -45,6 +45,7 @@ const CARD_SELECT = {
   oldPriceKop: true,
   packSize: true,
   stock: true,
+  stockQty: true,
   volumeMl: true,
   isNew: true,
   isHit: true,
