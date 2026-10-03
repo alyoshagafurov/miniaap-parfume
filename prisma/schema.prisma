@@ -197,6 +197,12 @@ model Product {
   /// recalculation both enforce it.
   packSize    Int        @default(1)
   stock       StockState @default(IN_STOCK)
+  /// How many units are on the shelf, when the owner keeps count; null when
+  /// they do not. A number makes `stock` follow from it — see src/lib/stock.ts
+  /// — and caps what a buyer can put in a request. Null is not zero: zero is
+  /// «нет в наличии», null is «не веду учёт» and leaves the status to be set by
+  /// hand, exactly as before this column existed.
+  stockQty    Int?
 
   status      PublishStatus @default(DRAFT)
   isNew       Boolean       @default(false)
