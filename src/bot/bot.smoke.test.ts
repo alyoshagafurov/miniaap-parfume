@@ -298,7 +298,21 @@ describe.skipIf(!hasDb)(
       }
       await bot.handleUpdate(callbackUpdate("terms"));
 
-      expect(/\p{Extended_Pictographic}/u.test(JSON.stringify(calls))).toBe(false);
+      // What the bot itself says, not what the client wrote into Settings. The
+      // greeting and the delivery terms are the client's own words, with the
+      // emoji they asked for (see the emoji rule in scripts/check-tokens.mjs),
+      // and they reach this test from whatever the database holds. Taking them
+      // out leaves every sentence that lives in the bot's code — which is what
+      // this exists to keep clean — and stops the result depending on whether
+      // the database happens to have been given the client's texts.
+      const { readSettings } = await import("@/server/settings");
+      const settings = await readSettings();
+      let said = JSON.stringify(calls);
+      for (const text of [settings.botGreeting.trim(), settings.deliveryTerms.trim()]) {
+        if (text) said = said.split(JSON.stringify(text).slice(1, -1)).join("");
+      }
+
+      expect(/\p{Extended_Pictographic}/u.test(said)).toBe(false);
     });
   },
 );

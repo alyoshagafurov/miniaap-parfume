@@ -183,8 +183,7 @@ const RULES = [
   },
   {
     id: "undefined-text-size",
-    why:
-      "That size is not in the type scale, so in Tailwind 4 the class emits no rule and the text renders at whatever it inherits. It happened twice: text-h2 on every admin title and the request total, and text-5xl on the placeholder monogram.",
+    why: "That size is not in the type scale, so in Tailwind 4 the class emits no rule and the text renders at whatever it inherits. It happened twice: text-h2 on every admin title and the request total, and text-5xl on the placeholder monogram.",
     // Built from globals.css at start-up below; a placeholder until then.
     test: /$^/g,
   },
@@ -203,11 +202,15 @@ const RULES = [
      * texts live in Settings and are edited in the panel, so what sits in the
      * seed is only their initial value.
      *
-     * The interface is still covered. Nothing else in prisma/seed.ts should
+     * The two texts moved from prisma/seed.ts to prisma/seed-data.ts when
+     * scripts/init-settings.ts needed them without the demo catalog, so the
+     * exception moved with them and covers both files.
+     *
+     * The interface is still covered. Nothing else in those files should
      * carry an emoji either, and if it ever does, this line is why it was not
      * caught — narrow it rather than widening the habit.
      */
-    skipFiles: ["prisma/seed.ts"],
+    skipFiles: ["prisma/seed.ts", "prisma/seed-data.ts"],
   },
 ];
 
@@ -224,13 +227,39 @@ function walk(dir, out = []) {
 
 {
   const css = readFileSync(join(ROOT, TOKEN_SOURCE), "utf8");
-  const scale = css.slice(css.indexOf("--text-*: initial"), css.indexOf("--tracking-*: initial"));
+  const scale = css.slice(
+    css.indexOf("--text-*: initial"),
+    css.indexOf("--tracking-*: initial"),
+  );
   const defined = new Set([...scale.matchAll(/--text-([a-z0-9]+):/g)].map((m) => m[1]));
-  const sizes = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl", "h1", "h2", "h3", "h4", "h5", "h6"];
+  const sizes = [
+    "xs",
+    "sm",
+    "base",
+    "lg",
+    "xl",
+    "2xl",
+    "3xl",
+    "4xl",
+    "5xl",
+    "6xl",
+    "7xl",
+    "8xl",
+    "9xl",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+  ];
   const missing = sizes.filter((s) => !defined.has(s));
   const rule = RULES.find((r) => r.id === "undefined-text-size");
   if (rule && missing.length > 0) {
-    rule.test = new RegExp(`(?<![\\w-])(?:[a-z]+:)*text-(?:${missing.join("|")})(?![\\w-])`, "g");
+    rule.test = new RegExp(
+      `(?<![\\w-])(?:[a-z]+:)*text-(?:${missing.join("|")})(?![\\w-])`,
+      "g",
+    );
   }
 }
 

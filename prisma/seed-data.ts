@@ -477,3 +477,67 @@ export const STOCK_CYCLE: StockState[] = [
   "IN_STOCK",
   "OUT",
 ];
+
+/**
+ * What the bot says when someone opens it, and what the delivery button shows.
+ *
+ * Written by the client, kept verbatim. Two things about them are deliberate
+ * and worth not "fixing" on sight:
+ *
+ * The emoji. Everywhere else in this project they are banned — the design
+ * direction says so and the interface has none. These are the client's own
+ * words to their own buyers in a messenger, which is a different register from
+ * a catalog screen, and they asked for them.
+ *
+ * The figures. The minimum order, the address and the phone appear here as
+ * plain text while they also live in their own Settings fields. That is a
+ * duplication, and it can drift: raising the minimum on the settings screen
+ * does not rewrite this paragraph. It is kept because the client wrote the
+ * greeting as one piece of prose, and the alternative — stitching it from
+ * fields — would take the writing away from them. If it drifts, the fix is to
+ * edit the greeting on the same screen, right above the field that changed.
+ */
+export const BOT_GREETING = [
+  "Добро пожаловать в ÁRUMI — оптовый склад парфюмерии и средств для ухода.",
+  "",
+  "Здесь вы можете посмотреть актуальный ассортимент и цены, выбрать товар и оформить заказ в WhatsApp",
+  "",
+  "📦 Минимальный заказ — от 5 000 ₽",
+  "🚚 Отправка по всей России",
+  "📍 Хасавюрт, рынок «Новый Терек»",
+  "📲 WhatsApp: 8 928 314-40-00",
+].join("\n");
+
+export const DELIVERY_TERMS = [
+  "Как проходит заказ",
+  "",
+  "1. Оформляете заказ в WhatsApp — отправляете выбранные товары и необходимое количество.",
+  "2. 📦 Мы собираем ваш заказ и подтверждаем наличие.",
+  "3. 💳 Отправляем реквизиты для оплаты.",
+  "4. ✅ Вы оплачиваете заказ.",
+  "5. Мы отправляем товар через Ozon Доставку или транспортную компанию.",
+  "",
+  "Отправляем заказы по всей России.",
+].join("\n");
+
+/**
+ * The client's own details, as the settings row should hold them on day one.
+ *
+ * Here and not in src/server/settings.ts, whose defaults are deliberately
+ * empty: nothing outside a seed may carry a contact detail, and a database
+ * that has never been seeded must not quietly invent an address for a buyer to
+ * ring. Read by prisma/seed.ts and by scripts/init-settings.ts — the second
+ * exists because production is never seeded (the seed also writes a demo
+ * catalog), and a fresh production database is otherwise left with no address,
+ * no telephone and a bot that answers «Здравствуйте.» and nothing more.
+ */
+export const CLIENT_SETTINGS = {
+  companyName: "ÁRUMI Parfum & Care",
+  address: "Хасавюрт, рынок «Новый Терек»",
+  phone: "8 928 314 40 00",
+  whatsappPhone: "79283144000",
+  minOrderKop: 500_000,
+  showPrices: true,
+  deliveryTerms: DELIVERY_TERMS,
+  botGreeting: BOT_GREETING,
+} as const;

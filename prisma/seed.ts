@@ -20,6 +20,7 @@ import { slugify } from "../src/lib/slug";
 import {
   BRANDS,
   CATEGORIES,
+  CLIENT_SETTINGS,
   DEODORANT_BASES,
   STOCK_CYCLE,
   TWIN_PAIRS,
@@ -163,48 +164,6 @@ async function main() {
 
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
-/**
- * What the bot says when someone opens it, and what the delivery button shows.
- *
- * Written by the client, kept verbatim. Two things about them are deliberate
- * and worth not "fixing" on sight:
- *
- * The emoji. Everywhere else in this project they are banned — the design
- * direction says so and the interface has none. These are the client's own
- * words to their own buyers in a messenger, which is a different register from
- * a catalog screen, and they asked for them.
- *
- * The figures. The minimum order, the address and the phone appear here as
- * plain text while they also live in their own Settings fields. That is a
- * duplication, and it can drift: raising the minimum on the settings screen
- * does not rewrite this paragraph. It is kept because the client wrote the
- * greeting as one piece of prose, and the alternative — stitching it from
- * fields — would take the writing away from them. If it drifts, the fix is to
- * edit the greeting on the same screen, right above the field that changed.
- */
-const BOT_GREETING = [
-  "Добро пожаловать в ÁRUMI — оптовый склад парфюмерии и средств для ухода.",
-  "",
-  "Здесь вы можете посмотреть актуальный ассортимент и цены, выбрать товар и оформить заказ в WhatsApp",
-  "",
-  "📦 Минимальный заказ — от 5 000 ₽",
-  "🚚 Отправка по всей России",
-  "📍 Хасавюрт, рынок «Новый Терек»",
-  "📲 WhatsApp: 8 928 314-40-00",
-].join("\n");
-
-const DELIVERY_TERMS = [
-  "Как проходит заказ",
-  "",
-  "1. Оформляете заказ в WhatsApp — отправляете выбранные товары и необходимое количество.",
-  "2. 📦 Мы собираем ваш заказ и подтверждаем наличие.",
-  "3. 💳 Отправляем реквизиты для оплаты.",
-  "4. ✅ Вы оплачиваете заказ.",
-  "5. Мы отправляем товар через Ozon Доставку или транспортную компанию.",
-  "",
-  "Отправляем заказы по всей России.",
-].join("\n");
-
   try {
     // ── Settings ────────────────────────────────────────────────────────────
     // Real client details from the brief. Nothing in the application hardcodes
@@ -212,17 +171,7 @@ const DELIVERY_TERMS = [
     await prisma.settings.upsert({
       where: { id: 1 },
       update: {},
-      create: {
-        id: 1,
-        companyName: "ÁRUMI Parfum & Care",
-        address: "Хасавюрт, рынок «Новый Терек»",
-        phone: "8 928 314 40 00",
-        whatsappPhone: "79283144000",
-        minOrderKop: 500_000,
-        showPrices: true,
-        deliveryTerms: DELIVERY_TERMS,
-        botGreeting: BOT_GREETING,
-      },
+      create: { id: 1, ...CLIENT_SETTINGS },
     });
 
     // ── Categories ──────────────────────────────────────────────────────────
