@@ -78,9 +78,20 @@ async function main(): Promise<void> {
         ],
         { scope: { type: "chat", chat_id: Number(admin.telegramId) } },
       );
+      // A chat-specific button overrides the bot-wide default. Older
+      // deployments may have left Railway's URL on an administrator chat, so
+      // explicitly point each active admin's button at the current deployment.
+      await api.setChatMenuButton({
+        chat_id: Number(admin.telegramId),
+        menu_button: {
+          type: "web_app",
+          text: BUTTON.menu,
+          web_app: { url: origin.origin },
+        },
+      });
     } catch {
-      // Telegram cannot assign a per-chat command menu until that admin has
-      // started the bot. The commands remain usable by typing them directly.
+      // Telegram cannot assign per-chat commands or a menu until that admin
+      // has started the bot. The commands remain usable by typing them directly.
     }
   }
 
