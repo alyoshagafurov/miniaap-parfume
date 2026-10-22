@@ -49,6 +49,7 @@ async function main(): Promise<void> {
     drop_pending_updates: false,
   });
   if (!configured) throw new Error("Telegram не подтвердил установку webhook");
+  const webhookUrl = `${origin.origin}/api/telegram/webhook`;
 
   await api.setMyCommands([
     { command: "start", description: COMMAND_DESCRIPTION.start },
@@ -67,7 +68,28 @@ async function main(): Promise<void> {
     where: { isActive: true },
     select: { telegramId: true },
   });
-  for (const admin of admins) {
+  const chatIds = new Set(
+    admins
+      .map((admin) => Number(admin.telegramId))
+      .filter((chatId) => Number.isSafeInteger(chatId) && chatId > 0),
+  );
+
+  // ADMIN_CHAT_ID is often the owner's private chat, but it may also be a
+  // group. Telegram only supports per-chat menu buttons in private chats, so
+  // add it when it is a positive Telegram user ID. This also covers owners who
+  // have not been added to AdminUser yet.
+  const adminChatId = process.env.ADMIN_CHAT_ID?.trim();
+  const adminChatIdNumber = adminChatId ? Number(adminChatId) : undefined;
+  if (
+    adminChatIdNumber !== undefined &&
+    Number.isSafeInteger(adminChatIdNumber) &&
+    adminChatIdNumber > 0
+  ) {
+    chatIds.add(adminChatIdNumber);
+  }
+
+  let privateMenusVerified = 0;
+  for (const chatId of chatIds) {
     try {
       await api.setMyCommands(
         [
@@ -76,26 +98,54 @@ async function main(): Promise<void> {
           { command: "contacts", description: COMMAND_DESCRIPTION.contacts },
           { command: "admin", description: COMMAND_DESCRIPTION.admin },
         ],
-        { scope: { type: "chat", chat_id: Number(admin.telegramId) } },
+        { scope: { type: "chat", chat_id: chatId } },
       );
       // A chat-specific button overrides the bot-wide default. Older
       // deployments may have left Railway's URL on an administrator chat, so
       // explicitly point each active admin's button at the current deployment.
       await api.setChatMenuButton({
-        chat_id: Number(admin.telegramId),
+        chat_id: chatId,
         menu_button: {
           type: "web_app",
           text: BUTTON.menu,
           web_app: { url: origin.origin },
         },
       });
-    } catch {
+      const currentMenu = await api.getChatMenuButton({ chat_id: chatId });
+      if (
+        currentMenu.type !== "web_app" ||
+        currentMenu.web_app.url !== origin.origin
+      ) {
+        throw new Error("Telegram не подтвердил адрес личной кнопки меню");
+      }
+      privateMenusVerified += 1;
+    } catch (error) {
+      if (chatId === adminChatIdNumber) {
+        throw new Error(
+          "Не удалось установить личную кнопку меню владельца. Проверьте, что владелец нажал /start в этом боте.",
+          { cause: error },
+        );
+      }
       // Telegram cannot assign per-chat commands or a menu until that admin
       // has started the bot. The commands remain usable by typing them directly.
+      console.error("Не удалось установить личную кнопку меню одному из администраторов");
     }
   }
 
-  console.log(`Webhook настроен: ${origin.origin}/api/telegram/webhook`);
+  const globalMenu = await api.getChatMenuButton({});
+  if (globalMenu.type !== "web_app" || globalMenu.web_app.url !== origin.origin) {
+    throw new Error("Telegram не подтвердил адрес общей кнопки меню");
+  }
+
+  const currentWebhook = await api.getWebhookInfo();
+  if (currentWebhook.url !== webhookUrl) {
+    throw new Error("Telegram изменил адрес webhook во время настройки");
+  }
+
+  console.log(`Webhook настроен: ${webhookUrl}`);
+  console.log(
+    `Кнопка меню Telegram проверена: ${origin.origin} (${privateMenusVerified} личных чата)`,
+  );
   await prisma.$disconnect();
 }
 
