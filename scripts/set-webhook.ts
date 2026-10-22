@@ -28,6 +28,15 @@ function safeErrorMessage(error: unknown): string {
   return message.replace(/bot\d+:[A-Za-z0-9_-]+/g, "bot[скрыт]");
 }
 
+function normalizedMenuUrl(url: string): string | undefined {
+  try {
+    // Telegram may canonicalize a root URL by adding a trailing slash.
+    return new URL(url).href;
+  } catch {
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const token = required("BOT_TOKEN");
   const secretToken = required("BOT_WEBHOOK_SECRET");
@@ -118,11 +127,19 @@ async function main(): Promise<void> {
         },
       });
       const currentMenu = await api.getChatMenuButton({ chat_id: chatId });
+      const currentMenuUrl =
+        currentMenu.type === "web_app"
+          ? normalizedMenuUrl(currentMenu.web_app.url)
+          : undefined;
       if (
         currentMenu.type !== "web_app" ||
-        currentMenu.web_app.url !== origin.origin
+        currentMenuUrl !== normalizedMenuUrl(origin.origin)
       ) {
-        throw new Error("Telegram не подтвердил адрес личной кнопки меню");
+        const actualUrl =
+          currentMenu.type === "web_app" ? currentMenu.web_app.url : "—";
+        throw new Error(
+          `Telegram вернул личную кнопку меню type=${currentMenu.type}, url=${actualUrl}`,
+        );
       }
       privateMenusVerified += 1;
     } catch (error) {
@@ -138,9 +155,16 @@ async function main(): Promise<void> {
   }
 
   const globalMenu = await api.getChatMenuButton({});
-  if (globalMenu.type !== "web_app" || globalMenu.web_app.url !== origin.origin) {
+  const globalMenuUrl =
+    globalMenu.type === "web_app"
+      ? normalizedMenuUrl(globalMenu.web_app.url)
+      : undefined;
+  if (
+    globalMenu.type !== "web_app" ||
+    globalMenuUrl !== normalizedMenuUrl(origin.origin)
+  ) {
     console.error(
-      "Telegram изменил общую кнопку меню во время настройки; старый polling-процесс ещё активен",
+      `Telegram вернул общую кнопку меню type=${globalMenu.type}, url=${globalMenu.type === "web_app" ? globalMenu.web_app.url : "—"}`,
     );
   }
 
@@ -157,7 +181,7 @@ async function main(): Promise<void> {
   const currentWebhook = await api.getWebhookInfo();
   if (currentWebhook.url !== webhookUrl) {
     console.error(
-      "Telegram изменил адрес webhook сразу после установки; старый polling-процесс ещё активен",
+      `Telegram вернул адрес webhook ${currentWebhook.url || "(пусто)"} после установки`,
     );
   }
 
