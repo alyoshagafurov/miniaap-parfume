@@ -23,6 +23,11 @@ function required(name: string): string {
   return value;
 }
 
+function safeErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.replace(/bot\d+:[A-Za-z0-9_-]+/g, "bot[скрыт]");
+}
+
 async function main(): Promise<void> {
   const token = required("BOT_TOKEN");
   const secretToken = required("BOT_WEBHOOK_SECRET");
@@ -43,12 +48,6 @@ async function main(): Promise<void> {
   }
 
   const api = new Api(token, clientOptions());
-  const configured = await api.setWebhook(`${origin.origin}/api/telegram/webhook`, {
-    secret_token: secretToken,
-    allowed_updates: ["message", "callback_query", "my_chat_member"],
-    drop_pending_updates: false,
-  });
-  if (!configured) throw new Error("Telegram не подтвердил установку webhook");
   const webhookUrl = `${origin.origin}/api/telegram/webhook`;
 
   await api.setMyCommands([
@@ -100,6 +99,13 @@ async function main(): Promise<void> {
         ],
         { scope: { type: "chat", chat_id: chatId } },
       );
+    } catch (error) {
+      console.error(
+        `Не удалось обновить команды одному из администраторов: ${safeErrorMessage(error)}`,
+      );
+    }
+
+    try {
       // A chat-specific button overrides the bot-wide default. Older
       // deployments may have left Railway's URL on an administrator chat, so
       // explicitly point each active admin's button at the current deployment.
@@ -120,15 +126,14 @@ async function main(): Promise<void> {
       }
       privateMenusVerified += 1;
     } catch (error) {
-      if (chatId === adminChatIdNumber) {
-        throw new Error(
-          "Не удалось установить личную кнопку меню владельца. Проверьте, что владелец нажал /start в этом боте.",
-          { cause: error },
-        );
-      }
-      // Telegram cannot assign per-chat commands or a menu until that admin
-      // has started the bot. The commands remain usable by typing them directly.
-      console.error("Не удалось установить личную кнопку меню одному из администраторов");
+      // Telegram cannot assign a per-chat menu until that user has started
+      // the bot. Keep publishing the site and the global menu, but report the
+      // specific API error so a stale per-chat override can be diagnosed.
+      const target =
+        chatId === adminChatIdNumber ? "владельца" : "одного из администраторов";
+      console.error(
+        `Не удалось установить личную кнопку меню ${target}: ${safeErrorMessage(error)}`,
+      );
     }
   }
 
@@ -137,12 +142,26 @@ async function main(): Promise<void> {
     throw new Error("Telegram не подтвердил адрес общей кнопки меню");
   }
 
+  // Do this last: the old Railway polling process may restart when Telegram
+  // switches to webhooks, and its startup deletes the webhook. By configuring
+  // the menu first, a competing poller cannot prevent the user's button fix.
+  const configured = await api.setWebhook(webhookUrl, {
+    secret_token: secretToken,
+    allowed_updates: ["message", "callback_query", "my_chat_member"],
+    drop_pending_updates: false,
+  });
+  if (!configured) throw new Error("Telegram не подтвердил установку webhook");
+
   const currentWebhook = await api.getWebhookInfo();
   if (currentWebhook.url !== webhookUrl) {
-    throw new Error("Telegram изменил адрес webhook во время настройки");
+    console.error(
+      "Telegram изменил адрес webhook сразу после установки; старый polling-процесс ещё активен",
+    );
   }
 
-  console.log(`Webhook настроен: ${webhookUrl}`);
+  console.log(
+    `${currentWebhook.url === webhookUrl ? "Webhook настроен" : "Webhook требует повторной настройки"}: ${webhookUrl}`,
+  );
   console.log(
     `Кнопка меню Telegram проверена: ${origin.origin} (${privateMenusVerified} личных чата)`,
   );
