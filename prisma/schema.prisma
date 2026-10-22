@@ -328,6 +328,12 @@ model Order {
   /// Recomputed on the server from the items at submission time. Never trusted
   /// from the client.
   totalKop Int
+  /// The volume discount taken off the items (src/lib/discount.ts), and the
+  /// percent it was. `totalKop` is already net of it, so the items' sum is
+  /// `totalKop + discountKop`. Stored, not recomputed: the tiers may change, and
+  /// an old request must keep saying what it was sold for.
+  discountKop     Int @default(0)
+  discountPercent Int @default(0)
 
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
