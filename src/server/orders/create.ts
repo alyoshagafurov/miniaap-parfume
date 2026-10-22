@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { discountFor } from "@/lib/discount";
 import { DELIVERY_LABELS, OFFERED_DELIVERY } from "@/lib/orders";
 import { prisma } from "@/server/db";
 import { rateLimit } from "@/server/rate-limit";
@@ -314,6 +315,8 @@ export async function createOrder(
         // Placeholder: recomputed below from the rows actually written, so the
         // stored total can never disagree with its own items.
         totalKop: 0,
+        discountKop: 0,
+        discountPercent: 0,
         items: {
           create: quote.lines.map((l) => ({
             productId: l.productId,
@@ -337,10 +340,31 @@ export async function createOrder(
     // Finding 4 from the schema review: totalKop has no database-level tie to
     // the sum of its items, so it is derived from the persisted rows inside the
     // same transaction rather than from the in-memory quote.
-    const totalKop = order.items.reduce((sum, i) => sum + i.priceKop * i.qty, 0);
-    await tx.order.update({ where: { id: order.id }, data: { totalKop } });
+    //
+    // The discount is worked out here from those same rows, by the same function
+    // the quote used, so what is stored is the persisted items less what they
+    // earned — never a figure carried in from elsewhere.
+    const itemsKop = order.items.reduce((sum, i) => sum + i.priceKop * i.qty, 0);
+    const discount = settings.showPrices
+      ? discountFor(itemsKop)
+      : { percent: 0, discountKop: 0 };
+    const totalKop = itemsKop - discount.discountKop;
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        totalKop,
+        discountKop: discount.discountKop,
+        discountPercent: discount.percent,
+      },
+    });
 
-    return { id: order.id, number: order.number, totalKop };
+    return {
+      id: order.id,
+      number: order.number,
+      totalKop,
+      discountKop: discount.discountKop,
+      discountPercent: discount.percent,
+    };
   });
 
   // Told about, not dependent on. The request is committed; a relay that is
@@ -381,6 +405,8 @@ export async function createOrder(
         delivery: DELIVERY_LABELS[input.delivery] ?? input.delivery,
         comment: input.comment || null,
         totalKop: created.totalKop,
+        discountKop: created.discountKop,
+        discountPercent: created.discountPercent,
         username: identity?.ok ? (identity.user.username ?? null) : null,
         telegramId,
         lines: quote.lines.map((l) => ({

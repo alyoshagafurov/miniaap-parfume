@@ -207,6 +207,41 @@ describe("quantity validation", () => {
   });
 });
 
+describe("volume discount", () => {
+  // p1 costs 1 500 ₽, so every 7 is 10 500 ₽.
+  it("takes nothing off a request that is not over 10 000 ₽", () => {
+    const q = quoteCart([line("p1", 6)], CATALOG, SETTINGS); // 9 000 ₽
+    expect(q.discountPercent).toBe(0);
+    expect(q.totalKop).toBe(q.subtotalKop);
+  });
+
+  it("takes 3% off a request over 10 000 ₽", () => {
+    const q = quoteCart([line("p1", 7)], CATALOG, SETTINGS); // 10 500 ₽
+    expect(q.subtotalKop).toBe(1_050_000);
+    expect(q.discountPercent).toBe(3);
+    expect(q.discountKop).toBe(31_500);
+    expect(q.totalKop).toBe(1_018_500);
+  });
+
+  it("takes 5% off a request over 30 000 ₽", () => {
+    const q = quoteCart([line("p1", 21)], CATALOG, SETTINGS); // 31 500 ₽
+    expect(q.discountPercent).toBe(5);
+    expect(q.totalKop).toBe(3_150_000 - 157_500);
+  });
+
+  it("judges the minimum on the sum before the discount", () => {
+    const q = quoteCart([line("p1", 7)], CATALOG, SETTINGS);
+    expect(q.shortfallKop).toBe(0);
+    expect(q.meetsMinimum).toBe(true);
+  });
+
+  it("gives nothing when prices are hidden", () => {
+    const q = quoteCart([line("p1", 21)], CATALOG, { ...SETTINGS, showPrices: false });
+    expect(q.discountKop).toBe(0);
+    expect(q.totalKop).toBe(0);
+  });
+});
+
 describe("minimum order", () => {
   it("reports the shortfall when below the minimum", () => {
     const q = quoteCart([line("p1", 2)], CATALOG, SETTINGS); // 3 000 ₽

@@ -57,6 +57,13 @@ export async function GET(
     if (error instanceof StorageMiss) return new NextResponse(null, { status: 404 });
     // A bucket that is down is not a missing picture, and answering 404 would
     // make a broken deployment look like an empty catalog.
+    //
+    // Said in the log as well, because until this line a broken bucket produced
+    // a catalog of grey pictures and not one word anywhere to say why. The name
+    // and the message only: the SDK's error object carries the request, and the
+    // key it names is a product photograph's path, not anybody's data.
+    const e = error as { name?: string; message?: string };
+    console.error(`Фото не отдано (${key}): ${e.name ?? "Error"} — ${e.message ?? ""}`);
     return new NextResponse(null, { status: 502 });
   }
 }

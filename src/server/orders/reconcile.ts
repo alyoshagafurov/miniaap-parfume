@@ -1,3 +1,5 @@
+import { afterDiscount } from "@/lib/discount";
+
 import type { Quote } from "./quote";
 
 /**
@@ -157,13 +159,13 @@ export function reconcileCart(
   }
 
   const previousTotalKop = quote.showPrices
-    ? snapshot.reduce((sum, l) => sum + l.seenPriceKop * l.qty, 0)
+    ? afterDiscount(snapshot.reduce((sum, l) => sum + l.seenPriceKop * l.qty, 0))
     : 0;
 
   return {
     changed: changes.length > 0,
     changes,
-    totalKop: quote.subtotalKop,
+    totalKop: quote.totalKop,
     previousTotalKop,
     correctedLines,
   };

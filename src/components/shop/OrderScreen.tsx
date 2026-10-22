@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea, TextInput } from "@/components/ui/Field";
 import { applyCorrections, toOrderItems } from "@/lib/cart";
+import { discountFor, nextDiscount } from "@/lib/discount";
 import { formatRub } from "@/lib/money";
 import { DELIVERY_LABELS, OFFERED_DELIVERY, type OfferedDelivery } from "@/lib/orders";
 import type { CreateOrderResult } from "@/server/orders/create";
@@ -86,6 +87,10 @@ export function OrderScreen({
     },
   });
 
+  // `totalKop` is the sum of the lines. The server applies the same discount
+  // from the same rule, so what is shown here is what it will charge.
+  const discount = showPrices ? discountFor(totalKop) : { percent: 0, discountKop: 0 };
+  const payableKop = totalKop - discount.discountKop;
   const shortfall = Math.max(0, minOrderKop - totalKop);
   const meetsMinimum = !showPrices || shortfall === 0;
   const canSubmit = count > 0 && meetsMinimum && !pending;
@@ -154,7 +159,7 @@ export function OrderScreen({
   const submitLabel = !meetsMinimum
     ? `Ещё ${formatRub(shortfall)} до минимума`
     : showPrices
-      ? `Оформить · ${formatRub(totalKop)}`
+      ? `Оформить · ${formatRub(payableKop)}`
       : "Оформить заявку";
 
   // Telegram's own submit button, gated on the provider's ready flag — nothing
@@ -267,10 +272,25 @@ export function OrderScreen({
           bright amber, at 6.3:1. */}
       {showPrices ? (
         <div className="bg-night text-on-night mt-6 rounded-lg p-5">
-          <div className="flex items-baseline justify-between gap-4">
+          <DiscountNotice totalKop={totalKop} />
+          {discount.discountKop > 0 ? (
+            <div className="mt-4 flex items-baseline justify-between gap-4 text-sm">
+              <span className="text-on-night-muted">Сумма заявки</span>
+              <span className="tabular-nums">{formatRub(totalKop)}</span>
+            </div>
+          ) : null}
+          {discount.discountKop > 0 ? (
+            <div className="mt-1 flex items-baseline justify-between gap-4 text-sm">
+              <span className="text-on-night-muted">Скидка {discount.percent}%</span>
+              <span className="text-price-bright font-bold tabular-nums">
+                −{formatRub(discount.discountKop)}
+              </span>
+            </div>
+          ) : null}
+          <div className="mt-4 flex items-baseline justify-between gap-4">
             <span className="display-caps text-lg">Итого</span>
             <span className="text-price-bright text-h2 font-extrabold tracking-tight tabular-nums">
-              {formatRub(totalKop)}
+              {formatRub(payableKop)}
             </span>
           </div>
           <MinimumProgress totalKop={totalKop} minOrderKop={minOrderKop} />
@@ -461,6 +481,33 @@ export function OrderScreen({
         </Button>
       </form>
     </>
+  );
+}
+
+/**
+ * The promotion, stated whether or not it has been earned.
+ *
+ * The terms first, always, so a buyer who has not reached the first step knows
+ * there is one; then where this basket stands — how much more earns the next
+ * discount, or that the best one is already in. A discount nobody was told
+ * about changes nobody's order.
+ */
+function DiscountNotice({ totalKop }: { totalKop: number }) {
+  const now = discountFor(totalKop);
+  const next = nextDiscount(totalKop);
+  return (
+    <div className="bg-on-night/10 rounded-md p-3 text-sm leading-snug">
+      <p className="font-bold">
+        Акция: заказ более 10 000 ₽ — скидка 3%, более 30 000 ₽ — скидка 5%
+      </p>
+      <p className="text-on-night-muted mt-1">
+        {next
+          ? now.percent > 0
+            ? `Скидка ${now.percent}% уже применена. Добавьте ещё ${formatRub(next.moreKop)} — будет ${next.percent}%`
+            : `Добавьте ещё ${formatRub(next.moreKop)} — получите скидку ${next.percent}%`
+          : `Максимальная скидка ${now.percent}% применена`}
+      </p>
+    </div>
   );
 }
 

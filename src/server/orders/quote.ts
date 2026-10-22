@@ -1,3 +1,4 @@
+import { discountFor } from "@/lib/discount";
 import { sumKop } from "@/lib/money";
 import { maxOrderableQty } from "@/lib/stock";
 
@@ -51,7 +52,12 @@ export type AdjustmentReason = "PACK_SIZE" | "MAX_QUANTITY" | "STOCK_LIMIT";
 
 export interface Quote {
   lines: QuotedLine[];
+  /** The sum of the lines, before the discount. The minimum order is judged on this. */
   subtotalKop: number;
+  discountPercent: number;
+  discountKop: number;
+  /** What is payable: the subtotal less the discount. */
+  totalKop: number;
   minOrderKop: number;
   /** How much more is needed to reach the minimum; 0 once it is met. */
   shortfallKop: number;
@@ -160,6 +166,9 @@ export function quoteCart(
     return {
       lines,
       subtotalKop: 0,
+      discountPercent: 0,
+      discountKop: 0,
+      totalKop: 0,
       minOrderKop: settings.minOrderKop,
       shortfallKop: 0,
       meetsMinimum: true,
@@ -171,10 +180,14 @@ export function quoteCart(
 
   const subtotalKop = sumKop(lines.map((l) => l.lineTotalKop));
   const shortfallKop = Math.max(0, settings.minOrderKop - subtotalKop);
+  const discount = discountFor(subtotalKop);
 
   return {
     lines,
     subtotalKop,
+    discountPercent: discount.percent,
+    discountKop: discount.discountKop,
+    totalKop: subtotalKop - discount.discountKop,
     minOrderKop: settings.minOrderKop,
     shortfallKop,
     // An empty cart never qualifies, however low the minimum is set.

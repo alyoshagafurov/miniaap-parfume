@@ -153,6 +153,15 @@ async function Card({ params }: PageProps) {
           ))}
         </ul>
 
+        {order.discountKop > 0 ? (
+          <div className="border-rule mt-4 flex items-baseline justify-between gap-4 border-t pt-3 text-sm">
+            <span className="text-muted">Скидка {order.discountPercent}% за объём</span>
+            <span className="text-ink font-semibold tabular-nums">
+              −{formatRub(order.discountKop)}
+            </span>
+          </div>
+        ) : null}
+
         <div className="border-rule mt-4 flex items-baseline justify-between gap-4 border-t pt-3">
           <span className="text-ink text-base">Итого</span>
           <span className="text-ink text-base font-semibold tabular-nums">
@@ -160,7 +169,7 @@ async function Card({ params }: PageProps) {
           </span>
         </div>
 
-        {itemsTotal !== order.totalKop ? (
+        {itemsTotal - order.discountKop !== order.totalKop ? (
           <p
             role="alert"
             className="border-danger bg-danger-wash text-ink mt-4 rounded-md border p-3 text-sm"

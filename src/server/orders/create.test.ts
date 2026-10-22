@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { afterDiscount } from "@/lib/discount";
+
 import { normalizePhone, parseOrderInput } from "./create";
 
 const VALID = {
@@ -208,9 +210,11 @@ describe.skipIf(!hasDb)("createOrder", () => {
     expect(saved?.source).toBe("WEB");
     expect(saved?.phone).toBe("+79283144000");
     expect(saved?.items).toHaveLength(1);
-    // Finding 4: the stored total must equal the sum of its own items.
+    // Finding 4: the stored total must be derived from its own items — the sum
+    // of them, less the volume discount they earned, which is stored beside it.
     const sum = saved!.items.reduce((a, i) => a + i.priceKop * i.qty, 0);
-    expect(saved?.totalKop).toBe(sum);
+    expect(saved?.totalKop).toBe(afterDiscount(sum));
+    expect(saved!.totalKop + saved!.discountKop).toBe(sum);
     // The snapshot must survive the product being renamed or deleted.
     expect(saved?.items[0]?.sku).toBeTruthy();
     expect(saved?.items[0]?.title).toBeTruthy();
@@ -319,8 +323,10 @@ describe.skipIf(!hasDb)("createOrder refuses a stale basket", () => {
       fromKop: priceKop - 10_000,
       toKop: priceKop,
     });
-    expect(r.totalKop).toBe(priceKop * qty);
-    expect(r.previousTotalKop).toBe((priceKop - 10_000) * qty);
+    // Both sides are what is payable, discount included — the same rule on the
+    // old basket and the new one, so the difference shown is only the price.
+    expect(r.totalKop).toBe(afterDiscount(priceKop * qty));
+    expect(r.previousTotalKop).toBe(afterDiscount((priceKop - 10_000) * qty));
   });
 
   it("writes no order when it reports a change", async () => {

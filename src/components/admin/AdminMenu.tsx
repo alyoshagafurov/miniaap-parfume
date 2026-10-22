@@ -9,6 +9,7 @@ import { Sheet } from "@/components/ui/Sheet";
 
 const SECTIONS = [
   { href: "/admin", label: "Главная" },
+  { href: "/admin/orders", label: "Заявки" },
   { href: "/admin/products", label: "Товары" },
   { href: "/admin/categories", label: "Категории" },
   { href: "/admin/settings", label: "Настройки", owner: true },
@@ -18,9 +19,11 @@ const SECTIONS = [
 /**
  * The panel's only navigation.
  *
- * Five sections, because that is what the client asked the panel to be:
- * Главная, Товары, Категории, Настройки, Админы. The other screens — orders,
- * fragrances, brands, bulk photos, import — still answer at their addresses:
+ * Six sections: Главная, Заявки, Товары, Категории, Настройки, Админы. Orders
+ * were left out at first and then went missing in practice — the only way in
+ * was a «Новые заявки» row that disappears once nothing is new, so a request
+ * vanished from the panel the moment its status changed. They are a section
+ * now, and the list keeps every status. The other screens — brands, bulk photos, import — still answer at their addresses:
  * a manager's Telegram notice links straight to an order, and a product's
  * fragrance links to its notes. They are reached from where they are needed
  * rather than listed where they are not.

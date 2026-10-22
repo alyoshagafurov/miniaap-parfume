@@ -36,6 +36,8 @@ export interface OrderSummary {
 export interface OrderDetail extends OrderSummary {
   delivery: string;
   comment: string | null;
+  discountKop: number;
+  discountPercent: number;
   /** A string, never the BigInt: see the note at the top of this file. */
   telegramId: string | null;
   telegramUsername: string | null;
@@ -150,6 +152,8 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
       city: true,
       delivery: true,
       comment: true,
+      discountKop: true,
+      discountPercent: true,
       totalKop: true,
       createdAt: true,
       telegramUser: {
@@ -181,6 +185,8 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
     city: order.city,
     delivery: order.delivery,
     comment: order.comment,
+    discountKop: order.discountKop,
+    discountPercent: order.discountPercent,
     totalKop: order.totalKop,
     itemCount: order.items.length,
     createdAt: order.createdAt,

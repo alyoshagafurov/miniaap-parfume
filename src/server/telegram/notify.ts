@@ -37,6 +37,8 @@ export interface OrderNotification {
   delivery: string;
   comment: string | null;
   totalKop: number;
+  discountKop?: number;
+  discountPercent?: number;
   username: string | null;
   /** Null for a web buyer, who has no Telegram to be written to. */
   telegramId: bigint | null;
@@ -123,6 +125,12 @@ export async function notifyNewOrder(
           delivery: order.delivery,
           comment: order.comment,
           totalKop: order.totalKop,
+          ...(order.discountKop
+            ? {
+                discountKop: order.discountKop,
+                discountPercent: order.discountPercent ?? 0,
+              }
+            : {}),
           showPrices: settings.showPrices,
           lines: order.lines,
           username: order.username,

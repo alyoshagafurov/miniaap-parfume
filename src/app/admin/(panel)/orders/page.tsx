@@ -14,10 +14,10 @@ type SearchParams = Record<string, string | string[] | undefined>;
 /**
  * The requests.
  *
- * Not in the menu — the client asked for five sections and this is not one of
- * them. A manager arrives here from the Telegram notice or from «Новые заявки»
- * on the home screen, and with no row of sections above the page any more, the
- * way back is the first line of it.
+ * A section of the menu, and the record: «Все» is the default and every status
+ * is kept, so changing a request's status moves it between tabs and never out
+ * of the panel. The Telegram notice and «Новые заявки» on the home screen land
+ * here too, and the first line is the way back.
  */
 export default function OrdersPage({
   searchParams,

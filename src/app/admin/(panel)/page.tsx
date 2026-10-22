@@ -90,6 +90,17 @@ async function Overview() {
       <section className="mt-12">
         <SectionHeading>Разделы</SectionHeading>
         <ul className="mt-5 flex flex-col gap-3">
+          {/* Always here, new or not: the history of past requests is reached from
+              this row, and it must not depend on there being anything new. */}
+          <Row
+            href="/admin/orders"
+            label="Заявки"
+            note={
+              counts.newOrders > 0
+                ? `Новых: ${counts.newOrders}. Все прежние хранятся здесь`
+                : "Все заявки и их история"
+            }
+          />
           <Row
             href="/admin/products"
             label="Товары"

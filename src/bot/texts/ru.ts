@@ -130,6 +130,9 @@ export function orderForManager(params: {
   delivery: string;
   comment: string | null;
   totalKop: number;
+  /** The volume discount already taken off `totalKop`; 0 when there is none. */
+  discountKop?: number;
+  discountPercent?: number;
   showPrices: boolean;
   lines: Array<{ title: string; sku: string; qty: number; lineTotalKop: number }>;
   username: string | null;
@@ -139,7 +142,13 @@ export function orderForManager(params: {
     return `• ${l.title} (${l.sku}) × ${l.qty}${sum}`;
   });
 
-  const total = params.showPrices ? `\nИтого: ${formatRub(params.totalKop)}` : "";
+  const discount =
+    params.showPrices && params.discountKop
+      ? `\nСкидка ${params.discountPercent ?? 0}%: −${formatRub(params.discountKop)}`
+      : "";
+  const total = params.showPrices
+    ? `${discount}\nИтого: ${formatRub(params.totalKop)}`
+    : "";
   const from = params.username ? `\nTelegram: @${params.username}` : "";
 
   const head = `Новая заявка ${params.number}\n\n`;
