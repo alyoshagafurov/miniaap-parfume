@@ -12,8 +12,12 @@ if [[ "${VERCEL_ENV:-}" == "production" ]]; then
   fi
   pnpm prisma generate
   pnpm db:deploy
+  pnpm build
+  # Register the Telegram webhook only after the application build succeeds.
+  # On redeploys the stable production domain serves the prior deployment until
+  # Vercel switches aliases, so Telegram keeps a working endpoint.
+  pnpm bot:webhook:set
 else
   DATABASE_URL="${DATABASE_URL:-postgresql://build:build@127.0.0.1:5432/build?schema=public}" pnpm prisma generate
+  pnpm build
 fi
-
-pnpm build

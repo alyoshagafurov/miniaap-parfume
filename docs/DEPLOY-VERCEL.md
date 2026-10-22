@@ -32,8 +32,9 @@ them in Git or in `vercel.json`.
 Import the GitHub repository `alyoshagafurov/miniaap-parfume` into the
 `alyosha's projects` team. Use the repository root and the detected Next.js
 framework. `vercel.json` runs `vercel-build.sh`: production deployments generate
-the Prisma client and apply migrations before building; preview deployments only
-generate the client and do not migrate the production database.
+the Prisma client, apply migrations, build the app, then register the Telegram
+webhook. Preview deployments only generate the client and build; they do not
+migrate the production database or change the Telegram webhook.
 
 Set these variables for **Production**:
 
@@ -73,16 +74,9 @@ Railway is inaccessible, rotate the token in BotFather before cutover: open
 token into Vercel's Production `BOT_TOKEN` variable and deploy again. The old
 Railway process will then no longer be able to poll or change webhook settings.
 
-After the production domain is live and the new token is set, create a local,
-git-ignored `.env.production` with `BOT_TOKEN`, `BOT_WEBHOOK_SECRET`,
-`MINI_APP_URL`, and `DATABASE_URL`, then run:
-
-```sh
-pnpm bot:webhook:set
-```
-
-The script registers `/api/telegram/webhook`, sets the Mini App menu button and
-commands, and preserves pending Telegram updates. It does not print secrets.
+The Production build registers `/api/telegram/webhook`, sets the Mini App menu
+button and commands, and preserves pending Telegram updates. It does not print
+secrets.
 
 ## First administrator and catalog
 
