@@ -363,7 +363,7 @@ Corrections that override the above:
 - auto-retry defaults maxDelaySeconds to Infinity, so a retry_after of 3600 makes your bot sleep for an hour inside one API call. Always set an explicit maxDelaySeconds.
 - bot.stop() does not wait for the middleware stack. `await bot.stop()` alone can exit mid-handler; you must also await the promise returned by bot.start().
 - Do not call bot.start() with await as your only statement expecting it to resolve — it resolves only on stop. Keep the returned promise in a variable and attach shutdown to it.
-- Never mix bot.start() and the runner's run(bot) in the same process, and never call setWebhook — the relay + long polling combination breaks if a webhook is registered (getUpdates returns 409). If a webhook was ever set, call bot.api.deleteWebhook({ drop_pending_updates: true }) once at boot.
+- Never mix bot.start() and the runner's run(bot) in the same process. The Railway/VPS relay path uses long polling and clears stale webhooks at boot; the separate Vercel deployment uses setWebhook through `src/app/api/telegram/webhook/route.ts` and must not run the standalone poller.
 - setMyCommands with BotCommandScopeChat REPLACES the whole visible command list for that chat — an admin scoped to only /stats and /broadcast will no longer see /start. Include every command the admin should see.
 - setChatMenuButton's chat_id is typed `number` only (not `number | string`), unlike most chat_id params.
 - file_unique_id cannot be used to send or download. Cache file_id. Also note file_id is only valid for YOUR bot — it is not portable across bots, and a relay does not change that.

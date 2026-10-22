@@ -19,7 +19,8 @@ import { loadDotEnv } from "../src/lib/env";
 import { hashPassword } from "../src/server/auth/password";
 import { prisma } from "../src/server/db";
 
-loadDotEnv();
+loadDotEnv(process.env.ENV_FILE ?? ".env.production");
+loadDotEnv(".env");
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);

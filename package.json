@@ -13,6 +13,7 @@
     "start": "next start --port ${PORT:-3100}",
     "bot": "tsx src/bot/index.ts",
     "bot:dev": "tsx watch src/bot/index.ts",
+    "bot:webhook:set": "tsx scripts/set-webhook.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",

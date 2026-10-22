@@ -12,7 +12,8 @@ import { Api } from "grammy";
  *
  * The web process uses this Api directly to notify the manager and to send
  * login codes; it never polls. The bot process (src/bot) builds a Bot with the
- * same client options and owns long polling. Webhooks are not used at all.
+ * same client options and owns long polling on Railway/VPS. Vercel handles
+ * updates through the separate Next.js webhook route.
  */
 
 /**

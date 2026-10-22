@@ -8,10 +8,12 @@ import { defineConfig, env } from "prisma/config";
 // none — the variables come from the environment. Without this, every
 // `prisma migrate deploy` in production failed before it read a single
 // migration.
-try {
-  process.loadEnvFile?.(".env");
-} catch {
-  // Configured from the real environment, which is the production case.
+for (const file of [process.env.ENV_FILE ?? ".env.production", ".env"]) {
+  try {
+    process.loadEnvFile?.(file);
+  } catch {
+    // Configured from the real environment, which is the production case.
+  }
 }
 
 export default defineConfig({

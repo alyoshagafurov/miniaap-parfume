@@ -13,10 +13,9 @@ import { clientOptions } from "@/server/telegram/client";
  *
  *   pnpm bot
  *
- * A separate process from the web app, sharing its database. Long polling
- * only — webhooks are never registered, because the production host is in
- * Russia and reaches the Bot API through a relay; a webhook would require
- * Telegram to reach back in, which it cannot.
+ * A separate process from the web app, sharing its database. This process
+ * uses long polling on Railway/VPS. Vercel uses the separate Next.js route at
+ * /api/telegram/webhook and must not run this process.
  *
  * This file is only the process: environment, boot, polling, shutdown. Every
  * handler lives in bot.ts, which has no side effects, so the smoke test can
@@ -104,7 +103,8 @@ async function boot(): Promise<void> {
   // stays invisible.
   await assertSearchHealth();
 
-  // If a webhook was ever registered, getUpdates returns 409 forever.
+  // This standalone polling process owns its bot token and clears stale
+  // webhooks before polling. Do not run it with the Vercel webhook deployment.
   await bot.api.deleteWebhook({ drop_pending_updates: false });
 
   // /id is answered but listed nowhere: it is a setup tool the owner is told

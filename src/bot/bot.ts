@@ -19,7 +19,8 @@ import { clientOptions, installAutoRetry } from "@/server/telegram/client";
  * Builds the bot with every handler attached.
  *
  * Deliberately free of side effects: it reads no environment, starts no
- * polling, and never calls process.exit. Everything it needs arrives as an
+ * polling, and never calls process.exit. It can serve either the standalone
+ * poller or the Vercel webhook route. Everything it needs arrives as an
  * argument. That is what lets the smoke test stand a bot up in plain Node —
  * no Next runtime, no network — and drive real updates through it.
  *
