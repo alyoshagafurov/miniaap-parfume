@@ -59,6 +59,7 @@
     "@tanstack/react-table": "9.2.4",
     "@tma.js/init-data-node": "2.0.8",
     "@tma.js/sdk-react": "3.0.23",
+    "@vercel/blob": "^2.8.2",
     "argon2": "0.45.1",
     "csv-parse": "7.0.2",
     "fflate": "0.8.3",

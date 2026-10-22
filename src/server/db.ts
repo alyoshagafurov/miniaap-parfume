@@ -22,7 +22,10 @@ import { PrismaClient } from "@prisma/client";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
+  // Serverless runtimes should use the provider's pooled endpoint when one is
+  // available. DATABASE_URL remains the migration/direct connection and the
+  // local-development fallback.
+  const connectionString = process.env.DATABASE_URL_POOLED || process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL не задан — проверьте .env");
   }

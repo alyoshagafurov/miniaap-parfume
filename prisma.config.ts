@@ -19,7 +19,9 @@ for (const file of [process.env.ENV_FILE ?? ".env.production", ".env"]) {
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: env("DATABASE_URL"),
+    // Keep Prisma migrations on the direct endpoint when the provider exposes
+    // a separate pooler URL for application traffic.
+    url: process.env.DATABASE_URL_DIRECT || env("DATABASE_URL"),
   },
   migrations: {
     path: "prisma/migrations",

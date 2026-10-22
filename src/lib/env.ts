@@ -40,10 +40,13 @@ const serverSchema = z.object({
   ADMIN_CHAT_ID: z.string().optional(),
   MINI_APP_URL: z.string().url().optional(),
 
-  S3_ENDPOINT: z.string().url(),
-  S3_BUCKET: z.string().min(1),
-  S3_ACCESS_KEY: z.string().min(1),
-  S3_SECRET_KEY: z.string().min(1),
+  // Local development uses MinIO; Vercel uses Blob. One complete storage
+  // backend is required, with Blob taking precedence when its token exists.
+  BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_ACCESS_KEY: z.string().min(1).optional(),
+  S3_SECRET_KEY: z.string().min(1).optional(),
   /**
    * Публичный адрес бакета — если он публичный.
    *
@@ -56,6 +59,13 @@ const serverSchema = z.object({
    * приложение. Это путь Yandex Object Storage и MinIO в разработке.
    */
   NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url().or(z.literal("")).optional(),
+}).superRefine((value, context) => {
+  if (value.BLOB_READ_WRITE_TOKEN) return;
+  const missing = ["S3_ENDPOINT", "S3_BUCKET", "S3_ACCESS_KEY", "S3_SECRET_KEY"]
+    .filter((key) => !value[key as keyof typeof value]);
+  for (const key of missing) {
+    context.addIssue({ code: "custom", path: [key], message: `${key} обязателен без Vercel Blob` });
+  }
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

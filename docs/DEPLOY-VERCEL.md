@@ -21,8 +21,8 @@ Create these services in regions close to the Vercel Functions region:
   direct URL for migrations if the provider supplies both.
 - Redis with TLS enabled (`rediss://…`). Rate limits fail closed when Redis is
   unavailable, including admin login and order submission.
-- An S3-compatible bucket. The app uses it for uploaded product photos; a
-  private bucket works because `/api/media/*` proxies the images.
+- A public Vercel Blob store in the same region. The app uses it for catalog
+  photos; Blob URLs are public because catalog photos are public assets.
 
 Keep provider credentials in Vercel project environment variables. Do not put
 them in Git or in `vercel.json`.
@@ -39,13 +39,11 @@ Set these variables for **Production**:
 
 | Variable | Value |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection URL |
-| `REDIS_URL` | TLS Redis connection URL |
-| `S3_ENDPOINT` | S3 API endpoint, including `https://` |
-| `S3_BUCKET` | Bucket name |
-| `S3_ACCESS_KEY` | S3 access key |
-| `S3_SECRET_KEY` | S3 secret key |
-| `S3_REGION` | Provider region (`auto` for Cloudflare R2) |
+| `DATABASE_URL` | Direct PostgreSQL URL for migrations |
+| `DATABASE_URL_POOLED` | Pooled PostgreSQL URL for application traffic, when the provider offers one |
+| `REDIS_URL` | Injected by the Upstash Redis integration |
+| `BLOB_READ_WRITE_TOKEN` | Injected by the connected Vercel Blob store |
+| `BLOB_STORE_ID` | Injected by the connected Vercel Blob store |
 | `AUTH_SECRET` | New random value, at least 32 characters |
 | `BOT_WEBHOOK_SECRET` | 32–256 random letters, digits, `_` or `-` |
 | `BOT_TOKEN` | Current token from BotFather; see cutover below |
@@ -57,8 +55,10 @@ Set these variables for **Production**:
 | `DEPLOY_TARGET` | `vercel` |
 
 Add `BOT_USERNAME` and `NEXT_PUBLIC_YANDEX_METRICA_ID` only if they are needed.
-The app can use a private S3 bucket; leave `NEXT_PUBLIC_S3_PUBLIC_URL` unset in
-that case.
+Local development continues to use MinIO through the `S3_*` variables. When
+`BLOB_READ_WRITE_TOKEN` is present, Vercel Blob is used instead. Its photo URLs
+are served through `/api/media/*`; no public storage token is exposed to the
+browser.
 
 Use a temporary placeholder for `MINI_APP_URL` on the first build if Vercel has
 not assigned the production domain yet, then replace it with the assigned HTTPS

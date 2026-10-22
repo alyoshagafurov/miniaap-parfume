@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { del as deleteBlobs, get as getBlob, put as putBlob } from "@vercel/blob";
 
 import { env } from "@/lib/env";
 
@@ -24,15 +25,18 @@ let cached: S3Client | undefined;
 function client(): S3Client {
   if (cached) return cached;
   const e = env();
+  if (!e.S3_ENDPOINT || !e.S3_ACCESS_KEY || !e.S3_SECRET_KEY) {
+    throw new Error("S3 не настроен и Vercel Blob недоступен");
+  }
   cached = new S3Client({
-    endpoint: e.S3_ENDPOINT,
+    endpoint: e.S3_ENDPOINT!,
     // From the environment, because an S3-compatible store decides for itself
     // what it wants here: MinIO ignores it, Yandex wants ru-central1, and a
     // Railway bucket reports `auto`. It is only used to sign, but a signature
     // computed for the wrong region is rejected by the ones that check.
     region: process.env.S3_REGION ?? "us-east-1",
     forcePathStyle: true,
-    credentials: { accessKeyId: e.S3_ACCESS_KEY, secretAccessKey: e.S3_SECRET_KEY },
+    credentials: { accessKeyId: e.S3_ACCESS_KEY!, secretAccessKey: e.S3_SECRET_KEY! },
   });
   return cached;
 }
@@ -54,9 +58,19 @@ export interface StoredObject {
 export async function putObjects(objects: readonly StoredObject[]): Promise<void> {
   const e = env();
   for (const object of objects) {
+    if (e.BLOB_READ_WRITE_TOKEN) {
+      await putBlob(object.key, object.body, {
+        access: "public",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: object.contentType,
+        cacheControlMaxAge: 31536000,
+      });
+      continue;
+    }
     await client().send(
       new PutObjectCommand({
-        Bucket: e.S3_BUCKET,
+        Bucket: e.S3_BUCKET!,
         Key: object.key,
         Body: object.body,
         ContentType: object.contentType,
@@ -78,9 +92,13 @@ export async function putObjects(objects: readonly StoredObject[]): Promise<void
 export async function deleteObjects(keys: readonly string[]): Promise<void> {
   if (keys.length === 0) return;
   try {
+    if (env().BLOB_READ_WRITE_TOKEN) {
+      await deleteBlobs([...keys]);
+      return;
+    }
     await client().send(
       new DeleteObjectsCommand({
-        Bucket: env().S3_BUCKET,
+        Bucket: env().S3_BUCKET!,
         Delete: { Objects: keys.map((Key) => ({ Key })) },
       }),
     );
@@ -135,8 +153,18 @@ export async function getObject(
 ): Promise<{ body: Uint8Array; contentType: string }> {
   const e = env();
   try {
+    if (e.BLOB_READ_WRITE_TOKEN) {
+      const result = await getBlob(key, { access: "public" });
+      if (!result || result.statusCode !== 200 || !result.stream) {
+        throw new StorageMiss(key);
+      }
+      return {
+        body: new Uint8Array(await new Response(result.stream).arrayBuffer()),
+        contentType: result.blob.contentType ?? "application/octet-stream",
+      };
+    }
     const result = await client().send(
-      new GetObjectCommand({ Bucket: e.S3_BUCKET, Key: key }),
+      new GetObjectCommand({ Bucket: e.S3_BUCKET!, Key: key }),
     );
     if (!result.Body) throw new StorageMiss(key);
     return {
