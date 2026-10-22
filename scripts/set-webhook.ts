@@ -139,7 +139,9 @@ async function main(): Promise<void> {
 
   const globalMenu = await api.getChatMenuButton({});
   if (globalMenu.type !== "web_app" || globalMenu.web_app.url !== origin.origin) {
-    throw new Error("Telegram не подтвердил адрес общей кнопки меню");
+    console.error(
+      "Telegram изменил общую кнопку меню во время настройки; старый polling-процесс ещё активен",
+    );
   }
 
   // Do this last: the old Railway polling process may restart when Telegram
