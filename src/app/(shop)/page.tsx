@@ -179,6 +179,12 @@ function Hero({
           <p className="text-on-night-muted mt-4 text-sm leading-snug">{address}</p>
         ) : null}
 
+        {whatsappPhone ? (
+          <p className="text-on-night-muted mt-3 text-sm leading-snug">
+            По поводу крупного опта пишите в WhatsApp
+          </p>
+        ) : null}
+
         {phone || whatsappPhone ? (
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {/* The reference's white capsule on a dark ground: the call is the
