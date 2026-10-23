@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { ProductCard } from "@/components/shop/ProductCard";
+import { StoredImage } from "@/components/shop/StoredImage";
 import { SectionHeading } from "@/components/ui/GoldRule";
-import { objectUrl } from "@/lib/media";
 import { GOODS, keepUnits, plural } from "@/lib/format";
 import { formatRub } from "@/lib/money";
 import {
@@ -235,15 +235,17 @@ function CategoryRow({ category }: { category: CategoryRowData }) {
         className="stage group flex items-center gap-4 p-3"
       >
         {category.coverKey ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={objectUrl(category.coverKey)}
+          <StoredImage
+            imageKey={category.coverKey}
             alt=""
             width={64}
             height={80}
+            sourceWidth={400}
+            sizes="64px"
+            pictureClassName="block h-20 w-16 shrink-0"
             loading="lazy"
             decoding="async"
-            className="bg-canvas h-20 w-16 shrink-0 rounded-md object-cover"
+            className="bg-canvas h-full w-full rounded-md object-cover"
           />
         ) : (
           <span

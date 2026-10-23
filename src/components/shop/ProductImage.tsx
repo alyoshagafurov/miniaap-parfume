@@ -1,5 +1,5 @@
+import { StoredImage } from "@/components/shop/StoredImage";
 import { productName } from "@/lib/format";
-import { objectUrl } from "@/lib/media";
 
 /**
  * A product image, or the state that stands in for one.
@@ -85,16 +85,12 @@ export function ProductImage({
   }
 
   return (
-    // Not next/image: sharp already renders AVIF and WebP at three widths on
-    // upload, so images.unoptimized is set and next/image would emit this same
-    // element while adding client JS. Width, height, blur placeholder, lazy
-    // loading and sizes — everything the rule is protecting — are all present.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={objectUrl(image.key)}
+    <StoredImage
+      imageKey={image.key}
       alt={productName(brandName, title)}
       width={image.width}
       height={image.height}
+      sourceWidth={image.width}
       sizes={sizes}
       loading={priority ? "eager" : "lazy"}
       decoding="async"

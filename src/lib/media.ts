@@ -31,6 +31,9 @@
 
 /** Where the proxy lives. Relative on purpose — it works in a browser too. */
 const PROXY_PREFIX = "/api/media/";
+const IMAGE_RENDITION_WIDTHS = [400, 800, 1600] as const;
+
+export type ImageFormat = "avif" | "webp";
 
 function publicBase(): string {
   return (process.env.NEXT_PUBLIC_S3_PUBLIC_URL ?? "").replace(/\/+$/, "");
@@ -42,6 +45,35 @@ export function objectUrl(key: string): string {
   // NEXT_PUBLIC_ is inlined at build, so this branch is decided then and the
   // unused one costs nothing at runtime.
   return base ? `${base}/${clean}` : `${PROXY_PREFIX}${clean}`;
+}
+
+/**
+ * Build a browser-selectable srcset from renditions that actually exist for
+ * this original width. Inputs between 400px and 800px use the stored 800.webp
+ * fallback at its real width, since the uploader does not upscale AVIF files.
+ */
+export function imageSrcSet(
+  key: string,
+  originalWidth: number,
+  format: ImageFormat,
+): string | undefined {
+  if (!/-800\.webp$/.test(key) || !Number.isInteger(originalWidth) || originalWidth < 400) {
+    return undefined;
+  }
+
+  const base = key.replace(/-800\.webp$/, "");
+  const candidates: { url: string; width: number }[] = IMAGE_RENDITION_WIDTHS.filter(
+    (width) => width <= originalWidth,
+  ).map((width) => ({
+    url: objectUrl(`${base}-${width}.${format}`),
+    width,
+  }));
+
+  if (format === "webp" && originalWidth > 400 && originalWidth < 800) {
+    candidates.push({ url: objectUrl(key), width: originalWidth });
+  }
+
+  return candidates.map(({ url, width }) => `${url} ${width}w`).join(", ");
 }
 
 /**
