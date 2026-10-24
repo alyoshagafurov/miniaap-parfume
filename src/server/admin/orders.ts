@@ -51,6 +51,8 @@ export interface OrderDetail extends OrderSummary {
     format: string;
     priceKop: number;
     qty: number;
+    /** The photograph as it was when the request was placed; null if it had none. */
+    imageKey: string | null;
   }>;
 }
 
@@ -169,6 +171,7 @@ export async function getOrder(id: string): Promise<OrderDetail | null> {
           format: true,
           priceKop: true,
           qty: true,
+          imageKey: true,
         },
       },
     },

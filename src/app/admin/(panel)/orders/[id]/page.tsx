@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { OrderStatusControl } from "@/components/admin/OrderStatusControl";
 import { formatDateTimeRu } from "@/lib/format";
+import { objectUrl } from "@/lib/media";
 import { formatRub } from "@/lib/money";
 import { DELIVERY_LABELS } from "@/lib/orders";
 import { getOrder } from "@/server/admin/orders";
@@ -136,19 +137,49 @@ async function Card({ params }: PageProps) {
         <h2 className="caps text-muted">Состав</h2>
         <ul className="mt-3 flex flex-col">
           {order.items.map((item) => (
-            <li key={item.id} className="border-rule border-b py-3 last:border-b-0">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                {/* title alone: the snapshot's title is the product's generated
-                    name, which already begins with the brand. */}
-                <span className="text-ink text-sm">{item.title}</span>
-                <span className="text-ink text-sm font-semibold tabular-nums">
-                  {formatRub(lineTotal(item.priceKop, item.qty))}
+            <li
+              key={item.id}
+              className="border-rule flex items-start gap-3 border-b py-3 last:border-b-0"
+            >
+              {/* The photograph the buyer saw, kept on the line when the request
+                  was placed — so it is still here after the product's own
+                  photos are changed or the product is gone. Without one, the
+                  monogram, the same designed state the storefront uses. */}
+              {item.imageKey ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={objectUrl(item.imageKey.replace(/-\d+\.webp$/, "-400.webp"))}
+                  alt=""
+                  width={56}
+                  height={70}
+                  loading="lazy"
+                  decoding="async"
+                  className="bg-canvas aspect-[4/5] w-14 shrink-0 rounded-md object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden
+                  className="bg-canvas flex aspect-[4/5] w-14 shrink-0 items-center justify-center rounded-md"
+                >
+                  <span className="font-wordmark text-wordmark/45 text-xl leading-none">
+                    Á
+                  </span>
                 </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  {/* title alone: the snapshot's title is the product's generated
+                    name, which already begins with the brand. */}
+                  <span className="text-ink text-sm">{item.title}</span>
+                  <span className="text-ink text-sm font-semibold tabular-nums">
+                    {formatRub(lineTotal(item.priceKop, item.qty))}
+                  </span>
+                </div>
+                <p className="text-muted mt-0.5 text-xs tabular-nums">
+                  {item.sku} · {item.format} · {formatRub(item.priceKop)} × {item.qty}
+                  {item.productId ? "" : " · товара больше нет в каталоге"}
+                </p>
               </div>
-              <p className="text-muted mt-0.5 text-xs tabular-nums">
-                {item.sku} · {item.format} · {formatRub(item.priceKop)} × {item.qty}
-                {item.productId ? "" : " · товара больше нет в каталоге"}
-              </p>
             </li>
           ))}
         </ul>
