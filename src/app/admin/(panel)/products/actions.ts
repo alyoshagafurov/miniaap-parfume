@@ -307,9 +307,9 @@ export async function reorderImages(input: unknown): Promise<ActionResult> {
 /**
  * Deletes a photograph, then its bytes.
  *
- * In that order, and the bytes only if the row is really gone: an object with
- * no row is wasted storage, and a row with no object is a broken image in front
- * of a buyer.
+ * In that order, and the bytes only if the row is really gone and no past order
+ * refers to them. An order's photograph is part of its snapshot, so removing
+ * the catalog photo must not break the manager's record.
  */
 export async function removeImage(input: unknown): Promise<ActionResult> {
   await requirePermission("catalog:write");
@@ -318,7 +318,11 @@ export async function removeImage(input: unknown): Promise<ActionResult> {
 
   try {
     const removed = await fromAction(removeProductImage(parsed.data.imageId));
-    await deleteObjects(renditionKeys(removed.key));
+    const usedByOrder = await prisma.orderItem.findFirst({
+      where: { imageKey: removed.key },
+      select: { id: true },
+    });
+    if (!usedByOrder) await deleteObjects(renditionKeys(removed.key));
     return { ok: true };
   } catch (error) {
     if (error instanceof CatalogConflict) return { ok: false, message: error.message };
