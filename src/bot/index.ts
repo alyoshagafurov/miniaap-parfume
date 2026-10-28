@@ -43,6 +43,26 @@ function requireEnv(name: string, why: string): string {
  * storage configuration is already known good, rather than one that dies on
  * the first /start.
  */
+/**
+ * Not on Railway any more.
+ *
+ * The bot now answers through a webhook on Vercel. The old Railway service
+ * still builds every push to main and, on start, deleted that webhook and took
+ * the updates for itself — so buyers in Telegram got the Railway bot, whose
+ * buttons opened the Railway storefront and its own database, and their
+ * requests never reached the panel. Railway sets RAILWAY_ENVIRONMENT in every
+ * container; seeing it, this process leaves before it touches Telegram. Exit 0
+ * so the platform does not restart it in a loop. The VPS fallback sets no such
+ * variable and polls as before; BOT_ALLOW_RAILWAY=1 undoes this if the bot ever
+ * moves back.
+ */
+if (process.env.RAILWAY_ENVIRONMENT && process.env.BOT_ALLOW_RAILWAY !== "1") {
+  console.log(
+    "Бот на Railway отключён: он работает через webhook на Vercel. Ничего не трогаю.",
+  );
+  process.exit(0);
+}
+
 const envCheck = checkEnv();
 if (!envCheck.ok) {
   console.error(
