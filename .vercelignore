@@ -1,0 +1,5 @@
+# Local machine values (test tokens, a localhost Telegram relay) must never reach a
+# Vercel build: an uploaded .env fills in anything the project does not set.
+.env
+.env.*
+!.env.example
