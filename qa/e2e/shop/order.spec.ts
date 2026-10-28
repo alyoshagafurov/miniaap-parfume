@@ -93,6 +93,27 @@ test.describe("Заявка", () => {
     expect(parsed.lines).toHaveLength(0);
 
     await shot(page, info, "14-order-accepted");
+
+    // Placed from an ordinary browser, and still the buyer's: «Мои заявки» on the
+    // site finds it by this browser's own cookie, with no Telegram at all.
+    const number = (await page.getByText(/^№ /).innerText())
+      .replace(/^№\s*/, "")
+      .trim();
+    await page.goto("/orders");
+    await expect(page.getByText(number)).toBeVisible({ timeout: 15_000 });
+    await shot(page, info, "14b-orders-on-site");
+
+    // And only this browser's: a fresh one has no such cookie and sees none.
+    const other = await page.context().browser()!.newContext();
+    const stranger = await other.newPage();
+    await stranger.goto(
+      `${test.info().project.use.baseURL ?? "http://localhost:3100"}/orders`,
+    );
+    await expect(stranger.getByText("Заявок пока нет")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(stranger.getByText(number)).toBeHidden();
+    await other.close();
   });
 
   test("требует телефон и согласие, и говорит об этом в поле", async ({ page }) => {

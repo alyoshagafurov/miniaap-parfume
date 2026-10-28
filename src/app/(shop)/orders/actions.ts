@@ -5,9 +5,11 @@ import { z } from "zod";
 import {
   listOrdersFor,
   repeatOrderFor,
+  type BuyerIdentity,
   type HistoryOrder,
   type RepeatResult,
 } from "@/server/orders/history";
+import { currentBuyerHash } from "@/server/orders/web-buyer";
 import { verifyInitData } from "@/server/telegram/init-data";
 
 /**
@@ -22,30 +24,36 @@ import { verifyInitData } from "@/server/telegram/init-data";
  * answer, so the action cannot be used to learn whether an order id exists.
  */
 
-const InitData = z.object({ initDataRaw: z.string().min(1).max(4096) });
+// Optional: a buyer in an ordinary browser has no launch string at all.
+const InitData = z.object({ initDataRaw: z.string().min(1).max(4096).optional() });
 
-function identify(input: unknown): bigint | null {
-  const parsed = InitData.safeParse(input);
-  if (!parsed.success) return null;
-  const result = verifyInitData(parsed.data.initDataRaw, process.env.BOT_TOKEN);
+/**
+ * Both identities, each proven its own way: the Telegram id from the signature,
+ * the browser key from an httpOnly cookie the buyer's own browser holds. Neither
+ * ever comes from the payload.
+ */
+async function identify(input: unknown): Promise<BuyerIdentity> {
+  const parsed = InitData.safeParse(input ?? {});
+  const raw = parsed.success ? parsed.data.initDataRaw : undefined;
+  const result = raw ? verifyInitData(raw, process.env.BOT_TOKEN) : null;
   // The reason is deliberately not returned and not logged: it is of no use to
   // the buyer, and the string it came from carries their name and id.
-  return result.ok ? result.user.telegramId : null;
+  return {
+    telegramId: result?.ok ? result.user.telegramId : null,
+    webBuyerHash: await currentBuyerHash(),
+  };
 }
 
 export async function listMyOrders(input: unknown): Promise<HistoryOrder[]> {
-  const telegramId = identify(input);
-  if (!telegramId) return [];
-  return listOrdersFor(telegramId);
+  return listOrdersFor(await identify(input));
 }
 
-const RepeatInput = InitData.extend({ orderId: z.string().min(1).max(64) });
+const RepeatInput = z.object({ orderId: z.string().min(1).max(64) });
 
 export async function repeatOrder(input: unknown): Promise<RepeatResult> {
-  const telegramId = identify(input);
   const parsed = RepeatInput.safeParse(input);
-  if (!telegramId || !parsed.success) return { lines: [], unavailable: [] };
+  if (!parsed.success) return { lines: [], unavailable: [] };
 
-  const result = await repeatOrderFor(parsed.data.orderId, telegramId);
+  const result = await repeatOrderFor(parsed.data.orderId, await identify(input));
   return result ?? { lines: [], unavailable: [] };
 }

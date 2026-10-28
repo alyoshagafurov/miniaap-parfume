@@ -122,6 +122,11 @@ export interface CreateOrderContext {
   botToken?: string | null;
   /** For rate limiting. Behind a proxy this is the real client address. */
   ip: string;
+  /**
+   * The browser's buyer key, hashed (see src/server/orders/web-buyer.ts), so
+   * the request shows up in «Мои заявки» on the site as well as in Telegram.
+   */
+  webBuyerHash?: string | null;
 }
 
 export type CreateOrderResult =
@@ -306,6 +311,7 @@ export async function createOrder(
       data: {
         number,
         telegramUserId,
+        webBuyerHash: ctx.webBuyerHash ?? null,
         source: telegramId ? "TELEGRAM" : "WEB",
         name: input.name,
         phone: input.phone,

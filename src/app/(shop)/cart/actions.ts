@@ -2,6 +2,7 @@
 
 import { clientIp } from "@/server/client-ip";
 import { createOrder, type CreateOrderResult } from "@/server/orders/create";
+import { ensureBuyerHash } from "@/server/orders/web-buyer";
 
 /**
  * Submitting a request.
@@ -32,5 +33,10 @@ export async function submitOrder(input: unknown): Promise<CreateOrderResult> {
   const initDataRaw =
     payload && typeof payload.initDataRaw === "string" ? payload.initDataRaw : null;
 
-  return createOrder(input, { initDataRaw, ip });
+  // Every request carries the browser's key, Telegram or not, so it appears in
+  // «Мои заявки» on the site too — inside the Mini App the webview keeps the
+  // same cookie, and the history shows what either identity placed.
+  const webBuyerHash = await ensureBuyerHash();
+
+  return createOrder(input, { initDataRaw, ip, webBuyerHash });
 }

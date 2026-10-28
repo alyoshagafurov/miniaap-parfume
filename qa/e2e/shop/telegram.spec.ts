@@ -114,9 +114,7 @@ test.describe("Внутри Telegram", () => {
     await expect(page.getByRole("button", { name: /^Оформить/ })).toBeVisible();
   });
 
-  test("в обычном браузере история не притворяется пустой — она объясняет", async ({
-    page,
-  }, info) => {
+  test("в обычном браузере без заявок история честно пуста", async ({ page }, info) => {
     // Deliberately not in Telegram: the beforeEach mock is per-page, and this
     // one opens a page without it.
     const plain = await page.context().browser()!.newContext();
@@ -124,7 +122,10 @@ test.describe("Внутри Telegram", () => {
     await fresh.goto(
       `${test.info().project.use.baseURL ?? "http://localhost:3100"}/orders`,
     );
-    await expect(fresh.getByText("Заявки хранятся в Telegram")).toBeVisible();
+    // A browser that never sent anything: no cookie, so nothing — and a line
+    // saying the site shows what this browser has sent.
+    await expect(fresh.getByText("Заявок пока нет")).toBeVisible({ timeout: 15_000 });
+    await expect(fresh.getByText(/с этого устройства и браузера/)).toBeVisible();
     await shot(fresh, info, "19-orders-browser");
     await plain.close();
   });

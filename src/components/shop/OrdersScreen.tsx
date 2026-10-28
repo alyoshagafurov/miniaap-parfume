@@ -29,9 +29,10 @@ const STATUS_LABEL: Record<string, string> = {
  * Mini App — it lives in the browser and is not a cookie, so the server has no
  * way to know who is asking until the client says so and signs for it.
  *
- * Outside Telegram this screen has nothing to show and says so plainly. A web
- * visitor is anonymous to us by construction; inventing a lookup by order
- * number would mean anyone who can count could read someone else's details.
+ * Outside Telegram the browser is the identity: requests sent from it carry a
+ * key held in its own httpOnly cookie (src/server/orders/web-buyer.ts), and the
+ * list is scoped by that. Nothing in this call names whose orders to show — a
+ * lookup by order number would let anyone who can count read someone else's.
  */
 export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
   const { ready, isTelegram, rawInitData } = useTelegram();
@@ -42,9 +43,9 @@ export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
   // the render can answer from `ready` and `isTelegram`, and answering it with
   // setState here would be a cascading render for a fact already known.
   useEffect(() => {
-    if (!ready || !isTelegram || !rawInitData) return;
+    if (!ready) return;
     let cancelled = false;
-    listMyOrders({ initDataRaw: rawInitData }).then(
+    listMyOrders(isTelegram && rawInitData ? { initDataRaw: rawInitData } : {}).then(
       (result) => {
         if (!cancelled) setOrders(result);
       },
@@ -66,8 +67,6 @@ export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
 
       {!ready ? (
         <ListSkeleton />
-      ) : !isTelegram || !rawInitData ? (
-        <NotInTelegram />
       ) : failed ? (
         <p role="alert" className="text-muted mt-8 text-sm">
           Не удалось загрузить заявки. Проверьте связь.
@@ -79,6 +78,9 @@ export function OrdersScreen({ showPrices }: { showPrices: boolean }) {
           <p className="text-ink text-lg">Заявок пока нет</p>
           <p className="text-muted mt-2 text-sm">
             Здесь появятся ваши заявки — с номером, датой и статусом.
+            {isTelegram
+              ? ""
+              : " На сайте видны заявки, отправленные с этого устройства и браузера."}
           </p>
           <div className="mt-6">
             <Link href="/" className="text-primary underline underline-offset-4">
@@ -119,9 +121,10 @@ function OrderCard({
   const [missing, setMissing] = useState<string[] | null>(null);
 
   const repeat = () => {
-    if (!initDataRaw) return;
     startTransition(async () => {
-      const result = await repeatOrder({ initDataRaw, orderId: order.id });
+      const result = await repeatOrder(
+        initDataRaw ? { initDataRaw, orderId: order.id } : { orderId: order.id },
+      );
       if (result.lines.length === 0) {
         haptics.error();
         setMissing(result.unavailable.map((u) => u.title));
@@ -181,33 +184,11 @@ function OrderCard({
       ) : null}
 
       <div className="mt-4">
-        <Button
-          variant="secondary"
-          onClick={repeat}
-          loading={pending}
-          disabled={!initDataRaw}
-        >
+        <Button variant="secondary" onClick={repeat} loading={pending}>
           Повторить
         </Button>
       </div>
     </article>
-  );
-}
-
-function NotInTelegram() {
-  return (
-    <div className="mt-8">
-      <p className="text-ink text-lg">Заявки хранятся в Telegram</p>
-      <p className="text-muted mt-2 text-sm">
-        Мы узнаём вас по аккаунту Telegram, поэтому история видна в мини-приложении.
-        Откройте каталог через бота — и все заявки будут здесь.
-      </p>
-      <div className="mt-6">
-        <Link href="/" className="text-primary underline underline-offset-4">
-          В каталог
-        </Link>
-      </div>
-    </div>
   );
 }
 

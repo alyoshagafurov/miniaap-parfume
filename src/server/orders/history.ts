@@ -38,9 +38,29 @@ export interface HistoryOrder {
 /** Deep enough for a wholesale buyer to find last month's order. */
 const HISTORY_LIMIT = 50;
 
-export async function listOrdersFor(telegramId: bigint): Promise<HistoryOrder[]> {
+/**
+ * Who is asking, as the actions established it: a Telegram id from a signed
+ * launch string, a browser key from an httpOnly cookie, or both — a buyer inside
+ * the Mini App has both, and sees what either placed.
+ */
+export interface BuyerIdentity {
+  telegramId: bigint | null;
+  webBuyerHash: string | null;
+}
+
+function ownedBy(who: BuyerIdentity) {
+  const or = [
+    ...(who.telegramId ? [{ telegramUser: { telegramId: who.telegramId } }] : []),
+    ...(who.webBuyerHash ? [{ webBuyerHash: who.webBuyerHash }] : []),
+  ];
+  // No identity is no orders — never an empty OR, which Prisma reads as «any».
+  return or.length > 0 ? { OR: or } : { id: "__none__" };
+}
+
+export async function listOrdersFor(who: BuyerIdentity): Promise<HistoryOrder[]> {
+  if (!who.telegramId && !who.webBuyerHash) return [];
   return prisma.order.findMany({
-    where: { telegramUser: { telegramId } },
+    where: ownedBy(who),
     orderBy: { createdAt: "desc" },
     take: HISTORY_LIMIT,
     select: {
@@ -101,10 +121,11 @@ export interface RepeatResult {
  */
 export async function repeatOrderFor(
   orderId: string,
-  telegramId: bigint,
+  who: BuyerIdentity,
 ): Promise<RepeatResult | null> {
+  if (!who.telegramId && !who.webBuyerHash) return null;
   const order = await prisma.order.findFirst({
-    where: { id: orderId, telegramUser: { telegramId } },
+    where: { id: orderId, ...ownedBy(who) },
     select: {
       items: {
         select: { productId: true, title: true, brandName: true, qty: true },
