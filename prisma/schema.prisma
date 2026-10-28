@@ -316,6 +316,10 @@ model Order {
 
   telegramUserId String?
   telegramUser   TelegramUser? @relation(fields: [telegramUserId], references: [id], onDelete: SetNull)
+  /// The browser that placed it, for a buyer outside Telegram: the SHA-256 of a
+  /// random token held in that browser's httpOnly cookie. Never the token itself,
+  /// so a database read cannot be replayed as somebody's «Мои заявки».
+  webBuyerHash   String?
   source         OrderSource
 
   name     String
@@ -341,6 +345,7 @@ model Order {
 
   @@index([status, createdAt])
   @@index([telegramUserId, createdAt])
+  @@index([webBuyerHash, createdAt])
   @@map("orders")
 }
 
